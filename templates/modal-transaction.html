@@ -1,0 +1,60 @@
+<!-- 手工登记流水模态框 -->
+<div id="transactionModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden modal">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="flex justify-between items-center">
+            <h3 class="text-lg font-medium text-gray-900" id="modalTitle">手工登记流水</h3>
+            <button id="closeTransactionModal" class="text-gray-400 hover:text-gray-500 focus:outline-none focus:text-gray-500 close-modal">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="mt-4">
+            <form id="transactionForm">
+                <div class="mb-4">
+                    <label for="transactionDate" class="block text-sm font-medium text-gray-700 mb-1">日期</label>
+                    <input type="date" id="transactionDate" name="date" class="block w-full px-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" required>
+                </div>
+                
+                <div class="mb-4">
+                    <label for="transactionType" class="block text-sm font-medium text-gray-700 mb-1">类型</label>
+                    <select id="transactionType" name="type" class="block w-full px-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" required>
+                        <option value="income">收入</option>
+                        <option value="expense">支出</option>
+                    </select>
+                </div>
+                
+                <div class="mb-4">
+                    <label for="transactionCategory" class="block text-sm font-medium text-gray-700 mb-1">分类</label>
+                    <select id="transactionCategory" name="categoryId" class="block w-full px-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" required>
+                        <!-- 分类选项将动态生成 -->
+                    </select>
+                </div>
+                
+                <div class="mb-4">
+                    <label for="transactionAmount" class="block text-sm font-medium text-gray-700 mb-1">金额</label>
+                    <input type="number" id="transactionAmount" name="amount" step="0.01" class="block w-full px-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" required>
+                </div>
+                
+                <div class="mb-4">
+                    <label for="transactionAccount" class="block text-sm font-medium text-gray-700 mb-1">账户</label>
+                    <select id="transactionAccount" name="accountId" class="block w-full px-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" required>
+                        <!-- 账户选项将动态生成 -->
+                    </select>
+                </div>
+                
+                <div class="mb-4">
+                    <label for="transactionDescription" class="block text-sm font-medium text-gray-700 mb-1">描述</label>
+                    <textarea id="transactionDescription" name="description" rows="3" class="block w-full px-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out"></textarea>
+                </div>
+                
+                <div class="flex justify-end space-x-2 mt-6">
+                    <button type="button" id="cancelTransactionBtn" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out">
+                        取消
+                    </button>
+                    <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out">
+                        保存
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
