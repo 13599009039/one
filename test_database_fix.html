@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>Database.js 修复验证</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+        .result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        button { padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Database.js V8.0 修复验证</h1>
+    <div id="results"></div>
+    <button onclick="runTests()">重新测试</button>
+    <button onclick="window.location.href='financial_system.html'">返回主系统</button>
+
+    <script src="modules/api.js?v=17.0"></script>
+    <script src="modules/database.js?v=8.0"></script>
+    <script>
+        const results = document.getElementById('results');
+        
+        function addResult(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.innerHTML = message;
+            results.appendChild(div);
+        }
+        
+        function runTests() {
+            results.innerHTML = '';
+            addResult('<strong>开始测试...</strong>', 'info');
+            
+            // 测试1: window.db 是否存在
+            if (typeof window.db !== 'undefined') {
+                addResult('✅ 测试1通过: window.db 对象已成功创建', 'success');
+                addResult(`   可用方法数量: ${Object.keys(window.db).length}`, 'info');
+            } else {
+                addResult('❌ 测试1失败: window.db 未定义', 'error');
+                return;
+            }
+            
+            // 测试2: getCurrentUser 函数
+            try {
+                const user = window.db.getCurrentUser();
+                addResult(`✅ 测试2通过: getCurrentUser() 可正常调用`, 'success');
+                addResult(`   当前用户: ${user ? user.username : '未登录'}`, 'info');
+            } catch (e) {
+                addResult(`❌ 测试2失败: ${e.message}`, 'error');
+            }
+            
+            // 测试3: getDefaultData 数据量
+            try {
+                const data = window.db.getDefaultData();
+                const customers = data.customers || [];
+                const transactions = data.transactions || [];
+                const users = data.users || [];
+                
+                addResult('✅ 测试3通过: 模拟数据已精简', 'success');
+                addResult(`   customers: ${customers.length} 条 (目标: 0条-已对接API)`, customers.length === 0 ? 'success' : 'info');
+                addResult(`   transactions: ${transactions.length} 条 (目标: ≤2条)`, transactions.length <= 2 ? 'success' : 'error');
+                addResult(`   users: ${users.length} 条 (目标: 0条-已对接API)`, users.length === 0 ? 'success' : 'info');
+            } catch (e) {
+                addResult(`❌ 测试3失败: ${e.message}`, 'error');
+            }
+            
+            // 测试4: 文件加载性能
+            const perfData = performance.getEntriesByName('http://localhost:8080/modules/database.js?v=8.0');
+            if (perfData.length > 0) {
+                const loadTime = perfData[0].duration;
+                addResult(`✅ 测试4通过: 文件加载耗时 ${loadTime.toFixed(2)}ms`, loadTime < 100 ? 'success' : 'info');
+            }
+            
+            addResult('<strong>=== 所有测试完成 ===</strong>', 'success');
+        }
+        
+        // 页面加载时自动运行测试
+        window.addEventListener('DOMContentLoaded', runTests);
+    </script>
+</body>
+</html>

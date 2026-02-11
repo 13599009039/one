@@ -1,0 +1,381 @@
+nohup: ignoring input
+[2026-02-09 01:24:17 +0800] [4279] [INFO] Starting gunicorn 21.2.0
+[2026-02-09 01:24:17 +0800] [4279] [INFO] Listening at: http://0.0.0.0:5000 (4279)
+[2026-02-09 01:24:17 +0800] [4279] [INFO] Using worker: sync
+[2026-02-09 01:24:17 +0800] [4280] [INFO] Booting worker with pid: 4280
+[2026-02-09 01:24:17 +0800] [4281] [INFO] Booting worker with pid: 4281
+[2026-02-09 01:24:17 +0800] [4282] [INFO] Booting worker with pid: 4282
+[2026-02-09 01:24:17 +0800] [4283] [INFO] Booting worker with pid: 4283
+[2026-02-09 01:24:53 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:4280)
+[2026-02-09 01:24:53 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:4282)
+[2026-02-09 01:24:53 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:4283)
+[2026-02-09 01:24:53 +0800] [4280] [INFO] Worker exiting (pid: 4280)
+[2026-02-09 01:24:53 +0800] [4282] [INFO] Worker exiting (pid: 4282)
+[2026-02-09 01:24:53 +0800] [4283] [INFO] Worker exiting (pid: 4283)
+[2026-02-09 01:24:54 +0800] [4279] [ERROR] Worker (pid:4282) exited with code 1
+[2026-02-09 01:24:54 +0800] [4279] [ERROR] Worker (pid:4282) exited with code 1.
+[2026-02-09 01:24:54 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:4281)
+[2026-02-09 01:24:54 +0800] [4281] [INFO] Worker exiting (pid: 4281)
+[2026-02-09 01:24:54 +0800] [4461] [INFO] Booting worker with pid: 4461
+[2026-02-09 01:24:54 +0800] [4279] [ERROR] Worker (pid:4280) was sent SIGKILL! Perhaps out of memory?
+[2026-02-09 01:24:54 +0800] [4279] [ERROR] Worker (pid:4283) was sent SIGKILL! Perhaps out of memory?
+[2026-02-09 01:24:54 +0800] [4465] [INFO] Booting worker with pid: 4465
+[2026-02-09 01:24:54 +0800] [4279] [ERROR] Worker (pid:4281) was sent SIGKILL! Perhaps out of memory?
+[2026-02-09 01:24:54 +0800] [4466] [INFO] Booting worker with pid: 4466
+[2026-02-09 01:24:54 +0800] [4467] [INFO] Booting worker with pid: 4467
+[2026-02-09 01:25:28 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:4465)
+[2026-02-09 01:25:28 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:4467)
+[2026-02-09 01:25:28 +0800] [4467] [INFO] Worker exiting (pid: 4467)
+[2026-02-09 01:25:28 +0800] [4465] [INFO] Worker exiting (pid: 4465)
+[2026-02-09 01:25:28 +0800] [4279] [ERROR] Worker (pid:4467) exited with code 1
+[2026-02-09 01:25:28 +0800] [4279] [ERROR] Worker (pid:4467) exited with code 1.
+[2026-02-09 01:25:28 +0800] [4530] [INFO] Booting worker with pid: 4530
+[2026-02-09 01:25:28 +0800] [4279] [ERROR] Worker (pid:4465) was sent SIGKILL! Perhaps out of memory?
+[2026-02-09 01:25:28 +0800] [4531] [INFO] Booting worker with pid: 4531
+[2026-02-09 01:26:03 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:4530)
+[2026-02-09 01:26:03 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:4531)
+[2026-02-09 01:26:03 +0800] [4530] [INFO] Worker exiting (pid: 4530)
+[2026-02-09 01:26:03 +0800] [4531] [INFO] Worker exiting (pid: 4531)
+[2026-02-09 01:26:03 +0800] [4279] [ERROR] Worker (pid:4531) exited with code 1
+[2026-02-09 01:26:03 +0800] [4279] [ERROR] Worker (pid:4531) exited with code 1.
+[2026-02-09 01:26:03 +0800] [4573] [INFO] Booting worker with pid: 4573
+[2026-02-09 01:26:03 +0800] [4279] [ERROR] Worker (pid:4530) was sent SIGKILL! Perhaps out of memory?
+[2026-02-09 01:26:03 +0800] [4574] [INFO] Booting worker with pid: 4574
+[2026-02-09 01:26:41 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:4461)
+[2026-02-09 01:26:41 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:4573)
+[2026-02-09 01:26:41 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:4574)
+[2026-02-09 01:26:41 +0800] [4574] [INFO] Worker exiting (pid: 4574)
+[2026-02-09 01:26:41 +0800] [4461] [INFO] Worker exiting (pid: 4461)
+[2026-02-09 01:26:41 +0800] [4573] [INFO] Worker exiting (pid: 4573)
+[2026-02-09 01:26:41 +0800] [4279] [ERROR] Worker (pid:4573) exited with code 1
+[2026-02-09 01:26:41 +0800] [4279] [ERROR] Worker (pid:4573) exited with code 1.
+[2026-02-09 01:26:41 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:4466)
+[2026-02-09 01:26:41 +0800] [4466] [INFO] Worker exiting (pid: 4466)
+[2026-02-09 01:26:41 +0800] [4279] [ERROR] Worker (pid:4461) was sent SIGKILL! Perhaps out of memory?
+[2026-02-09 01:26:41 +0800] [4629] [INFO] Booting worker with pid: 4629
+[2026-02-09 01:26:41 +0800] [4279] [ERROR] Worker (pid:4574) was sent SIGKILL! Perhaps out of memory?
+[2026-02-09 01:26:41 +0800] [4630] [INFO] Booting worker with pid: 4630
+[2026-02-09 01:26:41 +0800] [4279] [ERROR] Worker (pid:4466) was sent SIGKILL! Perhaps out of memory?
+[2026-02-09 01:26:41 +0800] [4631] [INFO] Booting worker with pid: 4631
+[2026-02-09 01:26:41 +0800] [4632] [INFO] Booting worker with pid: 4632
+[2026-02-09 01:27:12 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:4629)
+[2026-02-09 01:27:12 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:4630)
+[2026-02-09 01:27:12 +0800] [4630] [INFO] Worker exiting (pid: 4630)
+[2026-02-09 01:27:12 +0800] [4629] [INFO] Worker exiting (pid: 4629)
+[2026-02-09 01:27:12 +0800] [4279] [ERROR] Worker (pid:4630) exited with code 1
+[2026-02-09 01:27:12 +0800] [4279] [ERROR] Worker (pid:4630) exited with code 1.
+[2026-02-09 01:27:12 +0800] [4659] [INFO] Booting worker with pid: 4659
+[2026-02-09 01:27:12 +0800] [4279] [ERROR] Worker (pid:4629) was sent SIGKILL! Perhaps out of memory?
+[2026-02-09 01:27:12 +0800] [4660] [INFO] Booting worker with pid: 4660
+[2026-02-09 01:27:18 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:4631)
+[2026-02-09 01:27:18 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:4632)
+[2026-02-09 01:27:18 +0800] [4631] [INFO] Worker exiting (pid: 4631)
+[2026-02-09 01:27:18 +0800] [4632] [INFO] Worker exiting (pid: 4632)
+[2026-02-09 01:27:19 +0800] [4279] [ERROR] Worker (pid:4631) exited with code 1
+[2026-02-09 01:27:19 +0800] [4279] [ERROR] Worker (pid:4631) exited with code 1.
+[2026-02-09 01:27:19 +0800] [4279] [ERROR] Worker (pid:4632) was sent SIGKILL! Perhaps out of memory?
+[2026-02-09 01:27:19 +0800] [4671] [INFO] Booting worker with pid: 4671
+[2026-02-09 01:27:19 +0800] [4672] [INFO] Booting worker with pid: 4672
+[2026-02-09 01:27:43 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:4659)
+[2026-02-09 01:27:43 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:4660)
+[2026-02-09 01:27:43 +0800] [4660] [INFO] Worker exiting (pid: 4660)
+[2026-02-09 01:27:43 +0800] [4659] [INFO] Worker exiting (pid: 4659)
+[2026-02-09 01:27:43 +0800] [4279] [ERROR] Worker (pid:4660) exited with code 1
+[2026-02-09 01:27:43 +0800] [4279] [ERROR] Worker (pid:4660) exited with code 1.
+[2026-02-09 01:27:43 +0800] [4701] [INFO] Booting worker with pid: 4701
+[2026-02-09 01:27:43 +0800] [4279] [ERROR] Worker (pid:4659) was sent SIGKILL! Perhaps out of memory?
+[2026-02-09 01:27:43 +0800] [4702] [INFO] Booting worker with pid: 4702
+[2026-02-09 01:27:50 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:4671)
+[2026-02-09 01:27:50 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:4672)
+[2026-02-09 01:27:50 +0800] [4672] [INFO] Worker exiting (pid: 4672)
+[2026-02-09 01:27:50 +0800] [4671] [INFO] Worker exiting (pid: 4671)
+[2026-02-09 01:27:50 +0800] [4279] [ERROR] Worker (pid:4672) exited with code 1
+[2026-02-09 01:27:50 +0800] [4279] [ERROR] Worker (pid:4672) exited with code 1.
+[2026-02-09 01:27:50 +0800] [4709] [INFO] Booting worker with pid: 4709
+[2026-02-09 01:27:50 +0800] [4279] [ERROR] Worker (pid:4671) was sent SIGKILL! Perhaps out of memory?
+[2026-02-09 01:27:50 +0800] [4710] [INFO] Booting worker with pid: 4710
+[2026-02-09 01:28:24 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:4701)
+[2026-02-09 01:28:24 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:4702)
+[2026-02-09 01:28:24 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:4709)
+[2026-02-09 01:28:24 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:4710)
+[2026-02-09 01:28:24 +0800] [4701] [INFO] Worker exiting (pid: 4701)
+[2026-02-09 01:28:24 +0800] [4702] [INFO] Worker exiting (pid: 4702)
+[2026-02-09 01:28:24 +0800] [4709] [INFO] Worker exiting (pid: 4709)
+[2026-02-09 01:28:24 +0800] [4710] [INFO] Worker exiting (pid: 4710)
+[2026-02-09 01:28:24 +0800] [4279] [ERROR] Worker (pid:4702) exited with code 1
+[2026-02-09 01:28:24 +0800] [4279] [ERROR] Worker (pid:4702) exited with code 1.
+[2026-02-09 01:28:24 +0800] [4279] [ERROR] Worker (pid:4709) exited with code 1
+[2026-02-09 01:28:24 +0800] [4279] [ERROR] Worker (pid:4709) exited with code 1.
+[2026-02-09 01:28:24 +0800] [4751] [INFO] Booting worker with pid: 4751
+[2026-02-09 01:28:24 +0800] [4279] [ERROR] Worker (pid:4701) was sent SIGKILL! Perhaps out of memory?
+[2026-02-09 01:28:24 +0800] [4279] [ERROR] Worker (pid:4710) was sent SIGKILL! Perhaps out of memory?
+[2026-02-09 01:28:24 +0800] [4752] [INFO] Booting worker with pid: 4752
+[2026-02-09 01:28:25 +0800] [4753] [INFO] Booting worker with pid: 4753
+[2026-02-09 01:28:25 +0800] [4754] [INFO] Booting worker with pid: 4754
+[2026-02-09 01:29:27 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:4751)
+[2026-02-09 01:29:27 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:4752)
+[2026-02-09 01:29:27 +0800] [4752] [INFO] Worker exiting (pid: 4752)
+[2026-02-09 01:29:27 +0800] [4751] [INFO] Worker exiting (pid: 4751)
+[2026-02-09 01:29:27 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:4753)
+[2026-02-09 01:29:27 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:4754)
+[2026-02-09 01:29:27 +0800] [4753] [INFO] Worker exiting (pid: 4753)
+[2026-02-09 01:29:27 +0800] [4754] [INFO] Worker exiting (pid: 4754)
+[2026-02-09 01:29:27 +0800] [4279] [ERROR] Worker (pid:4752) exited with code 1
+[2026-02-09 01:29:27 +0800] [4279] [ERROR] Worker (pid:4752) exited with code 1.
+[2026-02-09 01:29:27 +0800] [4279] [ERROR] Worker (pid:4753) exited with code 1
+[2026-02-09 01:29:27 +0800] [4279] [ERROR] Worker (pid:4753) exited with code 1.
+[2026-02-09 01:29:27 +0800] [4831] [INFO] Booting worker with pid: 4831
+[2026-02-09 01:29:27 +0800] [4279] [ERROR] Worker (pid:4751) was sent SIGKILL! Perhaps out of memory?
+[2026-02-09 01:29:27 +0800] [4279] [ERROR] Worker (pid:4754) was sent SIGKILL! Perhaps out of memory?
+[2026-02-09 01:29:27 +0800] [4832] [INFO] Booting worker with pid: 4832
+[2026-02-09 01:29:27 +0800] [4833] [INFO] Booting worker with pid: 4833
+[2026-02-09 01:29:27 +0800] [4834] [INFO] Booting worker with pid: 4834
+[2026-02-09 01:30:03 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:4831)
+[2026-02-09 01:30:03 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:4832)
+[2026-02-09 01:30:03 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:4833)
+[2026-02-09 01:30:03 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:4834)
+[2026-02-09 01:30:03 +0800] [4831] [INFO] Worker exiting (pid: 4831)
+[2026-02-09 01:30:03 +0800] [4832] [INFO] Worker exiting (pid: 4832)
+[2026-02-09 01:30:03 +0800] [4834] [INFO] Worker exiting (pid: 4834)
+[2026-02-09 01:30:03 +0800] [4833] [INFO] Worker exiting (pid: 4833)
+[2026-02-09 01:30:03 +0800] [4279] [ERROR] Worker (pid:4831) exited with code 1
+[2026-02-09 01:30:03 +0800] [4279] [ERROR] Worker (pid:4831) exited with code 1.
+[2026-02-09 01:30:03 +0800] [4279] [ERROR] Worker (pid:4834) was sent SIGKILL! Perhaps out of memory?
+[2026-02-09 01:30:03 +0800] [4279] [ERROR] Worker (pid:4832) was sent SIGKILL! Perhaps out of memory?
+[2026-02-09 01:30:03 +0800] [4279] [ERROR] Worker (pid:4833) was sent SIGKILL! Perhaps out of memory?
+[2026-02-09 01:30:03 +0800] [4870] [INFO] Booting worker with pid: 4870
+[2026-02-09 01:30:03 +0800] [4871] [INFO] Booting worker with pid: 4871
+[2026-02-09 01:30:03 +0800] [4872] [INFO] Booting worker with pid: 4872
+[2026-02-09 01:30:04 +0800] [4873] [INFO] Booting worker with pid: 4873
+[2026-02-09 01:30:39 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:4870)
+[2026-02-09 01:30:39 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:4871)
+[2026-02-09 01:30:39 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:4872)
+[2026-02-09 01:30:39 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:4873)
+[2026-02-09 01:30:39 +0800] [4871] [INFO] Worker exiting (pid: 4871)
+[2026-02-09 01:30:39 +0800] [4873] [INFO] Worker exiting (pid: 4873)
+[2026-02-09 01:30:39 +0800] [4872] [INFO] Worker exiting (pid: 4872)
+[2026-02-09 01:30:39 +0800] [4870] [INFO] Worker exiting (pid: 4870)
+[2026-02-09 01:30:39 +0800] [4279] [ERROR] Worker (pid:4870) exited with code 1
+[2026-02-09 01:30:39 +0800] [4279] [ERROR] Worker (pid:4870) exited with code 1.
+[2026-02-09 01:30:39 +0800] [4279] [ERROR] Worker (pid:4871) exited with code 1
+[2026-02-09 01:30:39 +0800] [4279] [ERROR] Worker (pid:4871) exited with code 1.
+[2026-02-09 01:30:39 +0800] [4918] [INFO] Booting worker with pid: 4918
+[2026-02-09 01:30:39 +0800] [4279] [ERROR] Worker (pid:4873) was sent SIGKILL! Perhaps out of memory?
+[2026-02-09 01:30:39 +0800] [4279] [ERROR] Worker (pid:4872) was sent SIGKILL! Perhaps out of memory?
+[2026-02-09 01:30:39 +0800] [4919] [INFO] Booting worker with pid: 4919
+[2026-02-09 01:30:39 +0800] [4920] [INFO] Booting worker with pid: 4920
+[2026-02-09 01:30:39 +0800] [4921] [INFO] Booting worker with pid: 4921
+[2026-02-09 01:31:31 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:4918)
+[2026-02-09 01:31:31 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:4919)
+[2026-02-09 01:31:31 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:4920)
+[2026-02-09 01:31:31 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:4921)
+[2026-02-09 01:31:31 +0800] [4921] [INFO] Worker exiting (pid: 4921)
+[2026-02-09 01:31:31 +0800] [4918] [INFO] Worker exiting (pid: 4918)
+[2026-02-09 01:31:31 +0800] [4920] [INFO] Worker exiting (pid: 4920)
+[2026-02-09 01:31:31 +0800] [4919] [INFO] Worker exiting (pid: 4919)
+[2026-02-09 01:31:32 +0800] [4279] [ERROR] Worker (pid:4919) exited with code 1
+[2026-02-09 01:31:32 +0800] [4279] [ERROR] Worker (pid:4919) exited with code 1.
+[2026-02-09 01:31:32 +0800] [4979] [INFO] Booting worker with pid: 4979
+[2026-02-09 01:31:32 +0800] [4279] [ERROR] Worker (pid:4920) was sent SIGKILL! Perhaps out of memory?
+[2026-02-09 01:31:32 +0800] [4279] [ERROR] Worker (pid:4918) was sent SIGKILL! Perhaps out of memory?
+[2026-02-09 01:31:32 +0800] [4279] [ERROR] Worker (pid:4921) was sent SIGKILL! Perhaps out of memory?
+[2026-02-09 01:31:32 +0800] [4980] [INFO] Booting worker with pid: 4980
+[2026-02-09 01:31:32 +0800] [4981] [INFO] Booting worker with pid: 4981
+[2026-02-09 01:31:32 +0800] [4982] [INFO] Booting worker with pid: 4982
+[2026-02-09 01:32:10 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:4979)
+[2026-02-09 01:32:10 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:4982)
+[2026-02-09 01:32:10 +0800] [4979] [INFO] Worker exiting (pid: 4979)
+[2026-02-09 01:32:10 +0800] [4982] [INFO] Worker exiting (pid: 4982)
+[2026-02-09 01:32:10 +0800] [4279] [ERROR] Worker (pid:4979) exited with code 1
+[2026-02-09 01:32:10 +0800] [4279] [ERROR] Worker (pid:4979) exited with code 1.
+[2026-02-09 01:32:10 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:4980)
+[2026-02-09 01:32:10 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:4981)
+[2026-02-09 01:32:10 +0800] [4980] [INFO] Worker exiting (pid: 4980)
+[2026-02-09 01:32:10 +0800] [4981] [INFO] Worker exiting (pid: 4981)
+[2026-02-09 01:32:10 +0800] [4279] [ERROR] Worker (pid:4982) was sent SIGKILL! Perhaps out of memory?
+[2026-02-09 01:32:10 +0800] [5012] [INFO] Booting worker with pid: 5012
+[2026-02-09 01:32:10 +0800] [5013] [INFO] Booting worker with pid: 5013
+[2026-02-09 01:32:10 +0800] [4279] [ERROR] Worker (pid:4980) was sent SIGKILL! Perhaps out of memory?
+[2026-02-09 01:32:10 +0800] [4279] [ERROR] Worker (pid:4981) was sent SIGKILL! Perhaps out of memory?
+[2026-02-09 01:32:10 +0800] [5014] [INFO] Booting worker with pid: 5014
+[2026-02-09 01:32:10 +0800] [5015] [INFO] Booting worker with pid: 5015
+[2026-02-09 01:32:41 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:5013)
+[2026-02-09 01:32:41 +0800] [5013] [INFO] Worker exiting (pid: 5013)
+[2026-02-09 01:32:41 +0800] [4279] [ERROR] Worker (pid:5013) exited with code 1
+[2026-02-09 01:32:41 +0800] [4279] [ERROR] Worker (pid:5013) exited with code 1.
+[2026-02-09 01:32:41 +0800] [5054] [INFO] Booting worker with pid: 5054
+[2026-02-09 01:32:47 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:5014)
+[2026-02-09 01:32:47 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:5015)
+[2026-02-09 01:32:47 +0800] [5014] [INFO] Worker exiting (pid: 5014)
+[2026-02-09 01:32:47 +0800] [5015] [INFO] Worker exiting (pid: 5015)
+[2026-02-09 01:32:47 +0800] [4279] [ERROR] Worker (pid:5015) exited with code 1
+[2026-02-09 01:32:47 +0800] [4279] [ERROR] Worker (pid:5015) exited with code 1.
+[2026-02-09 01:32:47 +0800] [5058] [INFO] Booting worker with pid: 5058
+[2026-02-09 01:32:47 +0800] [4279] [ERROR] Worker (pid:5014) was sent SIGKILL! Perhaps out of memory?
+[2026-02-09 01:32:47 +0800] [5059] [INFO] Booting worker with pid: 5059
+[2026-02-09 01:33:33 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:5012)
+[2026-02-09 01:33:33 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:5054)
+[2026-02-09 01:33:33 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:5058)
+[2026-02-09 01:33:33 +0800] [5054] [INFO] Worker exiting (pid: 5054)
+[2026-02-09 01:33:33 +0800] [5058] [INFO] Worker exiting (pid: 5058)
+[2026-02-09 01:33:33 +0800] [5012] [INFO] Worker exiting (pid: 5012)
+[2026-02-09 01:33:33 +0800] [4279] [ERROR] Worker (pid:5012) exited with code 1
+[2026-02-09 01:33:33 +0800] [4279] [ERROR] Worker (pid:5012) exited with code 1.
+[2026-02-09 01:33:33 +0800] [4279] [ERROR] Worker (pid:5054) was sent SIGKILL! Perhaps out of memory?
+[2026-02-09 01:33:33 +0800] [4279] [ERROR] Worker (pid:5058) was sent SIGKILL! Perhaps out of memory?
+[2026-02-09 01:33:33 +0800] [5269] [INFO] Booting worker with pid: 5269
+[2026-02-09 01:33:33 +0800] [5270] [INFO] Booting worker with pid: 5270
+[2026-02-09 01:33:33 +0800] [5271] [INFO] Booting worker with pid: 5271
+[2026-02-09 01:34:08 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:5059)
+[2026-02-09 01:34:08 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:5269)
+[2026-02-09 01:34:08 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:5271)
+[2026-02-09 01:34:08 +0800] [5059] [INFO] Worker exiting (pid: 5059)
+[2026-02-09 01:34:08 +0800] [5269] [INFO] Worker exiting (pid: 5269)
+[2026-02-09 01:34:08 +0800] [5271] [INFO] Worker exiting (pid: 5271)
+[2026-02-09 01:34:09 +0800] [4279] [ERROR] Worker (pid:5059) exited with code 1
+[2026-02-09 01:34:09 +0800] [4279] [ERROR] Worker (pid:5059) exited with code 1.
+[2026-02-09 01:34:09 +0800] [4279] [ERROR] Worker (pid:5271) exited with code 1
+[2026-02-09 01:34:09 +0800] [4279] [ERROR] Worker (pid:5271) exited with code 1.
+[2026-02-09 01:34:09 +0800] [4279] [ERROR] Worker (pid:5269) was sent SIGKILL! Perhaps out of memory?
+[2026-02-09 01:34:09 +0800] [5444] [INFO] Booting worker with pid: 5444
+[2026-02-09 01:34:09 +0800] [5445] [INFO] Booting worker with pid: 5445
+[2026-02-09 01:34:09 +0800] [5446] [INFO] Booting worker with pid: 5446
+[2026-02-09 01:34:53 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:5270)
+[2026-02-09 01:34:53 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:5444)
+[2026-02-09 01:34:53 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:5446)
+[2026-02-09 01:34:53 +0800] [5270] [INFO] Worker exiting (pid: 5270)
+[2026-02-09 01:34:53 +0800] [5444] [INFO] Worker exiting (pid: 5444)
+[2026-02-09 01:34:53 +0800] [5446] [INFO] Worker exiting (pid: 5446)
+[2026-02-09 01:34:53 +0800] [4279] [ERROR] Worker (pid:5444) exited with code 1
+[2026-02-09 01:34:53 +0800] [4279] [ERROR] Worker (pid:5444) exited with code 1.
+[2026-02-09 01:34:53 +0800] [5501] [INFO] Booting worker with pid: 5501
+[2026-02-09 01:34:53 +0800] [4279] [ERROR] Worker (pid:5270) was sent SIGKILL! Perhaps out of memory?
+[2026-02-09 01:34:53 +0800] [4279] [ERROR] Worker (pid:5446) was sent SIGKILL! Perhaps out of memory?
+[2026-02-09 01:34:53 +0800] [5502] [INFO] Booting worker with pid: 5502
+[2026-02-09 01:34:53 +0800] [5503] [INFO] Booting worker with pid: 5503
+[2026-02-09 01:35:24 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:5445)
+[2026-02-09 01:35:24 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:5501)
+[2026-02-09 01:35:24 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:5503)
+[2026-02-09 01:35:24 +0800] [5445] [INFO] Worker exiting (pid: 5445)
+[2026-02-09 01:35:24 +0800] [5501] [INFO] Worker exiting (pid: 5501)
+[2026-02-09 01:35:24 +0800] [5503] [INFO] Worker exiting (pid: 5503)
+[2026-02-09 01:35:24 +0800] [4279] [ERROR] Worker (pid:5445) exited with code 1
+[2026-02-09 01:35:24 +0800] [4279] [ERROR] Worker (pid:5445) exited with code 1.
+[2026-02-09 01:35:24 +0800] [4279] [ERROR] Worker (pid:5503) was sent SIGKILL! Perhaps out of memory?
+[2026-02-09 01:35:24 +0800] [5570] [INFO] Booting worker with pid: 5570
+[2026-02-09 01:35:24 +0800] [4279] [ERROR] Worker (pid:5501) was sent SIGKILL! Perhaps out of memory?
+[2026-02-09 01:35:24 +0800] [5571] [INFO] Booting worker with pid: 5571
+[2026-02-09 01:35:25 +0800] [5572] [INFO] Booting worker with pid: 5572
+[2026-02-09 01:36:21 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:5570)
+[2026-02-09 01:36:21 +0800] [5570] [INFO] Worker exiting (pid: 5570)
+[2026-02-09 01:36:21 +0800] [4279] [ERROR] Worker (pid:5570) exited with code 1
+[2026-02-09 01:36:21 +0800] [4279] [ERROR] Worker (pid:5570) exited with code 1.
+[2026-02-09 01:36:21 +0800] [5782] [INFO] Booting worker with pid: 5782
+[2026-02-09 01:36:27 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:5502)
+[2026-02-09 01:36:27 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:5572)
+[2026-02-09 01:36:27 +0800] [5502] [INFO] Worker exiting (pid: 5502)
+[2026-02-09 01:36:27 +0800] [5572] [INFO] Worker exiting (pid: 5572)
+[2026-02-09 01:36:27 +0800] [4279] [ERROR] Worker (pid:5572) exited with code 1
+[2026-02-09 01:36:27 +0800] [4279] [ERROR] Worker (pid:5572) exited with code 1.
+[2026-02-09 01:36:27 +0800] [5794] [INFO] Booting worker with pid: 5794
+[2026-02-09 01:36:27 +0800] [4279] [ERROR] Worker (pid:5502) was sent SIGKILL! Perhaps out of memory?
+[2026-02-09 01:36:27 +0800] [5795] [INFO] Booting worker with pid: 5795
+[2026-02-09 01:37:00 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:5571)
+[2026-02-09 01:37:00 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:5782)
+[2026-02-09 01:37:00 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:5795)
+[2026-02-09 01:37:00 +0800] [5571] [INFO] Worker exiting (pid: 5571)
+[2026-02-09 01:37:00 +0800] [5782] [INFO] Worker exiting (pid: 5782)
+[2026-02-09 01:37:00 +0800] [5795] [INFO] Worker exiting (pid: 5795)
+[2026-02-09 01:37:00 +0800] [4279] [ERROR] Worker (pid:5782) exited with code 1
+[2026-02-09 01:37:00 +0800] [4279] [ERROR] Worker (pid:5782) exited with code 1.
+[2026-02-09 01:37:00 +0800] [5950] [INFO] Booting worker with pid: 5950
+[2026-02-09 01:37:00 +0800] [4279] [ERROR] Worker (pid:5571) was sent SIGKILL! Perhaps out of memory?
+[2026-02-09 01:37:00 +0800] [4279] [ERROR] Worker (pid:5795) was sent SIGKILL! Perhaps out of memory?
+[2026-02-09 01:37:00 +0800] [5951] [INFO] Booting worker with pid: 5951
+[2026-02-09 01:37:00 +0800] [5952] [INFO] Booting worker with pid: 5952
+[2026-02-09 01:37:32 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:5794)
+[2026-02-09 01:37:32 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:5950)
+[2026-02-09 01:37:32 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:5952)
+[2026-02-09 01:37:32 +0800] [5950] [INFO] Worker exiting (pid: 5950)
+[2026-02-09 01:37:32 +0800] [5794] [INFO] Worker exiting (pid: 5794)
+[2026-02-09 01:37:32 +0800] [5952] [INFO] Worker exiting (pid: 5952)
+[2026-02-09 01:37:33 +0800] [4279] [ERROR] Worker (pid:5794) exited with code 1
+[2026-02-09 01:37:33 +0800] [4279] [ERROR] Worker (pid:5794) exited with code 1.
+[2026-02-09 01:37:33 +0800] [4279] [ERROR] Worker (pid:5952) was sent SIGKILL! Perhaps out of memory?
+[2026-02-09 01:37:33 +0800] [4279] [ERROR] Worker (pid:5950) was sent SIGKILL! Perhaps out of memory?
+[2026-02-09 01:37:33 +0800] [5998] [INFO] Booting worker with pid: 5998
+[2026-02-09 01:37:33 +0800] [5999] [INFO] Booting worker with pid: 5999
+[2026-02-09 01:37:33 +0800] [6000] [INFO] Booting worker with pid: 6000
+[2026-02-09 01:38:04 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:5998)
+[2026-02-09 01:38:04 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:5999)
+[2026-02-09 01:38:04 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:6000)
+[2026-02-09 01:38:04 +0800] [5998] [INFO] Worker exiting (pid: 5998)
+[2026-02-09 01:38:04 +0800] [6000] [INFO] Worker exiting (pid: 6000)
+[2026-02-09 01:38:04 +0800] [5999] [INFO] Worker exiting (pid: 5999)
+[2026-02-09 01:38:04 +0800] [4279] [ERROR] Worker (pid:5998) exited with code 1
+[2026-02-09 01:38:04 +0800] [4279] [ERROR] Worker (pid:5998) exited with code 1.
+[2026-02-09 01:38:04 +0800] [4279] [ERROR] Worker (pid:5999) was sent SIGKILL! Perhaps out of memory?
+[2026-02-09 01:38:04 +0800] [4279] [ERROR] Worker (pid:6000) was sent SIGKILL! Perhaps out of memory?
+[2026-02-09 01:38:04 +0800] [6032] [INFO] Booting worker with pid: 6032
+[2026-02-09 01:38:04 +0800] [6033] [INFO] Booting worker with pid: 6033
+[2026-02-09 01:38:04 +0800] [6034] [INFO] Booting worker with pid: 6034
+[2026-02-09 01:38:42 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:5951)
+[2026-02-09 01:38:42 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:6033)
+[2026-02-09 01:38:42 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:6034)
+[2026-02-09 01:38:42 +0800] [6034] [INFO] Worker exiting (pid: 6034)
+[2026-02-09 01:38:42 +0800] [6033] [INFO] Worker exiting (pid: 6033)
+[2026-02-09 01:38:42 +0800] [5951] [INFO] Worker exiting (pid: 5951)
+[2026-02-09 01:38:42 +0800] [4279] [ERROR] Worker (pid:6033) exited with code 1
+[2026-02-09 01:38:42 +0800] [4279] [ERROR] Worker (pid:6033) exited with code 1.
+[2026-02-09 01:38:42 +0800] [4279] [ERROR] Worker (pid:5951) was sent SIGKILL! Perhaps out of memory?
+[2026-02-09 01:38:42 +0800] [6139] [INFO] Booting worker with pid: 6139
+[2026-02-09 01:38:42 +0800] [4279] [ERROR] Worker (pid:6034) was sent SIGKILL! Perhaps out of memory?
+[2026-02-09 01:38:42 +0800] [6140] [INFO] Booting worker with pid: 6140
+[2026-02-09 01:38:42 +0800] [6141] [INFO] Booting worker with pid: 6141
+[2026-02-09 01:39:49 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:6032)
+[2026-02-09 01:39:49 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:6139)
+[2026-02-09 01:39:49 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:6141)
+[2026-02-09 01:39:49 +0800] [6139] [INFO] Worker exiting (pid: 6139)
+[2026-02-09 01:39:49 +0800] [6032] [INFO] Worker exiting (pid: 6032)
+[2026-02-09 01:39:49 +0800] [6141] [INFO] Worker exiting (pid: 6141)
+[2026-02-09 01:39:49 +0800] [4279] [ERROR] Worker (pid:6032) exited with code 1
+[2026-02-09 01:39:49 +0800] [4279] [ERROR] Worker (pid:6032) exited with code 1.
+[2026-02-09 01:39:49 +0800] [6334] [INFO] Booting worker with pid: 6334
+[2026-02-09 01:39:49 +0800] [4279] [ERROR] Worker (pid:6139) was sent SIGKILL! Perhaps out of memory?
+[2026-02-09 01:39:49 +0800] [4279] [ERROR] Worker (pid:6141) was sent SIGKILL! Perhaps out of memory?
+[2026-02-09 01:39:49 +0800] [6338] [INFO] Booting worker with pid: 6338
+[2026-02-09 01:39:49 +0800] [6339] [INFO] Booting worker with pid: 6339
+[2026-02-09 01:40:33 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:6334)
+[2026-02-09 01:40:33 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:6338)
+[2026-02-09 01:40:33 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:6339)
+[2026-02-09 01:40:33 +0800] [6338] [INFO] Worker exiting (pid: 6338)
+[2026-02-09 01:40:33 +0800] [6334] [INFO] Worker exiting (pid: 6334)
+[2026-02-09 01:40:33 +0800] [6339] [INFO] Worker exiting (pid: 6339)
+[2026-02-09 01:40:33 +0800] [4279] [ERROR] Worker (pid:6338) exited with code 1
+[2026-02-09 01:40:33 +0800] [4279] [ERROR] Worker (pid:6338) exited with code 1.
+[2026-02-09 01:40:33 +0800] [6469] [INFO] Booting worker with pid: 6469
+[2026-02-09 01:40:33 +0800] [4279] [ERROR] Worker (pid:6334) was sent SIGKILL! Perhaps out of memory?
+[2026-02-09 01:40:33 +0800] [4279] [ERROR] Worker (pid:6339) was sent SIGKILL! Perhaps out of memory?
+[2026-02-09 01:40:33 +0800] [6470] [INFO] Booting worker with pid: 6470
+[2026-02-09 01:40:33 +0800] [6474] [INFO] Booting worker with pid: 6474
+[2026-02-09 01:41:21 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:6140)
+[2026-02-09 01:41:21 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:6470)
+[2026-02-09 01:41:21 +0800] [4279] [CRITICAL] WORKER TIMEOUT (pid:6474)
+[2026-02-09 01:41:21 +0800] [6470] [INFO] Worker exiting (pid: 6470)
+[2026-02-09 01:41:21 +0800] [6140] [INFO] Worker exiting (pid: 6140)
+[2026-02-09 01:41:21 +0800] [6474] [INFO] Worker exiting (pid: 6474)
+[2026-02-09 01:41:22 +0800] [4279] [ERROR] Worker (pid:6470) exited with code 1
+[2026-02-09 01:41:22 +0800] [4279] [ERROR] Worker (pid:6470) exited with code 1.
+[2026-02-09 01:41:22 +0800] [6524] [INFO] Booting worker with pid: 6524
+[2026-02-09 01:41:22 +0800] [4279] [ERROR] Worker (pid:6474) was sent SIGKILL! Perhaps out of memory?
+[2026-02-09 01:41:22 +0800] [4279] [ERROR] Worker (pid:6140) was sent SIGKILL! Perhaps out of memory?
+[2026-02-09 01:41:22 +0800] [6525] [INFO] Booting worker with pid: 6525
+[2026-02-09 01:41:22 +0800] [6526] [INFO] Booting worker with pid: 6526
+[2026-02-09 01:57:00 +0800] [6469] [INFO] Worker exiting (pid: 6469)
+[2026-02-09 01:57:00 +0800] [6524] [INFO] Worker exiting (pid: 6524)
+[2026-02-09 01:57:00 +0800] [6525] [INFO] Worker exiting (pid: 6525)
+[2026-02-09 01:57:00 +0800] [4279] [INFO] Handling signal: term
+[2026-02-09 01:57:00 +0800] [6526] [INFO] Worker exiting (pid: 6526)
+[2026-02-09 01:57:00 +0800] [4279] [ERROR] Worker (pid:6469) was sent SIGTERM!
+[2026-02-09 01:57:00 +0800] [4279] [ERROR] Worker (pid:6524) was sent SIGTERM!
+[2026-02-09 01:57:00 +0800] [4279] [INFO] Shutting down: Master

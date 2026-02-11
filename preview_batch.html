@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>批量登记界面预览</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 p-8">
+    <h1 class="text-2xl font-bold mb-6">批量登记交易记录界面预览</h1>
+    
+    <!-- 直接显示批量登记模态框内容 -->
+    <div class="border w-11/12 max-w-4xl shadow-lg rounded-md bg-white mx-auto">
+        <div class="flex justify-between items-center mb-4 p-5 border-b">
+            <h2 class="text-xl font-semibold text-gray-900">批量登记交易记录</h2>
+            <button class="text-gray-400 hover:text-gray-500 focus:outline-none focus:text-gray-500">
+                <span class="text-2xl">&times;</span>
+            </button>
+        </div>
+        <div class="overflow-x-auto p-5">
+            <table class="min-w-full divide-y divide-gray-200" id="batchTransactionsTable">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">日期</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">类型</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">分类</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">金额</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">账户</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">描述</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                    </tr>
+                </thead>
+                <tbody id="batchTransactionsTableBody">
+                    <!-- 示例行 -->
+                    <tr class="bg-white">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <input type="date" name="batch_date[]" value="2024-01-30" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <select name="batch_type[]" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                <option value="收入">收入</option>
+                                <option value="支出">支出</option>
+                            </select>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <select name="batch_category[]" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                <option value="income_001">销售收入</option>
+                                <option value="income_002">投资收益</option>
+                                <option value="expense_001">办公费用</option>
+                                <option value="expense_002">人员工资</option>
+                            </select>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <input type="number" name="batch_amount[]" step="0.01" placeholder="金额" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50" value="1000.00">
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <select name="batch_account[]" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                <option value="1">中国银行基本户 (中国银行)</option>
+                                <option value="2">工商银行一般户 (工商银行)</option>
+                            </select>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <input type="text" name="batch_description[]" placeholder="描述" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50" value="测试交易">
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <button type="button" class="removeBatchRowBtn text-red-500 hover:text-red-700">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    <!-- 空行 -->
+                    <tr class="bg-white">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <input type="date" name="batch_date[]" value="" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <select name="batch_type[]" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                <option value="收入">收入</option>
+                                <option value="支出">支出</option>
+                            </select>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <select name="batch_category[]" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                <option value="income_001">销售收入</option>
+                                <option value="income_002">投资收益</option>
+                                <option value="expense_001">办公费用</option>
+                                <option value="expense_002">人员工资</option>
+                            </select>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <input type="number" name="batch_amount[]" step="0.01" placeholder="金额" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <select name="batch_account[]" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                <option value="1">中国银行基本户 (中国银行)</option>
+                                <option value="2">工商银行一般户 (工商银行)</option>
+                            </select>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <input type="text" name="batch_description[]" placeholder="描述" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <button type="button" class="removeBatchRowBtn text-red-500 hover:text-red-700">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="flex justify-between items-center mt-4 p-5 border-t">
+            <button id="addBatchRowBtn" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <i class="fas fa-plus mr-1"></i> 添加一行
+            </button>
+            <div class="flex space-x-2">
+                <button id="cancelBatchTransactionBtn" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out">
+                    取消
+                </button>
+                <button id="saveBatchTransactionBtn" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out">
+                    批量保存
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 添加一行功能
+        document.getElementById('addBatchRowBtn').addEventListener('click', function() {
+            const tableBody = document.getElementById('batchTransactionsTableBody');
+            const rowIndex = tableBody.rows.length;
+            const today = new Date().toISOString().split('T')[0];
+            
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <input type="date" name="batch_date[]" value="${today}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <select name="batch_type[]" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                        <option value="收入">收入</option>
+                        <option value="支出">支出</option>
+                    </select>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <select name="batch_category[]" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                        <option value="income_001">销售收入</option>
+                        <option value="income_002">投资收益</option>
+                        <option value="expense_001">办公费用</option>
+                        <option value="expense_002">人员工资</option>
+                    </select>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <input type="number" name="batch_amount[]" step="0.01" placeholder="金额" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <select name="batch_account[]" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                        <option value="1">中国银行基本户 (中国银行)</option>
+                        <option value="2">工商银行一般户 (工商银行)</option>
+                    </select>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <input type="text" name="batch_description[]" placeholder="描述" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <button type="button" class="removeBatchRowBtn text-red-500 hover:text-red-700">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            
+            tableBody.appendChild(row);
+            
+            // 绑定删除按钮事件
+            bindRemoveRowEvents();
+        });
+        
+        // 删除行功能
+        function bindRemoveRowEvents() {
+            const removeButtons = document.querySelectorAll('.removeBatchRowBtn');
+            removeButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    this.closest('tr').remove();
+                });
+            });
+        }
+        
+        // 初始绑定删除按钮事件
+        bindRemoveRowEvents();
+        
+        // 批量保存功能
+        document.getElementById('saveBatchTransactionBtn').addEventListener('click', function() {
+            alert('批量保存功能演示');
+        });
+        
+        // 取消功能
+        document.getElementById('cancelBatchTransactionBtn').addEventListener('click', function() {
+            alert('取消功能演示');
+        });
+    </script>
+</body>
+</html>

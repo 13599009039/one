@@ -1,0 +1,83 @@
+<!-- 订单详情模态框 -->
+<div id="orderDetailModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden modal">
+    <div class="relative mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold text-gray-900">订单详情 - <span id="detailOrderId"></span></h3>
+            <button type="button" class="text-gray-400 hover:text-gray-500 close-modal" onclick="closeOrderDetailModal()">
+                <span class="text-2xl">&times;</span>
+            </button>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- 基本信息 -->
+            <div class="space-y-4">
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h4 class="font-semibold text-gray-700 mb-2">基本信息</h4>
+                    <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                        <p class="text-gray-500">客户：<span id="detailCustomer" class="text-gray-900 font-medium"></span></p>
+                        <p class="text-gray-500">下单日期：<span id="detailDate" class="text-gray-900 font-medium"></span></p>
+                        <p class="text-gray-500">订单状态：<span id="detailStatus" class="px-2 py-0.5 rounded-full text-xs font-semibold"></span></p>
+                        <p class="text-gray-500">合同金额：<span id="detailContractAmount" class="text-blue-600 font-bold"></span></p>
+                    </div>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h4 class="font-semibold text-gray-700 mb-2">业务团队</h4>
+                    <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                        <p class="text-gray-500">业务人员：<span id="detailBusinessStaff" class="text-gray-900"></span></p>
+                        <p class="text-gray-500">服务人员：<span id="detailServiceStaff" class="text-gray-900"></span></p>
+                        <p class="text-gray-500">运营人员：<span id="detailOperationStaff" class="text-gray-900"></span></p>
+                        <p class="text-gray-500">负责团队：<span id="detailTeam" class="text-gray-900"></span></p>
+                        <p class="text-gray-500">归属项目：<span id="detailProject" class="text-gray-900"></span></p>
+                        <p class="text-gray-500">归属公司：<span id="detailCompany" class="text-gray-900"></span></p>
+                    </div>
+                </div>
+                <!-- 备注列表 -->
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h4 class="font-semibold text-gray-700 mb-2">订单备注</h4>
+                    <div id="detailRemarksList" class="space-y-2 text-xs">
+                        <!-- 动态加载 -->
+                    </div>
+                </div>
+            </div>
+            <!-- 收款计划与记录 -->
+            <div class="space-y-4">
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <div class="flex justify-between items-center mb-2">
+                        <h4 class="font-semibold text-gray-700">收款记录</h4>
+                        <button onclick="openAddPaymentModal()" class="text-xs bg-blue-600 text-white px-2 py-1 rounded">登记收款</button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-xs">
+                            <thead>
+                                <tr class="text-left text-gray-500 border-b border-gray-200">
+                                    <th class="pb-2">日期</th>
+                                    <th class="pb-2">类型</th>
+                                    <th class="pb-2 text-right">金额</th>
+                                </tr>
+                            </thead>
+                            <tbody id="paymentRecordsList">
+                                <!-- 动态加载 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <!-- 合同信息 -->
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h4 class="font-semibold text-gray-700 mb-2">合同信息</h4>
+                    <div id="contractInfo">
+                        <!-- 动态加载 -->
+                    </div>
+                </div>
+                <!-- 售后处理 -->
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <div class="flex justify-between items-center mb-2">
+                        <h4 class="font-semibold text-gray-700">售后记录</h4>
+                        <button onclick="openAfterSalesModal()" class="text-xs bg-red-600 text-white px-2 py-1 rounded">售后登记</button>
+                    </div>
+                    <div id="afterSalesList" class="text-xs space-y-2">
+                        <!-- 动态加载 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

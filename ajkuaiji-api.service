@@ -1,0 +1,17 @@
+[Unit]
+Description=AiJia ERP Flask API Service
+After=network.target mysql.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/ajkuaiji/backend
+Environment="PATH=/root/ajkuaiji/backend/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+ExecStart=/root/ajkuaiji/backend/venv/bin/python3 /root/ajkuaiji/backend/app.py
+Restart=always
+RestartSec=3
+StandardOutput=append:/var/log/ajkuaiji-api.log
+StandardError=append:/var/log/ajkuaiji-api.log
+
+[Install]
+WantedBy=multi-user.target

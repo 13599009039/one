@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系统控制台 - 企业资源计划管理系统(ERP)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 font-sans">
+    <!-- 登录页面 -->
+    <div id="loginPage" class="min-h-screen flex items-center justify-center bg-gradient-to-r from-purple-600 to-indigo-600">
+        <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md transform transition-all duration-300 hover:scale-105">
+            <div class="text-center mb-8">
+                <div class="bg-purple-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-cogs text-white text-2xl"></i>
+                </div>
+                <h2 class="text-3xl font-bold text-gray-800">系统控制台</h2>
+                <p class="text-gray-600 mt-2">请使用超级管理员账号登录</p>
+            </div>
+            
+            <form id="loginForm" class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">用户名</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-user-shield text-gray-400"></i>
+                        </div>
+                        <input type="text" id="username" class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all" placeholder="输入管理员用户名" value="admin">
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">密码</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-lock text-gray-400"></i>
+                        </div>
+                        <input type="password" id="password" class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all" placeholder="输入密码" value="admin123">
+                    </div>
+                </div>
+                
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <input type="checkbox" id="remember" class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded">
+                        <label for="remember" class="ml-2 block text-sm text-gray-700">记住我</label>
+                    </div>
+                    <a href="financial_system.html" class="text-sm font-medium text-purple-600 hover:text-purple-500">返回系统</a>
+                </div>
+                
+                <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-[1.02] flex items-center justify-center">
+                    <i class="fas fa-sign-in-alt mr-2"></i> 登录控制台
+                </button>
+            </form>
+            
+            <div class="mt-6 text-center text-sm text-gray-500">
+                <p>© 2026 企业财务流水账管理系统 | 控制台仅对超级管理员开放</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 控制台主页面 -->
+    <div id="consolePage" class="hidden">
+        <!-- 顶部导航栏 -->
+        <nav class="bg-white shadow-lg border-b border-gray-200">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-16">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 flex items-center">
+                            <i class="fas fa-cogs text-purple-600 text-2xl mr-3"></i>
+                            <span class="text-xl font-bold text-gray-800">系统控制台</span>
+                        </div>
+                        <div class="hidden sm:ml-10 sm:flex sm:space-x-8">
+                            <a href="#" class="nav-link text-purple-600 border-purple-200 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium" data-target="companies">
+                                <i class="fas fa-building mr-2"></i> 公司管理
+                            </a>
+                            <a href="#" class="nav-link text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium" data-target="users">
+                                <i class="fas fa-users mr-2"></i> 用户管理
+                            </a>
+                            <a href="#" class="nav-link text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium" data-target="system">
+                                <i class="fas fa-cog mr-2"></i> 系统设置
+                            </a>
+                        </div>
+                    </div>
+                    <div class="flex items-center">
+                        <div class="ml-3 relative">
+                            <div class="flex items-center">
+                                <div class="bg-purple-100 text-purple-800 rounded-full p-1 mr-2">
+                                    <i class="fas fa-user-shield text-sm"></i>
+                                </div>
+                                <span class="text-sm font-medium text-gray-700">超级管理员</span>
+                                <div class="ml-1">
+                                    <button type="button" class="bg-white p-1 rounded-full text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500" id="userMenuButton">
+                                        <span class="sr-only">打开用户菜单</span>
+                                        <i class="fas fa-chevron-down text-xs"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- 主内容区域 -->
+        <main class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+            <!-- 公司管理模块 -->
+            <div id="companiesModule" class="module-content">
+                <div class="mb-8">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h1 class="text-3xl font-bold text-gray-900">公司管理</h1>
+                            <p class="text-gray-600 mt-2">管理系统中的所有公司信息</p>
+                        </div>
+                        <div>
+                            <button id="addCompanyBtn" class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center">
+                                <i class="fas fa-plus mr-2"></i> 添加公司
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 公司列表 -->
+                <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">公司名称</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">简称</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">联系人</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">联系电话</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">服务开始日期</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">服务费用</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">引流人员</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">转化人员</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">服务人员</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状态</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="companyTable" class="bg-white divide-y divide-gray-200">
+                                <!-- 公司数据将通过JavaScript填充 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 用户管理模块 -->
+            <div id="usersModule" class="module-content hidden">
+                <div class="mb-8">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h1 class="text-3xl font-bold text-gray-900">用户管理</h1>
+                            <p class="text-gray-600 mt-2">管理系统用户及其在各公司的权限</p>
+                        </div>
+                        <div>
+                            <button id="addUserBtn" class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center">
+                                <i class="fas fa-plus mr-2"></i> 添加用户
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 用户列表 -->
+                <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">用户名</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">姓名</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">角色</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状态</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">关联公司</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="userTable" class="bg-white divide-y divide-gray-200">
+                                <!-- 用户数据将通过JavaScript填充 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 系统设置模块 -->
+            <div id="systemModule" class="module-content hidden">
+                <div class="mb-8">
+                    <h1 class="text-3xl font-bold text-gray-900">系统设置</h1>
+                    <p class="text-gray-600 mt-2">管理系统级别的配置参数</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- 基本设置 -->
+                    <div class="bg-white rounded-xl shadow-md p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-6">基本设置</h3>
+                        <form id="systemSettingsForm" class="space-y-6">
+                            <div>
+                                <label for="systemName" class="block text-sm font-medium text-gray-700 mb-1">系统名称</label>
+                                <input type="text" id="systemName" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" value="企业财务流水账管理系统">
+                            </div>
+
+                            <div>
+                                <label for="systemVersion" class="block text-sm font-medium text-gray-700 mb-1">系统版本</label>
+                                <input type="text" id="systemVersion" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" value="1.0.0">
+                            </div>
+
+                            <div>
+                                <label for="defaultDateFormat" class="block text-sm font-medium text-gray-700 mb-1">默认日期格式</label>
+                                <select id="defaultDateFormat" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                                    <option value="YYYY-MM-DD" selected>YYYY-MM-DD</option>
+                                    <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+                                    <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+                                </select>
+                            </div>
+
+                            <div class="flex justify-end space-x-4 pt-4 border-t border-gray-200">
+                                <button type="button" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors">
+                                    取消
+                                </button>
+                                <button type="submit" class="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors flex items-center">
+                                    <i class="fas fa-save mr-2"></i> 保存设置
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- 安全设置 -->
+                    <div class="bg-white rounded-xl shadow-md p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-6">安全设置</h3>
+                        <div class="space-y-6">
+                            <div>
+                                <label class="flex items-center">
+                                    <input type="checkbox" id="enableRegistration" class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded">
+                                    <span class="ml-2 block text-sm text-gray-700">启用用户注册</span>
+                                </label>
+                                <p class="mt-1 text-sm text-gray-500">允许新用户自行注册账号</p>
+                            </div>
+
+                            <div>
+                                <label class="flex items-center">
+                                    <input type="checkbox" id="enableCaptcha" class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded">
+                                    <span class="ml-2 block text-sm text-gray-700">启用验证码</span>
+                                </label>
+                                <p class="mt-1 text-sm text-gray-500">登录和注册时使用验证码</p>
+                            </div>
+
+                            <div>
+                                <label for="sessionTimeout" class="block text-sm font-medium text-gray-700 mb-1">会话超时时间（分钟）</label>
+                                <input type="number" id="sessionTimeout" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" value="30">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 添加公司模态框 -->
+    <div id="addCompanyModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md transform transition-all">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-gray-900">添加公司</h3>
+                <button class="close-modal-btn text-gray-400 hover:text-gray-500">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <form id="addCompanyForm" class="space-y-4">
+                <div>
+                    <label for="companyName" class="block text-sm font-medium text-gray-700 mb-1">公司名称 <span class="text-red-500">*</span></label>
+                    <input type="text" id="companyName" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="输入公司全称">
+                </div>
+                <div>
+                    <label for="shortName" class="block text-sm font-medium text-gray-700 mb-1">公司简称 <span class="text-red-500">*</span></label>
+                    <input type="text" id="shortName" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="输入公司简称">
+                </div>
+                <div>
+                    <label for="contactPerson" class="block text-sm font-medium text-gray-700 mb-1">联系人</label>
+                    <input type="text" id="contactPerson" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="输入联系人姓名">
+                </div>
+                <div>
+                    <label for="contactPhone" class="block text-sm font-medium text-gray-700 mb-1">联系电话</label>
+                    <input type="text" id="contactPhone" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="输入联系电话">
+                </div>
+                <div>
+                    <label for="serviceStartDate" class="block text-sm font-medium text-gray-700 mb-1">服务开始日期</label>
+                    <input type="date" id="serviceStartDate" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                </div>
+                <div>
+                    <label for="serviceFee" class="block text-sm font-medium text-gray-700 mb-1">服务费用</label>
+                    <input type="number" id="serviceFee" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="输入服务费用">
+                </div>
+                <div>
+                    <label for="drainagePerson" class="block text-sm font-medium text-gray-700 mb-1">引流人员</label>
+                    <input type="text" id="drainagePerson" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="输入引流人员">
+                </div>
+                <div>
+                    <label for="conversionPerson" class="block text-sm font-medium text-gray-700 mb-1">转化人员</label>
+                    <input type="text" id="conversionPerson" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="输入转化人员">
+                </div>
+                <div>
+                    <label for="servicePerson" class="block text-sm font-medium text-gray-700 mb-1">服务人员</label>
+                    <input type="text" id="servicePerson" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="输入服务人员">
+                </div>
+                <div>
+                    <label for="address" class="block text-sm font-medium text-gray-700 mb-1">公司地址</label>
+                    <textarea id="address" rows="2" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="输入公司地址"></textarea>
+                </div>
+                <div class="flex justify-end space-x-4 pt-4 border-t border-gray-200">
+                    <button type="button" class="close-modal-btn px-6 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors">
+                        取消
+                    </button>
+                    <button type="submit" class="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors flex items-center">
+                        <i class="fas fa-plus mr-2"></i> 添加
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 编辑公司模态框 -->
+    <div id="editCompanyModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md transform transition-all">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-gray-900">编辑公司</h3>
+                <button class="close-modal-btn text-gray-400 hover:text-gray-500">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <form id="editCompanyForm" class="space-y-4">
+                <div>
+                    <label for="editCompanyName" class="block text-sm font-medium text-gray-700 mb-1">公司名称 <span class="text-red-500">*</span></label>
+                    <input type="text" id="editCompanyName" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="输入公司全称">
+                </div>
+                <div>
+                    <label for="editShortName" class="block text-sm font-medium text-gray-700 mb-1">公司简称 <span class="text-red-500">*</span></label>
+                    <input type="text" id="editShortName" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="输入公司简称">
+                </div>
+                <div>
+                    <label for="editContactPerson" class="block text-sm font-medium text-gray-700 mb-1">联系人</label>
+                    <input type="text" id="editContactPerson" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="输入联系人姓名">
+                </div>
+                <div>
+                    <label for="editContactPhone" class="block text-sm font-medium text-gray-700 mb-1">联系电话</label>
+                    <input type="text" id="editContactPhone" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="输入联系电话">
+                </div>
+                <div>
+                    <label for="editServiceStartDate" class="block text-sm font-medium text-gray-700 mb-1">服务开始日期</label>
+                    <input type="date" id="editServiceStartDate" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                </div>
+                <div>
+                    <label for="editServiceFee" class="block text-sm font-medium text-gray-700 mb-1">服务费用</label>
+                    <input type="number" id="editServiceFee" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="输入服务费用">
+                </div>
+                <div>
+                    <label for="editDrainagePerson" class="block text-sm font-medium text-gray-700 mb-1">引流人员</label>
+                    <input type="text" id="editDrainagePerson" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="输入引流人员">
+                </div>
+                <div>
+                    <label for="editConversionPerson" class="block text-sm font-medium text-gray-700 mb-1">转化人员</label>
+                    <input type="text" id="editConversionPerson" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="输入转化人员">
+                </div>
+                <div>
+                    <label for="editServicePerson" class="block text-sm font-medium text-gray-700 mb-1">服务人员</label>
+                    <input type="text" id="editServicePerson" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="输入服务人员">
+                </div>
+                <div>
+                    <label for="editAddress" class="block text-sm font-medium text-gray-700 mb-1">公司地址</label>
+                    <textarea id="editAddress" rows="2" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="输入公司地址"></textarea>
+                </div>
+                <div class="flex justify-end space-x-4 pt-4 border-t border-gray-200">
+                    <button type="button" class="close-modal-btn px-6 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors">
+                        取消
+                    </button>
+                    <button type="submit" class="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors flex items-center">
+                        <i class="fas fa-save mr-2"></i> 保存
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 编辑用户模态框 -->
+    <div id="editUserModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md transform transition-all">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-gray-900">编辑用户</h3>
+                <button class="close-modal-btn text-gray-400 hover:text-gray-500">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <form id="editUserForm" class="space-y-4">
+                <div>
+                    <label for="editUserUsername" class="block text-sm font-medium text-gray-700 mb-1">用户名 <span class="text-red-500">*</span></label>
+                    <input type="text" id="editUserUsername" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="输入用户名">
+                </div>
+                <div>
+                    <label for="editUserPassword" class="block text-sm font-medium text-gray-700 mb-1">密码（留空表示不修改）</label>
+                    <input type="password" id="editUserPassword" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="输入密码">
+                </div>
+                <div>
+                    <label for="editUserName" class="block text-sm font-medium text-gray-700 mb-1">姓名 <span class="text-red-500">*</span></label>
+                    <input type="text" id="editUserName" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="输入姓名">
+                </div>
+                <div>
+                    <label for="editUserPhone" class="block text-sm font-medium text-gray-700 mb-1">手机号 <span class="text-red-500">*</span></label>
+                    <input type="text" id="editUserPhone" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="输入手机号">
+                </div>
+                <div>
+                    <label for="editUserStatus" class="block text-sm font-medium text-gray-700 mb-1">状态</label>
+                    <select id="editUserStatus" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                        <option value="enabled">启用</option>
+                        <option value="disabled">禁用</option>
+                    </select>
+                </div>
+                <div class="flex justify-end space-x-4 pt-4 border-t border-gray-200">
+                    <button type="button" class="close-modal-btn px-6 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors">
+                        取消
+                    </button>
+                    <button type="submit" class="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors flex items-center">
+                        <i class="fas fa-save mr-2"></i> 保存
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 添加用户模态框 -->
+    <div id="addUserModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md transform transition-all">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-gray-900">添加用户</h3>
+                <button class="close-modal-btn text-gray-400 hover:text-gray-500">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <form id="addUserForm" class="space-y-4">
+                <div>
+                    <label for="userUsername" class="block text-sm font-medium text-gray-700 mb-1">用户名 <span class="text-red-500">*</span></label>
+                    <input type="text" id="userUsername" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="输入用户名">
+                </div>
+                <div>
+                    <label for="userPassword" class="block text-sm font-medium text-gray-700 mb-1">密码 <span class="text-red-500">*</span></label>
+                    <input type="password" id="userPassword" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="输入密码">
+                </div>
+                <div>
+                    <label for="userName" class="block text-sm font-medium text-gray-700 mb-1">姓名 <span class="text-red-500">*</span></label>
+                    <input type="text" id="userName" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="输入姓名">
+                </div>
+                <div>
+                    <label for="userPhone" class="block text-sm font-medium text-gray-700 mb-1">手机号 <span class="text-red-500">*</span></label>
+                    <input type="text" id="userPhone" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="输入手机号">
+                </div>
+                <div>
+                    <label for="userStatus" class="block text-sm font-medium text-gray-700 mb-1">状态</label>
+                    <select id="userStatus" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                        <option value="enabled">启用</option>
+                        <option value="disabled">禁用</option>
+                    </select>
+                </div>
+                <div class="flex justify-end space-x-4 pt-4 border-t border-gray-200">
+                    <button type="button" class="close-modal-btn px-6 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors">
+                        取消
+                    </button>
+                    <button type="submit" class="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors flex items-center">
+                        <i class="fas fa-plus mr-2"></i> 添加
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 检查登录状态
+            checkLoginStatus();
+            
+            // 登录表单处理
+            const loginForm = document.getElementById('loginForm');
+            loginForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+                const remember = document.getElementById('remember').checked;
+                
+                // 简单的登录验证
+                if (username === 'admin' && password === 'admin123') {
+                    // 保存登录状态
+                    if (remember) {
+                        localStorage.setItem('consoleLoggedIn', 'true');
+                    }
+                    
+                    document.getElementById('loginPage').classList.add('hidden');
+                    document.getElementById('consolePage').classList.remove('hidden');
+                    
+                    // 初始化控制台
+                    initConsole();
+                } else {
+                    alert('用户名或密码错误，请使用超级管理员账号登录');
+                }
+            });
+            
+            // 检查登录状态
+            function checkLoginStatus() {
+                if (localStorage.getItem('consoleLoggedIn') === 'true') {
+                    document.getElementById('loginPage').classList.add('hidden');
+                    document.getElementById('consolePage').classList.remove('hidden');
+                    initConsole();
+                }
+            }
+
+            // 初始化控制台
+            function initConsole() {
+                // 加载公司数据
+                loadCompanyData();
+                // 加载用户数据
+                loadUserData();
+                // 设置导航事件
+                setupNavigation();
+                // 设置表单处理
+                setupForms();
+            }
+
+            // 加载公司数据
+            function loadCompanyData() {
+                // 模拟公司数据
+                const companies = [
+                    {id: 1, company_name: '许昌爱佳网络科技有限公司', short_name: '爱佳网络', contact_person: '张总', contact_phone: '13800138000', service_start_date: '2026-01-01', service_fee: 10000,引流人员: '小王', 转化人员: '小李', 服务人员: '小张', status: 'active'},
+                    {id: 2, company_name: '许昌雷韵文化传媒有限公司', short_name: '雷韵文化', contact_person: '李总', contact_phone: '13900139000', service_start_date: '2026-01-15', service_fee: 8000,引流人员: '小陈', 转化人员: '小吴', 服务人员: '小郑', status: 'active'}
+                ];
+
+                // 填充公司表格
+                const companyTable = document.getElementById('companyTable');
+                companyTable.innerHTML = '';
+                
+                companies.forEach(company => {
+                    const row = document.createElement('tr');
+                    row.className = 'hover:bg-gray-50 transition-colors';
+                    
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${company.company_name}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${company.short_name}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${company.contact_person}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${company.contact_phone}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${company.service_start_date}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${company.service_fee}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${company.引流人员}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${company.转化人员}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${company.服务人员}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${company.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                                ${company.status === 'active' ? '启用' : '禁用'}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <div class="flex space-x-2">
+                                <button class="edit-company-btn text-blue-600 hover:text-blue-800" data-id="${company.id}">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="delete-company-btn text-red-600 hover:text-red-800" data-id="${company.id}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    `;
+                    
+                    companyTable.appendChild(row);
+                });
+                
+                // 添加编辑和删除按钮事件
+                document.querySelectorAll('.edit-company-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const companyId = this.getAttribute('data-id');
+                        const company = companies.find(c => c.id == companyId);
+                        
+                        if (company) {
+                            // 打开编辑模态框并填充数据
+                            document.getElementById('editCompanyModal').classList.remove('hidden');
+                            document.getElementById('editCompanyName').value = company.company_name;
+                            document.getElementById('editShortName').value = company.short_name;
+                            document.getElementById('editContactPerson').value = company.contact_person;
+                            document.getElementById('editContactPhone').value = company.contact_phone;
+                            document.getElementById('editServiceStartDate').value = company.service_start_date;
+                            document.getElementById('editServiceFee').value = company.service_fee;
+                            document.getElementById('editDrainagePerson').value = company.引流人员;
+                            document.getElementById('editConversionPerson').value = company.转化人员;
+                            document.getElementById('editServicePerson').value = company.服务人员;
+                            document.getElementById('editAddress').value = company.address || '';
+                            
+                            // 存储当前编辑的公司ID
+                            window.currentEditingCompanyId = companyId;
+                        }
+                    });
+                });
+                
+                document.querySelectorAll('.delete-company-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const companyId = this.getAttribute('data-id');
+                        const company = companies.find(c => c.id == companyId);
+                        
+                        if (company && confirm(`确定要删除公司 "${company.company_name}" 吗？`)) {
+                            // 这里可以添加删除公司的逻辑
+                            alert(`公司 "${company.company_name}" 删除成功！`);
+                            loadCompanyData(); // 重新加载公司数据
+                        }
+                    });
+                });
+                
+                // 编辑公司表单提交
+                const editCompanyForm = document.getElementById('editCompanyForm');
+                if (editCompanyForm) {
+                    editCompanyForm.addEventListener('submit', function(e) {
+                        e.preventDefault();
+                        
+                        const companyId = window.currentEditingCompanyId;
+                        const companyName = document.getElementById('editCompanyName').value;
+                        const shortName = document.getElementById('editShortName').value;
+                        const contactPerson = document.getElementById('editContactPerson').value;
+                        const contactPhone = document.getElementById('editContactPhone').value;
+                        const serviceStartDate = document.getElementById('editServiceStartDate').value;
+                        const serviceFee = document.getElementById('editServiceFee').value;
+                        const drainagePerson = document.getElementById('editDrainagePerson').value;
+                        const conversionPerson = document.getElementById('editConversionPerson').value;
+                        const servicePerson = document.getElementById('editServicePerson').value;
+                        const address = document.getElementById('editAddress').value;
+                        
+                        if (companyName && shortName) {
+                            alert(`公司 "${companyName}" 更新成功！`);
+                            document.getElementById('editCompanyModal').classList.add('hidden');
+                            this.reset();
+                            loadCompanyData();
+                            window.currentEditingCompanyId = null;
+                        } else {
+                            alert('请填写所有必填字段');
+                        }
+                    });
+                }
+            }
+
+            // 加载用户数据
+            function loadUserData() {
+                // 模拟用户数据
+                const users = [
+                    {id: 1, username: 'admin', name: '系统管理员', role: 'admin', status: 'enabled', companies: ['爱佳网络', '雷韵文化']}
+                ];
+
+                // 填充用户表格
+                const userTable = document.getElementById('userTable');
+                userTable.innerHTML = '';
+                
+                users.forEach(user => {
+                    const row = document.createElement('tr');
+                    row.className = 'hover:bg-gray-50 transition-colors';
+                    
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${user.username}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${user.name}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.role === 'admin' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'}">
+                                ${user.role === 'admin' ? '超级管理员' : '普通用户'}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.status === 'enabled' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                                ${user.status === 'enabled' ? '启用' : '禁用'}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${user.companies.join(', ')}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <div class="flex space-x-2">
+                                <button class="edit-user-btn text-blue-600 hover:text-blue-800" data-id="${user.id}">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="delete-user-btn ${user.role === 'admin' ? 'text-gray-400 cursor-not-allowed' : 'text-red-600 hover:text-red-800'}" data-id="${user.id}" ${user.role === 'admin' ? 'disabled' : ''}>
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    `;
+                    
+                    userTable.appendChild(row);
+                });
+                
+                // 添加编辑和删除按钮事件
+                document.querySelectorAll('.edit-user-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const userId = this.getAttribute('data-id');
+                        const user = users.find(u => u.id == userId);
+                        
+                        if (user) {
+                            // 打开编辑模态框并填充数据
+                            document.getElementById('editUserModal').classList.remove('hidden');
+                            document.getElementById('editUserUsername').value = user.username;
+                            document.getElementById('editUserName').value = user.name;
+                            document.getElementById('editUserPhone').value = user.phone || '';
+                            document.getElementById('editUserStatus').value = user.status;
+                            
+                            // 存储当前编辑的用户ID
+                            window.currentEditingUserId = userId;
+                        }
+                    });
+                });
+                
+                document.querySelectorAll('.delete-user-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        if (this.disabled) return;
+                        
+                        const userId = this.getAttribute('data-id');
+                        const user = users.find(u => u.id == userId);
+                        
+                        if (user && confirm(`确定要删除用户 "${user.username}" 吗？`)) {
+                            // 这里可以添加删除用户的逻辑
+                            alert(`用户 "${user.username}" 删除成功！`);
+                            loadUserData(); // 重新加载用户数据
+                        }
+                    });
+                });
+                
+                // 编辑用户表单提交
+                const editUserForm = document.getElementById('editUserForm');
+                if (editUserForm) {
+                    editUserForm.addEventListener('submit', function(e) {
+                        e.preventDefault();
+                        
+                        const userId = window.currentEditingUserId;
+                        const username = document.getElementById('editUserUsername').value;
+                        const password = document.getElementById('editUserPassword').value;
+                        const name = document.getElementById('editUserName').value;
+                        const phone = document.getElementById('editUserPhone').value;
+                        const status = document.getElementById('editUserStatus').value;
+                        
+                        if (username && name && phone) {
+                            alert(`用户 "${username}" 更新成功！`);
+                            document.getElementById('editUserModal').classList.add('hidden');
+                            this.reset();
+                            loadUserData();
+                            window.currentEditingUserId = null;
+                        } else {
+                            alert('请填写所有必填字段');
+                        }
+                    });
+                }
+            }
+
+            // 设置导航事件
+            function setupNavigation() {
+                // 主导航
+                const navLinks = document.querySelectorAll('.nav-link');
+                navLinks.forEach(link => {
+                    link.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        
+                        // 更新导航样式
+                        navLinks.forEach(l => {
+                            l.classList.remove('text-purple-600', 'border-purple-200');
+                            l.classList.add('text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+                        });
+                        this.classList.remove('text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+                        this.classList.add('text-purple-600', 'border-purple-200');
+                        
+                        // 显示对应模块
+                        const targetModule = this.getAttribute('data-target');
+                        document.querySelectorAll('.module-content').forEach(module => {
+                            module.classList.add('hidden');
+                        });
+                        document.getElementById(`${targetModule}Module`).classList.remove('hidden');
+                    });
+                });
+            }
+
+            // 设置表单处理
+            function setupForms() {
+                // 系统设置表单
+                const systemSettingsForm = document.getElementById('systemSettingsForm');
+                systemSettingsForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    alert('系统设置保存成功！');
+                });
+
+                // 添加公司模态框
+                const addCompanyBtn = document.getElementById('addCompanyBtn');
+                const addCompanyModal = document.getElementById('addCompanyModal');
+                const closeModalBtns = document.querySelectorAll('.close-modal-btn');
+                const addCompanyForm = document.getElementById('addCompanyForm');
+
+                addCompanyBtn.addEventListener('click', function() {
+                    addCompanyModal.classList.remove('hidden');
+                });
+
+                closeModalBtns.forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        addCompanyModal.classList.add('hidden');
+                        document.getElementById('addUserModal').classList.add('hidden');
+                        document.getElementById('editCompanyModal').classList.add('hidden');
+                        document.getElementById('editUserModal').classList.add('hidden');
+                    });
+                });
+
+                addCompanyForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const companyName = document.getElementById('companyName').value;
+                    const shortName = document.getElementById('shortName').value;
+                    const serviceStartDate = document.getElementById('serviceStartDate').value;
+                    const serviceFee = document.getElementById('serviceFee').value;
+                    const drainagePerson = document.getElementById('drainagePerson').value;
+                    const conversionPerson = document.getElementById('conversionPerson').value;
+                    const servicePerson = document.getElementById('servicePerson').value;
+                    
+                    if (companyName && shortName) {
+                        alert(`公司 "${companyName}" 添加成功！`);
+                        addCompanyModal.classList.add('hidden');
+                        this.reset();
+                        loadCompanyData();
+                    } else {
+                        alert('请填写所有必填字段');
+                    }
+                });
+
+                // 添加用户模态框
+                const addUserBtn = document.getElementById('addUserBtn');
+                const addUserModal = document.getElementById('addUserModal');
+                const addUserForm = document.getElementById('addUserForm');
+
+                addUserBtn.addEventListener('click', function() {
+                    addUserModal.classList.remove('hidden');
+                });
+
+                addUserForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const username = document.getElementById('userUsername').value;
+                    const password = document.getElementById('userPassword').value;
+                    const name = document.getElementById('userName').value;
+                    const phone = document.getElementById('userPhone').value;
+                    const status = document.getElementById('userStatus').value;
+                    
+                    if (username && password && name && phone) {
+                        alert(`用户 "${username}" 添加成功！`);
+                        addUserModal.classList.add('hidden');
+                        this.reset();
+                        loadUserData();
+                    } else {
+                        alert('请填写所有必填字段');
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
