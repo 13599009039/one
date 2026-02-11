@@ -1,0 +1,658 @@
+// 服务管理模块
+
+// 当前编辑的服务/服务包ID
+let currentEditServiceId = null;
+let currentEditPackageId = null;
+
+// 初始化商品/服务页面
+function initServicesPage() {
+    renderServicesList();
+}
+
+// 初始化服务包页面
+function initServicePackagesPage() {
+    renderServicePackagesList();
+}
+
+// 渲染商品/服务列表
+function renderServicesList() {
+    const result = db.getServices();
+    if (!result.success) return;
+    
+    const services = result.data;
+    const tbody = document.getElementById('servicesTableBody');
+    if (!tbody) return;
+    
+    const teams = db.getTeams().data || [];
+    
+    tbody.innerHTML = services.map(service => {
+        const team = teams.find(t => t.id === service.team_id);
+        const typeLabel = service.type === 'product' ? 
+            '<span class="px-2 py-0.5 bg-green-100 text-green-800 rounded text-xs">商品</span>' :
+            '<span class="px-2 py-0.5 bg-blue-100 text-blue-800 rounded text-xs">服务</span>';
+        const statusLabel = service.status === 'active' ?
+            '<span class="px-2 py-0.5 bg-green-100 text-green-800 rounded text-xs">启用</span>' :
+            '<span class="px-2 py-0.5 bg-gray-100 text-gray-800 rounded text-xs">停用</span>';
+        const stockDisplay = service.type === 'product' ? 
+            `<span class="${service.stock <= 10 ? 'text-red-600 font-bold' : ''}">${service.stock}</span>` : 
+            '<span class="text-gray-400">-</span>';
+        
+        return `
+            <tr class="hover:bg-gray-50">
+                <td class="px-4 py-3 text-sm text-gray-600">${service.code}</td>
+                <td class="px-4 py-3">
+                    <div class="font-medium text-gray-900">${service.name}</div>
+                    <div class="text-xs text-gray-500">${team?.name || '-'}</div>
+                </td>
+                <td class="px-4 py-3">${typeLabel}</td>
+                <td class="px-4 py-3 text-sm text-gray-600">${service.category || '-'}</td>
+                <td class="px-4 py-3 text-right text-sm font-medium text-gray-900">¥${service.retail_price.toFixed(2)}</td>
+                <td class="px-4 py-3 text-right text-sm text-gray-600">¥${service.cost_price.toFixed(2)}</td>
+                <td class="px-4 py-3 text-center">${stockDisplay}</td>
+                <td class="px-4 py-3 text-center">${statusLabel}</td>
+                <td class="px-4 py-3 text-center">
+                    <button onclick="viewServicePrices(${service.id})" class="text-blue-600 hover:text-blue-800 mr-2" title="查看价格">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button onclick="editService(${service.id})" class="text-green-600 hover:text-green-800 mr-2" title="编辑">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button onclick="deleteService(${service.id})" class="text-red-600 hover:text-red-800" title="删除">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// 渲染服务包列表
+function renderServicePackagesList() {
+    const result = db.getServicePackages();
+    if (!result.success) return;
+    
+    const packages = result.data;
+    const services = db.getServices().data || [];
+    const tbody = document.getElementById('servicePackagesTableBody');
+    if (!tbody) return;
+    
+    tbody.innerHTML = packages.map(pkg => {
+        const itemsText = pkg.items.map(item => {
+            const service = services.find(s => s.id === item.service_id);
+            return service ? `${service.name} x${item.quantity}` : '';
+        }).filter(Boolean).join(', ');
+        
+        const statusLabel = pkg.status === 'active' ?
+            '<span class="px-2 py-0.5 bg-green-100 text-green-800 rounded text-xs">启用</span>' :
+            '<span class="px-2 py-0.5 bg-gray-100 text-gray-800 rounded text-xs">停用</span>';
+        
+        return `
+            <tr class="hover:bg-gray-50">
+                <td class="px-4 py-3 text-sm text-gray-600">${pkg.code}</td>
+                <td class="px-4 py-3 font-medium text-gray-900">${pkg.name}</td>
+                <td class="px-4 py-3 text-sm text-gray-600 max-w-xs truncate" title="${itemsText}">${itemsText}</td>
+                <td class="px-4 py-3 text-right text-sm font-medium text-gray-900">¥${pkg.retail_price.toFixed(2)}</td>
+                <td class="px-4 py-3 text-right text-sm text-gray-600">¥${pkg.cost_price.toFixed(2)}</td>
+                <td class="px-4 py-3 text-center">${statusLabel}</td>
+                <td class="px-4 py-3 text-center">
+                    <button onclick="editServicePackage(${pkg.id})" class="text-green-600 hover:text-green-800 mr-2" title="编辑">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button onclick="deleteServicePackage(${pkg.id})" class="text-red-600 hover:text-red-800" title="删除">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// 查看服务价格详情
+function viewServicePrices(id) {
+    const services = db.getServices().data || [];
+    const service = services.find(s => s.id === id);
+    if (!service) return;
+    
+    const priceHtml = `
+        <div class="grid grid-cols-2 gap-4 text-sm">
+            <div class="bg-gray-50 p-3 rounded">
+                <p class="text-gray-500">内部服务价</p>
+                <p class="font-bold text-lg">¥${service.internal_price.toFixed(2)}</p>
+            </div>
+            <div class="bg-gray-50 p-3 rounded">
+                <p class="text-gray-500">成本价</p>
+                <p class="font-bold text-lg">¥${service.cost_price.toFixed(2)}</p>
+            </div>
+            <div class="bg-gray-50 p-3 rounded">
+                <p class="text-gray-500">供货价</p>
+                <p class="font-bold text-lg">¥${service.supply_price.toFixed(2)}</p>
+            </div>
+            <div class="bg-gray-50 p-3 rounded">
+                <p class="text-gray-500">运营成本</p>
+                <p class="font-bold text-lg">¥${service.operation_cost.toFixed(2)}</p>
+            </div>
+            <div class="bg-blue-50 p-3 rounded">
+                <p class="text-blue-600">零售价</p>
+                <p class="font-bold text-lg text-blue-600">¥${service.retail_price.toFixed(2)}</p>
+            </div>
+            <div class="bg-green-50 p-3 rounded">
+                <p class="text-green-600">批发价</p>
+                <p class="font-bold text-lg text-green-600">¥${service.wholesale_price.toFixed(2)}</p>
+            </div>
+            <div class="bg-purple-50 p-3 rounded col-span-2">
+                <p class="text-purple-600">代理价</p>
+                <p class="font-bold text-lg text-purple-600">¥${service.agent_price.toFixed(2)}</p>
+            </div>
+        </div>
+    `;
+    
+    showModalAlert(`${service.name} - 价格详情`, priceHtml);
+}
+
+// 打开服务编辑模态框
+function openServiceModal(id = null) {
+    currentEditServiceId = id;
+    const modal = document.getElementById('serviceModal');
+    if (!modal) {
+        createServiceModal();
+    }
+    
+    const teams = db.getTeams().data || [];
+    const teamSelect = document.getElementById('serviceTeamId');
+    if (teamSelect) {
+        teamSelect.innerHTML = '<option value="">请选择团队</option>' + 
+            teams.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+    }
+    
+    if (id) {
+        const services = db.getServices().data || [];
+        const service = services.find(s => s.id === id);
+        if (service) {
+            document.getElementById('serviceModalTitle').innerText = '编辑商品/服务';
+            document.getElementById('serviceName').value = service.name;
+            document.getElementById('serviceCode').value = service.code;
+            document.getElementById('serviceType').value = service.type;
+            document.getElementById('serviceCategory').value = service.category || '';
+            document.getElementById('serviceTeamId').value = service.team_id || '';
+            document.getElementById('serviceUnit').value = service.unit || '';
+            document.getElementById('serviceDescription').value = service.description || '';
+            document.getElementById('serviceInternalPrice').value = service.internal_price;
+            document.getElementById('serviceCostPrice').value = service.cost_price;
+            document.getElementById('serviceSupplyPrice').value = service.supply_price;
+            document.getElementById('serviceOperationCost').value = service.operation_cost;
+            document.getElementById('serviceRetailPrice').value = service.retail_price;
+            document.getElementById('serviceWholesalePrice').value = service.wholesale_price;
+            document.getElementById('serviceAgentPrice').value = service.agent_price;
+            document.getElementById('serviceStock').value = service.stock || 0;
+        }
+    } else {
+        document.getElementById('serviceModalTitle').innerText = '新增商品/服务';
+        document.getElementById('serviceForm').reset();
+    }
+    
+    document.getElementById('serviceModal').classList.remove('hidden');
+}
+
+// 创建服务模态框
+function createServiceModal() {
+    const modalHtml = `
+        <div id="serviceModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+            <div class="relative mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white mt-10">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 id="serviceModalTitle" class="text-xl font-bold text-gray-900">新增商品/服务</h3>
+                    <button onclick="closeServiceModal()" class="text-gray-400 hover:text-gray-500">
+                        <span class="text-2xl">&times;</span>
+                    </button>
+                </div>
+                <form id="serviceForm" onsubmit="saveService(event)">
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">名称 *</label>
+                            <input type="text" id="serviceName" required class="w-full px-3 py-2 border rounded-lg">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">编码</label>
+                            <input type="text" id="serviceCode" class="w-full px-3 py-2 border rounded-lg" placeholder="自动生成">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">类型 *</label>
+                            <select id="serviceType" required class="w-full px-3 py-2 border rounded-lg">
+                                <option value="service">服务</option>
+                                <option value="product">商品</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">分类</label>
+                            <input type="text" id="serviceCategory" class="w-full px-3 py-2 border rounded-lg">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">负责团队</label>
+                            <select id="serviceTeamId" class="w-full px-3 py-2 border rounded-lg">
+                                <option value="">请选择团队</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">单位</label>
+                            <input type="text" id="serviceUnit" class="w-full px-3 py-2 border rounded-lg" placeholder="如：条、场、个">
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">描述</label>
+                        <textarea id="serviceDescription" rows="2" class="w-full px-3 py-2 border rounded-lg"></textarea>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-lg mb-4">
+                        <h4 class="font-semibold text-gray-700 mb-3">价格体系</h4>
+                        <div class="grid grid-cols-4 gap-3">
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">内部服务价</label>
+                                <input type="number" id="serviceInternalPrice" step="0.01" class="w-full px-2 py-1.5 border rounded text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">成本价</label>
+                                <input type="number" id="serviceCostPrice" step="0.01" class="w-full px-2 py-1.5 border rounded text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">供货价</label>
+                                <input type="number" id="serviceSupplyPrice" step="0.01" class="w-full px-2 py-1.5 border rounded text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">运营成本</label>
+                                <input type="number" id="serviceOperationCost" step="0.01" class="w-full px-2 py-1.5 border rounded text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-blue-600 mb-1">零售价 *</label>
+                                <input type="number" id="serviceRetailPrice" step="0.01" required class="w-full px-2 py-1.5 border border-blue-300 rounded text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-green-600 mb-1">批发价</label>
+                                <input type="number" id="serviceWholesalePrice" step="0.01" class="w-full px-2 py-1.5 border rounded text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-purple-600 mb-1">代理价</label>
+                                <input type="number" id="serviceAgentPrice" step="0.01" class="w-full px-2 py-1.5 border rounded text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">库存数量</label>
+                                <input type="number" id="serviceStock" class="w-full px-2 py-1.5 border rounded text-sm">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" onclick="closeServiceModal()" class="px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-50">取消</button>
+                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">保存</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
+
+// 关闭服务模态框
+function closeServiceModal() {
+    document.getElementById('serviceModal')?.classList.add('hidden');
+}
+
+// 保存服务
+function saveService(event) {
+    event.preventDefault();
+    
+    const serviceData = {
+        name: document.getElementById('serviceName').value,
+        code: document.getElementById('serviceCode').value,
+        type: document.getElementById('serviceType').value,
+        category: document.getElementById('serviceCategory').value,
+        team_id: parseInt(document.getElementById('serviceTeamId').value) || null,
+        unit: document.getElementById('serviceUnit').value,
+        description: document.getElementById('serviceDescription').value,
+        internal_price: parseFloat(document.getElementById('serviceInternalPrice').value) || 0,
+        cost_price: parseFloat(document.getElementById('serviceCostPrice').value) || 0,
+        supply_price: parseFloat(document.getElementById('serviceSupplyPrice').value) || 0,
+        operation_cost: parseFloat(document.getElementById('serviceOperationCost').value) || 0,
+        retail_price: parseFloat(document.getElementById('serviceRetailPrice').value) || 0,
+        wholesale_price: parseFloat(document.getElementById('serviceWholesalePrice').value) || 0,
+        agent_price: parseFloat(document.getElementById('serviceAgentPrice').value) || 0,
+        stock: serviceData.type === 'product' ? parseInt(document.getElementById('serviceStock').value) || 0 : null,
+        status: 'active'
+    };
+    
+    let result;
+    if (currentEditServiceId) {
+        result = db.updateService(currentEditServiceId, serviceData);
+    } else {
+        result = db.addService(serviceData);
+    }
+    
+    if (result.success) {
+        closeServiceModal();
+        renderServicesList();
+        showToast(currentEditServiceId ? '服务更新成功' : '服务添加成功', 'success');
+    } else {
+        showToast(result.message || '操作失败', 'error');
+    }
+}
+
+// 编辑服务
+function editService(id) {
+    openServiceModal(id);
+}
+
+// 删除服务
+function deleteService(id) {
+    if (confirm('确定要删除此商品/服务吗？')) {
+        const result = db.deleteService(id);
+        if (result.success) {
+            renderServicesList();
+            showToast('删除成功', 'success');
+        } else {
+            showToast(result.message || '删除失败', 'error');
+        }
+    }
+}
+
+// 打开服务包编辑模态框
+function openServicePackageModal(id = null) {
+    currentEditPackageId = id;
+    const modal = document.getElementById('servicePackageModal');
+    if (!modal) {
+        createServicePackageModal();
+    }
+    
+    const teams = db.getTeams().data || [];
+    const teamSelect = document.getElementById('packageTeamId');
+    if (teamSelect) {
+        teamSelect.innerHTML = '<option value="">请选择团队</option>' + 
+            teams.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+    }
+    
+    // 加载可选服务列表
+    renderPackageItemsSelector();
+    
+    if (id) {
+        const packages = db.getServicePackages().data || [];
+        const pkg = packages.find(p => p.id === id);
+        if (pkg) {
+            document.getElementById('packageModalTitle').innerText = '编辑服务包';
+            document.getElementById('packageName').value = pkg.name;
+            document.getElementById('packageCode').value = pkg.code;
+            document.getElementById('packageTeamId').value = pkg.team_id || '';
+            document.getElementById('packageDescription').value = pkg.description || '';
+            document.getElementById('packageInternalPrice').value = pkg.internal_price;
+            document.getElementById('packageCostPrice').value = pkg.cost_price;
+            document.getElementById('packageRetailPrice').value = pkg.retail_price;
+            document.getElementById('packageWholesalePrice').value = pkg.wholesale_price;
+            document.getElementById('packageAgentPrice').value = pkg.agent_price;
+            
+            // 设置已选项目
+            selectedPackageItems = [...pkg.items];
+            renderSelectedPackageItems();
+        }
+    } else {
+        document.getElementById('packageModalTitle').innerText = '新增服务包';
+        document.getElementById('packageForm').reset();
+        selectedPackageItems = [];
+        renderSelectedPackageItems();
+    }
+    
+    document.getElementById('servicePackageModal').classList.remove('hidden');
+}
+
+// 已选服务包项目
+let selectedPackageItems = [];
+
+// 渲染服务包项目选择器
+function renderPackageItemsSelector() {
+    const services = db.getServices().data || [];
+    const container = document.getElementById('packageItemsSelector');
+    if (!container) return;
+    
+    container.innerHTML = services.map(s => `
+        <div class="flex items-center justify-between p-2 border rounded hover:bg-gray-50">
+            <div>
+                <span class="font-medium">${s.name}</span>
+                <span class="text-xs text-gray-500 ml-2">¥${s.retail_price}</span>
+            </div>
+            <button type="button" onclick="addToPackage(${s.id})" class="text-blue-600 hover:text-blue-800">
+                <i class="fas fa-plus"></i>
+            </button>
+        </div>
+    `).join('');
+}
+
+// 添加项目到服务包
+function addToPackage(serviceId) {
+    const existing = selectedPackageItems.find(item => item.service_id === serviceId);
+    if (existing) {
+        existing.quantity++;
+    } else {
+        selectedPackageItems.push({ service_id: serviceId, quantity: 1 });
+    }
+    renderSelectedPackageItems();
+}
+
+// 渲染已选服务包项目
+function renderSelectedPackageItems() {
+    const services = db.getServices().data || [];
+    const container = document.getElementById('selectedPackageItems');
+    if (!container) return;
+    
+    if (selectedPackageItems.length === 0) {
+        container.innerHTML = '<p class="text-gray-400 text-sm">请从左侧添加项目</p>';
+        return;
+    }
+    
+    container.innerHTML = selectedPackageItems.map((item, index) => {
+        const service = services.find(s => s.id === item.service_id);
+        return `
+            <div class="flex items-center justify-between p-2 bg-blue-50 rounded">
+                <span class="font-medium text-sm">${service?.name || '未知'}</span>
+                <div class="flex items-center space-x-2">
+                    <button type="button" onclick="updatePackageItemQty(${index}, -1)" class="text-gray-500 hover:text-gray-700">-</button>
+                    <span class="w-8 text-center">${item.quantity}</span>
+                    <button type="button" onclick="updatePackageItemQty(${index}, 1)" class="text-gray-500 hover:text-gray-700">+</button>
+                    <button type="button" onclick="removePackageItem(${index})" class="text-red-500 hover:text-red-700 ml-2">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// 更新服务包项目数量
+function updatePackageItemQty(index, delta) {
+    selectedPackageItems[index].quantity += delta;
+    if (selectedPackageItems[index].quantity <= 0) {
+        selectedPackageItems.splice(index, 1);
+    }
+    renderSelectedPackageItems();
+}
+
+// 移除服务包项目
+function removePackageItem(index) {
+    selectedPackageItems.splice(index, 1);
+    renderSelectedPackageItems();
+}
+
+// 创建服务包模态框
+function createServicePackageModal() {
+    const modalHtml = `
+        <div id="servicePackageModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+            <div class="relative mx-auto p-5 border w-full max-w-3xl shadow-lg rounded-md bg-white mt-10">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 id="packageModalTitle" class="text-xl font-bold text-gray-900">新增服务包</h3>
+                    <button onclick="closeServicePackageModal()" class="text-gray-400 hover:text-gray-500">
+                        <span class="text-2xl">&times;</span>
+                    </button>
+                </div>
+                <form id="packageForm" onsubmit="saveServicePackage(event)">
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">名称 *</label>
+                            <input type="text" id="packageName" required class="w-full px-3 py-2 border rounded-lg">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">编码</label>
+                            <input type="text" id="packageCode" class="w-full px-3 py-2 border rounded-lg" placeholder="自动生成">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">负责团队</label>
+                            <select id="packageTeamId" class="w-full px-3 py-2 border rounded-lg">
+                                <option value="">请选择团队</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">描述</label>
+                            <input type="text" id="packageDescription" class="w-full px-3 py-2 border rounded-lg">
+                        </div>
+                    </div>
+                    <!-- 项目选择区域 -->
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">可选项目</label>
+                            <div id="packageItemsSelector" class="border rounded-lg p-2 max-h-48 overflow-y-auto space-y-2">
+                                <!-- 动态加载 -->
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">已选项目</label>
+                            <div id="selectedPackageItems" class="border rounded-lg p-2 min-h-48 max-h-48 overflow-y-auto space-y-2">
+                                <p class="text-gray-400 text-sm">请从左侧添加项目</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 价格设置 -->
+                    <div class="bg-gray-50 p-4 rounded-lg mb-4">
+                        <h4 class="font-semibold text-gray-700 mb-3">套餐价格</h4>
+                        <div class="grid grid-cols-5 gap-3">
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">内部价</label>
+                                <input type="number" id="packageInternalPrice" step="0.01" class="w-full px-2 py-1.5 border rounded text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">成本价</label>
+                                <input type="number" id="packageCostPrice" step="0.01" class="w-full px-2 py-1.5 border rounded text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-blue-600 mb-1">零售价 *</label>
+                                <input type="number" id="packageRetailPrice" step="0.01" required class="w-full px-2 py-1.5 border border-blue-300 rounded text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-green-600 mb-1">批发价</label>
+                                <input type="number" id="packageWholesalePrice" step="0.01" class="w-full px-2 py-1.5 border rounded text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-purple-600 mb-1">代理价</label>
+                                <input type="number" id="packageAgentPrice" step="0.01" class="w-full px-2 py-1.5 border rounded text-sm">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" onclick="closeServicePackageModal()" class="px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-50">取消</button>
+                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">保存</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
+
+// 关闭服务包模态框
+function closeServicePackageModal() {
+    document.getElementById('servicePackageModal')?.classList.add('hidden');
+}
+
+// 保存服务包
+function saveServicePackage(event) {
+    event.preventDefault();
+    
+    if (selectedPackageItems.length === 0) {
+        showToast('请至少添加一个项目', 'error');
+        return;
+    }
+    
+    const packageData = {
+        name: document.getElementById('packageName').value,
+        code: document.getElementById('packageCode').value,
+        team_id: parseInt(document.getElementById('packageTeamId').value) || null,
+        description: document.getElementById('packageDescription').value,
+        items: selectedPackageItems,
+        internal_price: parseFloat(document.getElementById('packageInternalPrice').value) || 0,
+        cost_price: parseFloat(document.getElementById('packageCostPrice').value) || 0,
+        retail_price: parseFloat(document.getElementById('packageRetailPrice').value) || 0,
+        wholesale_price: parseFloat(document.getElementById('packageWholesalePrice').value) || 0,
+        agent_price: parseFloat(document.getElementById('packageAgentPrice').value) || 0,
+        status: 'active'
+    };
+    
+    let result;
+    if (currentEditPackageId) {
+        result = db.updateServicePackage(currentEditPackageId, packageData);
+    } else {
+        result = db.addServicePackage(packageData);
+    }
+    
+    if (result.success) {
+        closeServicePackageModal();
+        renderServicePackagesList();
+        showToast(currentEditPackageId ? '服务包更新成功' : '服务包添加成功', 'success');
+    } else {
+        showToast(result.message || '操作失败', 'error');
+    }
+}
+
+// 编辑服务包
+function editServicePackage(id) {
+    openServicePackageModal(id);
+}
+
+// 删除服务包
+function deleteServicePackage(id) {
+    if (confirm('确定要删除此服务包吗？')) {
+        const result = db.deleteServicePackage(id);
+        if (result.success) {
+            renderServicePackagesList();
+            showToast('删除成功', 'success');
+        } else {
+            showToast(result.message || '删除失败', 'error');
+        }
+    }
+}
+
+// 显示模态提示框
+function showModalAlert(title, content) {
+    const existing = document.getElementById('alertModal');
+    if (existing) existing.remove();
+    
+    const modalHtml = `
+        <div id="alertModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+            <div class="relative mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white mt-20">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold text-gray-900">${title}</h3>
+                    <button onclick="document.getElementById('alertModal').remove()" class="text-gray-400 hover:text-gray-500">
+                        <span class="text-2xl">&times;</span>
+                    </button>
+                </div>
+                <div>${content}</div>
+                <div class="mt-4 text-right">
+                    <button onclick="document.getElementById('alertModal').remove()" class="px-4 py-2 bg-blue-600 text-white rounded-lg">确定</button>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
+
+// 显示提示消息
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 ${
+        type === 'success' ? 'bg-green-500 text-white' :
+        type === 'error' ? 'bg-red-500 text-white' :
+        'bg-blue-500 text-white'
+    }`;
+    toast.innerText = message;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+}
