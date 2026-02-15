@@ -214,22 +214,21 @@
                     </div>
                 </div>
             </div>
-
-            <!-- 底部按钮 -->
-            <div class="flex justify-between items-center pt-4 border-t border-gray-200">
-                <!-- 左侧：操作日志入口（仅编辑模式显示） -->
-                <div id="orderLogEntry" class="flex-shrink-0" style="display: none;">
-                    <button type="button" onclick="showOrderOperationLogs()" class="text-sm text-blue-600 hover:text-blue-800 flex items-center px-2 py-1">
-                        <i class="fas fa-history mr-1"></i>操作日志
-                    </button>
-                </div>
-                <!-- 右侧：操作按钮 -->
-                <div class="flex space-x-3 ml-auto">
-                    <button type="button" onclick="closeAddOrderModal()" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50">取消</button>
-                    <button type="submit" id="orderSubmitBtn" class="bg-blue-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-blue-700">创建订单</button>
-                </div>
-            </div>
         </form>
+        </div>
+        <!-- 底部按钮（固定在模态框底部，不随内容滚动） -->
+        <div class="flex justify-between items-center pt-4 border-t border-gray-200 flex-shrink-0 bg-white">
+            <!-- 左侧：操作日志入口（仅编辑模式显示） -->
+            <div id="orderLogEntry" class="flex-shrink-0" style="display: none;">
+                <button type="button" onclick="showOrderOperationLogs()" class="text-sm text-blue-600 hover:text-blue-800 flex items-center px-2 py-1">
+                    <i class="fas fa-history mr-1"></i>操作日志
+                </button>
+            </div>
+            <!-- 右侧：操作按钮 -->
+            <div class="flex space-x-3 ml-auto">
+                <button type="button" onclick="closeAddOrderModal()" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50">取消</button>
+                <button type="button" onclick="document.getElementById('orderForm').requestSubmit()" id="orderSubmitBtn" class="bg-blue-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-blue-700">创建订单</button>
+            </div>
         </div>
     </div>
 </div>
