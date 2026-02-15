@@ -3071,6 +3071,17 @@ window.openEditOrderModal = async function(orderId) {
         await loadCustomersToSelect();  // 加载客户下拉框
         await loadOrderFormSelects();   // 加载人员/团队/项目下拉框
         
+        // 🔧 修复：等待下拉框DOM渲染完成
+        await new Promise(resolve => setTimeout(resolve, 150));
+        
+        // 🔧 修复：清除表单验证残留样式（防止红框显示）
+        modal.querySelectorAll('.border-red-500, .ring-red-500').forEach(el => {
+            el.classList.remove('border-red-500', 'ring-red-500');
+        });
+        modal.querySelectorAll('input, select').forEach(el => {
+            el.setCustomValidity('');
+        });
+        
         // 填充表单数据（安全访问，检查元素是否存在）
         const customerEl = document.getElementById('orderCustomer');  // 隐藏字段
         const customerSearchEl = document.getElementById('orderCustomerSearch');  // 显示搜索框
@@ -3110,21 +3121,63 @@ window.openEditOrderModal = async function(orderId) {
             }
             dateEl.value = orderDate;
         }
-        // 关键修复：人员、团队、项目下拉框需要设置ID而非名称
+        
+        // 🔧 关键修复：人员、团队、项目下拉框需要设置ID，并强制转换为字符串类型匹配
         if (businessStaffEl && order.business_staff_id) {
-            businessStaffEl.value = order.business_staff_id;
+            businessStaffEl.value = String(order.business_staff_id);
+            // 验证是否设置成功，如果失败尝试按名称匹配
+            if (!businessStaffEl.value && order.business_staff) {
+                for (let opt of businessStaffEl.options) {
+                    if (opt.text === order.business_staff) {
+                        businessStaffEl.value = opt.value;
+                        break;
+                    }
+                }
+            }
         }
         if (serviceStaffEl && order.service_staff_id) {
-            serviceStaffEl.value = order.service_staff_id;
+            serviceStaffEl.value = String(order.service_staff_id);
+            if (!serviceStaffEl.value && order.service_staff) {
+                for (let opt of serviceStaffEl.options) {
+                    if (opt.text === order.service_staff) {
+                        serviceStaffEl.value = opt.value;
+                        break;
+                    }
+                }
+            }
         }
         if (operationStaffEl && order.operation_staff_id) {
-            operationStaffEl.value = order.operation_staff_id;
+            operationStaffEl.value = String(order.operation_staff_id);
+            if (!operationStaffEl.value && order.operation_staff) {
+                for (let opt of operationStaffEl.options) {
+                    if (opt.text === order.operation_staff) {
+                        operationStaffEl.value = opt.value;
+                        break;
+                    }
+                }
+            }
         }
         if (teamEl && order.team_id) {
-            teamEl.value = order.team_id;
+            teamEl.value = String(order.team_id);
+            if (!teamEl.value && order.team) {
+                for (let opt of teamEl.options) {
+                    if (opt.text === order.team) {
+                        teamEl.value = opt.value;
+                        break;
+                    }
+                }
+            }
         }
         if (projectEl && order.project_id) {
-            projectEl.value = order.project_id;
+            projectEl.value = String(order.project_id);
+            if (!projectEl.value && order.project) {
+                for (let opt of projectEl.options) {
+                    if (opt.text === order.project) {
+                        projectEl.value = opt.value;
+                        break;
+                    }
+                }
+            }
         }
         if (companyEl) {
             companyEl.value = order.company || '';
@@ -3215,7 +3268,23 @@ window.openEditOrderModal = async function(orderId) {
         
         // 关键新增：回显优惠和成本数据
         
-        // 优惠类型和金额
+        // 🔧 核心修复：回显议价金额（negotiation_amount）
+        const negotiationAmountEl = document.getElementById('negotiationAmount');
+        if (negotiationAmountEl) {
+            // 优先使用 negotiation_amount，其次计算：final_amount - total_amount
+            let negotiationValue = 0;
+            if (order.negotiation_amount != null) {
+                negotiationValue = parseFloat(order.negotiation_amount) || 0;
+            } else if (order.final_amount != null && order.total_amount != null) {
+                // 议价金额 = 最终成交价 - 商品原价合计
+                negotiationValue = parseFloat(order.final_amount) - parseFloat(order.total_amount);
+            } else if (order.final_transaction_price != null && order.total_amount != null) {
+                negotiationValue = parseFloat(order.final_transaction_price) - parseFloat(order.total_amount);
+            }
+            negotiationAmountEl.value = negotiationValue;
+        }
+        
+        // 优惠类型和金额（旧版兼容）
         if (order.discount_type) {
             const discountTypeRadio = document.querySelector(`input[name="discountType"][value="${order.discount_type}"]`);
             if (discountTypeRadio) {
@@ -3259,11 +3328,10 @@ window.openEditOrderModal = async function(orderId) {
         // 触发计算，更新总计显示
         updateOrderItemsTotal();
         
-        // 议价模式：无需优惠类型切换事件
-        // calculateNegotiation() 已在 updateOrderItemsTotal() 和 calculateOrderTotal() 中自动调用
-        // 移除旧版本的 calculateOrderDiscount 事件绑定（该函数已废弃）
+        // 🔧 核心修复：延时触发议价计算，确保成交价正确显示
         setTimeout(() => {
-        }, 100);
+            calculateNegotiation();
+        }, 200);
         
         // 显示模态框（关键修复：和创建订单一样，必须设置inline style）
         modal.classList.remove('hidden');
