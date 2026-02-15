@@ -318,7 +318,7 @@ function openAddOrderModal() {
     // ✅ 隐藏操作日志入口（创建模式不显示）
     const orderLogEntry = document.getElementById('orderLogEntry');
     if (orderLogEntry) {
-        orderLogEntry.classList.add('hidden');
+        orderLogEntry.style.display = 'none';
     }
     
     // 重置表单
@@ -1471,7 +1471,7 @@ window.closeAddOrderModal = function() {
     // ✅ 关键修复：隐藏操作日志入口（关闭后重置为默认状态）
     const orderLogEntry = document.getElementById('orderLogEntry');
     if (orderLogEntry) {
-        orderLogEntry.classList.add('hidden');
+        orderLogEntry.style.display = 'none';
         console.log('✅ [closeAddOrderModal] 操作日志入口已隐藏');
     }
     
@@ -3677,8 +3677,8 @@ window.openEditOrderModal = async function(orderId) {
         const orderLogEntry = document.getElementById('orderLogEntry');
         console.log('🔍 [编辑订单] 查找操作日志入口:', orderLogEntry);
         if (orderLogEntry) {
-            orderLogEntry.classList.remove('hidden');
-            console.log('✅ [编辑订单] 操作日志入口已显示');
+            orderLogEntry.style.display = 'block';
+            console.log('✅ [编辑订单] 操作日志入口已显示, display=block');
         } else {
             console.error('❌ [编辑订单] 操作日志入口元素未找到！请检查模板是否正确加载');
         }
