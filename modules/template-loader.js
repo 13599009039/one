@@ -9,7 +9,7 @@ const TemplateCache = {};
 
 // 配置对象
 const TemplateLoaderConfig = {
-    version: '24.2',
+    version: '24.3',
     baseUrl: 'templates/',
     templates: [
         'modal-order-detail',
@@ -20,7 +20,8 @@ const TemplateLoaderConfig = {
         'modal-batch-transaction',
         'modal-refund',
         'modal-payment',
-        'modal-aftersales'
+        'modal-aftersales',
+        'modal-aftersale-order'  // 新增：售后订单创建弹窗
         // 注意：任务相关模板使用Bootstrap样式，与项目Tailwind CSS冲突，暂时禁用
         // 'modal-task-pool',
         // 'modal-task-detail',

@@ -1,26 +1,50 @@
-<!-- 订单详情模态框 -->
+<!-- 订单详情模态框（纯展示模式） -->
 <div id="orderDetailModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-start justify-center pt-5 px-4 hidden modal" style="z-index: 10000 !important;">
-    <div class="relative w-full max-w-3xl shadow-lg rounded-md bg-white p-4 mb-5">
-        <div class="flex justify-between items-center mb-3">
-            <h3 class="text-lg font-bold text-gray-900">订单详情 - 订单号: <span id="detailOrderId"></span></h3>
+    <div class="relative w-full max-w-3xl shadow-lg rounded-md bg-white p-4 mb-5 max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-3 sticky top-0 bg-white pb-2 border-b">
+            <div class="flex items-center">
+                <h3 class="text-lg font-bold text-gray-900">订单详情 - 订单号: <span id="detailOrderId"></span></h3>
+                <!-- 订单类型标签 -->
+                <span id="detailOrderTypeTag" class="ml-2 px-2 py-0.5 rounded-full text-xs font-semibold hidden"></span>
+            </div>
             <button type="button" class="text-gray-400 hover:text-gray-500 close-modal" onclick="closeOrderDetailModal()">
                 <span class="text-2xl">&times;</span>
             </button>
         </div>
+        
+        <!-- 售后订单：显示关联的原订单信息 -->
+        <div id="parentOrderInfo" class="hidden mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <p class="text-sm text-yellow-800">
+                <i class="fas fa-link mr-1"></i>
+                关联原订单：<span id="parentOrderLink" class="font-medium text-blue-600 cursor-pointer hover:underline"></span>
+            </p>
+        </div>
+        
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <!-- 基本信息 -->
+            <!-- 左侧：基本信息 -->
             <div class="space-y-3">
+                <!-- 基本信息 -->
                 <div class="bg-gray-50 p-3 rounded-lg">
-                    <h4 class="font-semibold text-gray-700 mb-2 text-sm">基本信息</h4>
+                    <h4 class="font-semibold text-gray-700 mb-2 text-sm flex items-center">
+                        <i class="fas fa-info-circle text-blue-500 mr-2"></i>基本信息
+                    </h4>
                     <div class="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
                         <p class="text-gray-500">客户：<span id="detailCustomer" class="text-gray-900 font-medium"></span></p>
                         <p class="text-gray-500">下单日期：<span id="detailDate" class="text-gray-900 font-medium"></span></p>
                         <p class="text-gray-500">订单状态：<span id="detailStatus" class="px-2 py-0.5 rounded-full text-xs font-semibold"></span></p>
                     </div>
+                    <!-- 售后订单特有字段 -->
+                    <div id="aftersaleInfo" class="hidden mt-2 pt-2 border-t border-gray-200">
+                        <p class="text-gray-500 text-sm">售后类型：<span id="detailAftersaleType" class="text-red-600 font-medium"></span></p>
+                        <p class="text-gray-500 text-sm mt-1">售后原因：<span id="detailAftersaleReason" class="text-gray-900"></span></p>
+                    </div>
                 </div>
-                <!-- 金额信息（清晰展示各项金额） -->
+                
+                <!-- 金额信息 -->
                 <div class="bg-gradient-to-r from-green-50 to-emerald-50 p-3 rounded-lg">
-                    <h4 class="font-semibold text-gray-700 mb-2 text-sm">金额信息</h4>
+                    <h4 class="font-semibold text-gray-700 mb-2 text-sm flex items-center">
+                        <i class="fas fa-yen-sign text-green-500 mr-2"></i>金额信息
+                    </h4>
                     <div class="space-y-2 text-sm">
                         <div class="flex justify-between items-center">
                             <span class="text-gray-500">商品原价合计：</span>
@@ -44,8 +68,12 @@
                         </div>
                     </div>
                 </div>
+                
+                <!-- 业务团队 -->
                 <div class="bg-gray-50 p-3 rounded-lg">
-                    <h4 class="font-semibold text-gray-700 mb-2 text-sm">业务团队</h4>
+                    <h4 class="font-semibold text-gray-700 mb-2 text-sm flex items-center">
+                        <i class="fas fa-users text-purple-500 mr-2"></i>业务团队
+                    </h4>
                     <div class="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
                         <p class="text-gray-500">业务人员：<span id="detailBusinessStaff" class="text-gray-900"></span></p>
                         <p class="text-gray-500">服务人员：<span id="detailServiceStaff" class="text-gray-900"></span></p>
@@ -55,33 +83,29 @@
                         <p class="text-gray-500">归属公司：<span id="detailCompany" class="text-gray-900"></span></p>
                     </div>
                 </div>
-                <!-- 备注列表 -->
+                
+                <!-- 订单备注 -->
                 <div class="bg-gray-50 p-3 rounded-lg">
-                    <h4 class="font-semibold text-gray-700 mb-2 text-sm">订单备注</h4>
+                    <h4 class="font-semibold text-gray-700 mb-2 text-sm flex items-center">
+                        <i class="fas fa-sticky-note text-yellow-500 mr-2"></i>订单备注
+                    </h4>
                     <div id="detailRemarksList" class="space-y-2 text-xs">
                         <!-- 动态加载 -->
                     </div>
                 </div>
             </div>
-            <!-- 收款记录与统计 -->
+            
+            <!-- 右侧：收款、合同、售后记录 -->
             <div class="space-y-3">
+                <!-- 收款记录（只读） -->
                 <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-3 rounded-lg shadow-sm">
-                    <div class="flex justify-between items-center mb-2">
-                        <h4 class="font-semibold text-gray-800 flex items-center">
-                            <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                            </svg>
-                            收款记录
-                        </h4>
-                        <div class="flex space-x-2">
-                            <button onclick="openAddPaymentModal()" class="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-md shadow transition">
-                                + 登记收款
-                            </button>
-                            <button id="refundButton" onclick="openRefundModal()" class="text-xs bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-md shadow transition">
-                                退款
-                            </button>
-                        </div>
-                    </div>
+                    <h4 class="font-semibold text-gray-800 mb-2 flex items-center">
+                        <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        </svg>
+                        收款记录
+                        <span class="ml-2 text-xs text-gray-500 font-normal">（在编辑页操作）</span>
+                    </h4>
                     <div class="bg-white rounded-lg overflow-hidden shadow-inner">
                         <table class="min-w-full text-xs">
                             <thead class="bg-gray-100">
@@ -96,22 +120,34 @@
                             </tbody>
                         </table>
                     </div>
+                    <p id="noPaymentRecords" class="hidden text-center text-gray-400 text-xs py-2">暂无收款记录</p>
                 </div>
-                <!-- 合同信息 -->
-                <div class="bg-gray-50 p-4 rounded-lg">
-                    <h4 class="font-semibold text-gray-700 mb-2">合同信息</h4>
-                    <div id="contractInfo">
+                
+                <!-- 合同信息（只读） -->
+                <div class="bg-gray-50 p-3 rounded-lg">
+                    <h4 class="font-semibold text-gray-700 mb-2 flex items-center">
+                        <i class="fas fa-file-contract text-indigo-500 mr-2"></i>合同信息
+                    </h4>
+                    <div id="contractInfo" class="text-sm">
                         <!-- 动态加载 -->
                     </div>
                 </div>
-                <!-- 售后处理 -->
-                <div class="bg-gray-50 p-4 rounded-lg">
-                    <div class="flex justify-between items-center mb-2">
-                        <h4 class="font-semibold text-gray-700">售后记录</h4>
-                        <button onclick="openAfterSalesModal()" class="text-xs bg-red-600 text-white px-2 py-1 rounded">售后登记</button>
-                    </div>
+                
+                <!-- 售后记录/关联售后订单（只读） -->
+                <div class="bg-gray-50 p-3 rounded-lg">
+                    <h4 class="font-semibold text-gray-700 mb-2 flex items-center">
+                        <i class="fas fa-headset text-red-500 mr-2"></i>售后记录
+                        <span class="ml-2 text-xs text-gray-500 font-normal">（在列表页发起售后）</span>
+                    </h4>
                     <div id="afterSalesList" class="text-xs space-y-2">
                         <!-- 动态加载 -->
+                    </div>
+                    <!-- 关联的售后订单列表 -->
+                    <div id="aftersaleOrdersList" class="hidden mt-3 pt-3 border-t border-gray-200">
+                        <p class="text-xs text-gray-600 mb-2 font-medium">关联售后订单：</p>
+                        <div id="aftersaleOrdersContent" class="space-y-1">
+                            <!-- 动态加载 -->
+                        </div>
                     </div>
                 </div>
             </div>

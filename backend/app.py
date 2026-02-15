@@ -2219,7 +2219,8 @@ def get_orders():
         start_date = request.args.get('start_date', '')
         end_date = request.args.get('end_date', '')
         date_type = request.args.get('date_type', 'order_date')  # order_date订单日期 / contract_sign_date签约日期
-        is_audited = request.args.get('is_audited', '')  # 新增：审核状态筛选
+        is_audited = request.args.get('is_audited', '')  # 审核状态筛选
+        order_type = request.args.get('order_type', '')  # 新增：订单类型筛选 sale/aftersale
         
         conn = get_db_connection()
         with conn.cursor() as cursor:
@@ -2243,10 +2244,15 @@ def get_orders():
                 where_clauses.append("o.customer_id=%s")
                 params.append(customer_id)
             
-            # 新增：审核状态筛选
+            # 审核状态筛选
             if is_audited:
                 where_clauses.append("o.is_audited=%s")
                 params.append(int(is_audited))
+            
+            # 新增：订单类型筛选
+            if order_type:
+                where_clauses.append("o.order_type=%s")
+                params.append(order_type)
             
             # 日期筛选（根据date_type决定按订单日期还是签约日期）
             if start_date:
@@ -2270,11 +2276,13 @@ def get_orders():
             cursor.execute(count_sql, params)
             total = cursor.fetchone()['total']
             
-            # 分页查询 - ✅ JOIN customers表获取客户名称
+            # 分页查询 - ✅ JOIN customers表获取客户名称，新增关联原订单查询
             offset = (page - 1) * page_size
-            data_sql = f"""SELECT o.*, c.shop_name as customer_shop_name 
+            data_sql = f"""SELECT o.*, c.shop_name as customer_shop_name,
+                                  po.id as parent_order_number
                          FROM orders o 
-                         LEFT JOIN customers c ON o.customer_id = c.id 
+                         LEFT JOIN customers c ON o.customer_id = c.id
+                         LEFT JOIN orders po ON o.parent_order_id = po.id
                          WHERE {where_sql} 
                          ORDER BY o.created_at DESC LIMIT %s OFFSET %s"""
             cursor.execute(data_sql, params + [page_size, offset])
@@ -2322,6 +2330,25 @@ def get_order(order_id):
                 # 获取订单明细
                 cursor.execute("SELECT * FROM order_items WHERE order_id=%s", (order_id,))
                 order['items'] = cursor.fetchall()
+                
+                # 如果是售后订单，获取关联的原订单基本信息
+                if order.get('order_type') == 'aftersale' and order.get('parent_order_id'):
+                    cursor.execute("""
+                        SELECT id, customer_name, order_date, final_amount, status
+                        FROM orders WHERE id=%s
+                    """, (order['parent_order_id'],))
+                    parent_order = cursor.fetchone()
+                    if parent_order:
+                        order['parent_order_info'] = parent_order
+                
+                # 如果是销售订单，查询关联的售后订单列表
+                if order.get('order_type') == 'sale' or not order.get('order_type'):
+                    cursor.execute("""
+                        SELECT id, aftersale_type, status, created_at, final_amount
+                        FROM orders WHERE parent_order_id=%s AND is_deleted=0
+                        ORDER BY created_at DESC
+                    """, (order_id,))
+                    order['aftersale_orders'] = cursor.fetchall()
                 
                 # P1-6优化：获取订单的收款记录
                 cursor.execute("""
@@ -2494,6 +2521,131 @@ def add_order():
     except Exception as e:
         import traceback
         app.logger.error(f'订单创建错误: {str(e)}\n{traceback.format_exc()}')
+        return jsonify({'success': False, 'message': str(e)})
+
+# ========== 售后订单API ==========
+
+@app.route('/api/orders/aftersale', methods=['POST'])
+def create_aftersale_order():
+    """创建售后订单（作为独立订单，关联原销售订单）"""
+    try:
+        data = request.json
+        parent_order_id = data.get('parent_order_id')
+        aftersale_type = data.get('aftersale_type')
+        aftersale_reason = data.get('aftersale_reason', '')
+        
+        if not parent_order_id:
+            return jsonify({'success': False, 'message': '缺少原订单ID'}), 400
+        if not aftersale_type:
+            return jsonify({'success': False, 'message': '缺少售后类型'}), 400
+        
+        conn = get_db_connection()
+        company_id = session.get('company_id', 1)
+        
+        with conn.cursor() as cursor:
+            # 验证原订单存在且属于当前公司
+            cursor.execute("""
+                SELECT id, customer_id, customer_name, business_staff, business_staff_id,
+                       service_staff, service_staff_id, operation_staff, operation_staff_id,
+                       team, team_id, project, project_id, company
+                FROM orders WHERE id=%s AND company_id=%s AND is_deleted=0
+            """, (parent_order_id, company_id))
+            parent_order = cursor.fetchone()
+            
+            if not parent_order:
+                return jsonify({'success': False, 'message': '原订单不存在'}), 404
+            
+            # 处理remarks：如果是list则转为json字符串
+            remarks_data = data.get('remarks', [])
+            if isinstance(remarks_data, list):
+                remarks_str = json.dumps(remarks_data, ensure_ascii=False)
+            else:
+                remarks_str = str(remarks_data) if remarks_data else None
+            
+            # 创建售后订单（继承原订单的客户和团队信息）
+            sql = """INSERT INTO orders (
+                order_type, parent_order_id, aftersale_type, aftersale_reason,
+                customer_id, customer_name, order_date,
+                business_staff, business_staff_id,
+                service_staff, service_staff_id,
+                operation_staff, operation_staff_id,
+                team, team_id,
+                project, project_id,
+                company, company_id,
+                total_amount, total_cost,
+                negotiation_amount, final_transaction_price,
+                final_amount, final_cost,
+                status, remarks
+            ) VALUES (
+                'aftersale', %s, %s, %s,
+                %s, %s, %s,
+                %s, %s,
+                %s, %s,
+                %s, %s,
+                %s, %s,
+                %s, %s,
+                %s, %s,
+                %s, %s,
+                %s, %s,
+                %s, %s,
+                %s, %s
+            )"""
+            
+            cursor.execute(sql, (
+                parent_order_id,
+                aftersale_type,
+                aftersale_reason,
+                parent_order['customer_id'],
+                parent_order['customer_name'],
+                data.get('order_date'),
+                data.get('business_staff') or parent_order['business_staff'],
+                data.get('business_staff_id') or parent_order['business_staff_id'],
+                data.get('service_staff') or parent_order['service_staff'],
+                data.get('service_staff_id') or parent_order['service_staff_id'],
+                data.get('operation_staff') or parent_order['operation_staff'],
+                data.get('operation_staff_id') or parent_order['operation_staff_id'],
+                data.get('team') or parent_order['team'],
+                data.get('team_id') or parent_order['team_id'],
+                data.get('project') or parent_order['project'],
+                data.get('project_id') or parent_order['project_id'],
+                parent_order['company'],
+                company_id,
+                data.get('total_amount', 0),
+                data.get('total_cost', 0),
+                data.get('negotiation_amount', 0),
+                data.get('final_transaction_price', 0),
+                data.get('final_amount', 0),
+                data.get('final_cost', 0),
+                data.get('status', '处理中'),
+                remarks_str
+            ))
+            order_id = cursor.lastrowid
+            
+            # 插入订单明细（如果有）
+            if 'items' in data and data['items']:
+                item_sql = """INSERT INTO order_items (order_id, service_id, service_name, service_type, price, quantity, total)
+                             VALUES (%s, %s, %s, %s, %s, %s, %s)"""
+                for item in data['items']:
+                    cursor.execute(item_sql, (
+                        order_id,
+                        item.get('service_id'),
+                        item.get('service_name'),
+                        '服务',
+                        item.get('price', 0),
+                        item.get('quantity', 1),
+                        item.get('subtotal', 0)
+                    ))
+            
+            conn.commit()
+        conn.close()
+        
+        # 记录创建售后订单操作日志
+        log_order_operation(order_id, 'create', remark=f'创建售后订单，关联原订单: {parent_order_id}，类型: {aftersale_type}')
+        
+        return jsonify({'success': True, 'data': {'id': order_id, 'parent_order_id': parent_order_id}})
+    except Exception as e:
+        import traceback
+        app.logger.error(f'售后订单创建错误: {str(e)}\n{traceback.format_exc()}')
         return jsonify({'success': False, 'message': str(e)})
 
 # ========== 批量订单登记API ==========

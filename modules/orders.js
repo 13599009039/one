@@ -117,7 +117,6 @@ function filterOrdersByCustomDate() {
     currentOrderDateRange = 'custom';
     orderFilterStartDate = startDate;
     orderFilterEndDate = endDate;
-    
     // 更新按钮样式
     updateOrderDateButtonStyles('custom');
     
@@ -127,6 +126,15 @@ function filterOrdersByCustomDate() {
     // 触发筛选
     loadOrdersData();
 }
+
+// 订单类型筛选
+function filterOrdersByType() {
+    // 重置到第一页
+    orderCurrentPage = 1;
+    // 重新加载数据
+    loadOrdersData();
+}
+window.filterOrdersByType = filterOrdersByType;
 
 // 更新日期范围按钮样式
 function updateOrderDateButtonStyles(activeRange) {
@@ -2007,7 +2015,7 @@ async function loadOrdersData() {
     
     let result, customersResult, packagesResult;
     
-    // 调用 API 加载（传递日期筛选参数 + 分页参数）
+    // 调用 API 加载（传递日期筛选参数 + 分页参数 + 类型筛选）
     try {
         
         // 构建 API 参数
@@ -2019,6 +2027,12 @@ async function loadOrdersData() {
             apiParams.start_date = orderFilterStartDate;
             apiParams.end_date = orderFilterEndDate;
             apiParams.date_type = 'contract_date'; // 使用签约日期筛选
+        }
+        
+        // 新增：订单类型筛选
+        const orderTypeFilter = document.getElementById('orderTypeFilter');
+        if (orderTypeFilter && orderTypeFilter.value) {
+            apiParams.order_type = orderTypeFilter.value;
         }
         
         console.log('🔍 [loadOrdersData] API参数:', apiParams);
@@ -2098,13 +2112,20 @@ async function loadOrdersData() {
                 '服务中': 'bg-blue-100 text-blue-800',
                 '已完成': 'bg-green-100 text-green-800',
                 '已取消': 'bg-gray-100 text-gray-800',
-                '售后中': 'bg-red-100 text-red-800'
+                '售后中': 'bg-red-100 text-red-800',
+                '处理中': 'bg-orange-100 text-orange-800'
             };
             const statusClass = statusColors[order.status] || 'bg-gray-100 text-gray-800';
             
             // P1-UI-5: 收款状态样式和文本
             const paymentStatus = order.payment_status || '未收款';
             const paymentStatusClass = getPaymentStatusClass(paymentStatus);
+            
+            // 订单类型标签
+            const isAftersaleOrder = order.order_type === 'aftersale';
+            const orderTypeBadge = isAftersaleOrder 
+                ? '<span class="px-2 py-0.5 text-xs font-medium rounded-full bg-red-100 text-red-800">售后</span>'
+                : '';
             
             // 审核状态（双审核：业务审核 + 财务审核）
             const businessAudited = order.business_audit_status === 1 || order.is_audited === 1;  // 兼容旧数据
@@ -2124,6 +2145,13 @@ async function loadOrdersData() {
                 <button class="text-blue-600 hover:text-blue-900 mr-1" onclick="viewOrder('${order.id}')" title="查看">查看</button>
                 <button class="text-green-600 hover:text-green-900 mr-1" onclick="openPaymentModal('${order.id}')" title="登记收款">收款</button>
             `;
+            
+            // 销售订单才显示售后按钮
+            if (!isAftersaleOrder) {
+                actionButtons += `
+                    <button class="text-red-600 hover:text-red-900 mr-1" onclick="openAftersaleOrderModal('${order.id}')" title="发起售后">售后</button>
+                `;
+            }
             
             if (financeAudited) {
                 // 财务已审：完全锁定，只能反财务审核
@@ -2149,10 +2177,16 @@ async function loadOrdersData() {
             tr.className = 'hover:bg-gray-50';
             // 金额展示优化：优先使用final_amount（最终成交金额），其次使用contract_amount
             const displayAmount = parseFloat(order.final_amount || order.contract_amount || order.total_amount || 0) || 0;
+            
+            // 售后订单显示关联原订单号
+            const orderIdDisplay = isAftersaleOrder && order.parent_order_id
+                ? `${order.id} <span class="text-red-500">(关联#${order.parent_order_id})</span>`
+                : `${order.id}`;
+            
             tr.innerHTML = `
                 <td class="px-4 py-3 text-sm">
                     <div class="font-medium text-gray-900">${customer ? customer.shop_name : '未知客户'}</div>
-                    <div class="text-xs text-gray-500">${order.id}</div>
+                    <div class="text-xs text-gray-500">${orderIdDisplay} ${orderTypeBadge}</div>
                 </td>
                 <td class="px-4 py-3 text-sm text-gray-600">${order.business_staff || '-'}</td>
                 <td class="px-4 py-3 text-sm text-gray-600">${order.service_staff || '-'}</td>
@@ -2218,14 +2252,50 @@ window.viewOrder = async function(id) {
         }
     } catch (error) {
         console.error('❌ API加载客户失败:', error);
-        showNotification('客户信息加载失败', 'error');
     }
     
+    // 基本信息
     document.getElementById('detailOrderId').textContent = order.id;
-    document.getElementById('detailCustomer').textContent = customer ? customer.shop_name : '未知客户';
+    document.getElementById('detailCustomer').textContent = customer ? customer.shop_name : (order.customer_name || '未知客户');
     document.getElementById('detailDate').textContent = formatDate(order.order_date);
     
-    // 金额信息展示（清晰区分各项金额）
+    // 订单类型标签
+    const orderTypeTag = document.getElementById('detailOrderTypeTag');
+    if (orderTypeTag) {
+        if (order.order_type === 'aftersale') {
+            orderTypeTag.textContent = '售后订单';
+            orderTypeTag.className = 'ml-2 px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-800';
+            orderTypeTag.classList.remove('hidden');
+        } else {
+            orderTypeTag.textContent = '销售订单';
+            orderTypeTag.className = 'ml-2 px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800';
+            orderTypeTag.classList.remove('hidden');
+        }
+    }
+    
+    // 售后订单特有信息
+    const aftersaleInfo = document.getElementById('aftersaleInfo');
+    const parentOrderInfo = document.getElementById('parentOrderInfo');
+    if (order.order_type === 'aftersale') {
+        // 显示售后类型和原因
+        if (aftersaleInfo) {
+            aftersaleInfo.classList.remove('hidden');
+            document.getElementById('detailAftersaleType').textContent = order.aftersale_type || '-';
+            document.getElementById('detailAftersaleReason').textContent = order.aftersale_reason || '-';
+        }
+        // 显示关联原订单
+        if (parentOrderInfo && order.parent_order_id) {
+            parentOrderInfo.classList.remove('hidden');
+            const parentLink = document.getElementById('parentOrderLink');
+            parentLink.textContent = `订单号 ${order.parent_order_id}`;
+            parentLink.onclick = () => viewOrder(order.parent_order_id);
+        }
+    } else {
+        if (aftersaleInfo) aftersaleInfo.classList.add('hidden');
+        if (parentOrderInfo) parentOrderInfo.classList.add('hidden');
+    }
+    
+    // 金额信息展示
     const totalAmount = parseFloat(order.total_amount) || 0;
     const negotiationAmount = parseFloat(order.negotiation_amount) || 0;
     const finalAmount = parseFloat(order.final_amount) || totalAmount + negotiationAmount;
@@ -2242,14 +2312,28 @@ window.viewOrder = async function(id) {
     document.getElementById('detailPaidAmount').textContent = `¥${paidAmount.toFixed(2)}`;
     document.getElementById('detailUnpaidAmount').textContent = `¥${unpaidAmount.toFixed(2)}`;
     
-    // 扩展字段
+    // 业务团队字段
     document.getElementById('detailBusinessStaff').textContent = order.business_staff || '-';
     document.getElementById('detailServiceStaff').textContent = order.service_staff || '-';
     document.getElementById('detailOperationStaff').textContent = order.operation_staff || '-';
     document.getElementById('detailTeam').textContent = order.team || '-';
-    document.getElementById('detailProject').textContent = order.project || '-';
+    
+    // 归属项目：确保显示名称而非ID
+    let projectDisplay = order.project || '-';
+    if (/^\d+$/.test(projectDisplay) && order.project_id) {
+        // 如果project字段是纯数字，尝试从缓存获取名称
+        try {
+            const projectsResult = await window.api.getProjects();
+            if (projectsResult.success && projectsResult.data) {
+                const proj = projectsResult.data.find(p => p.id === order.project_id);
+                if (proj) projectDisplay = proj.name;
+            }
+        } catch (e) {}
+    }
+    document.getElementById('detailProject').textContent = projectDisplay;
     document.getElementById('detailCompany').textContent = order.company || '-';
     
+    // 订单状态
     const statusEl = document.getElementById('detailStatus');
     statusEl.textContent = order.status;
     statusEl.className = `px-2 py-0.5 rounded-full text-xs font-semibold ${getStatusClass(order.status)}`;
@@ -2268,48 +2352,30 @@ window.viewOrder = async function(id) {
         remarksList.innerHTML = '<p class="text-gray-400 italic">暂无备注</p>';
     }
     
-    // 加载合同状态
+    // 加载合同状态（纯展示，无操作按钮）
     const contractInfo = document.getElementById('contractInfo');
     if (order.contract_number) {
         contractInfo.innerHTML = `
             <div class="space-y-1">
-                <p class="text-sm text-green-600 font-medium">✓ 已签署</p>
-                <p class="text-xs text-gray-600">合同编号: ${order.contract_number}</p>
-                ${order.contract_sign_date ? `<p class="text-xs text-gray-600">签署日期: ${order.contract_sign_date}</p>` : ''}
+                <p class="text-green-600 font-medium"><i class="fas fa-check-circle mr-1"></i>已签署</p>
+                <p class="text-gray-600">合同编号: ${order.contract_number}</p>
+                ${order.contract_sign_date ? `<p class="text-gray-600">签署日期: ${order.contract_sign_date}</p>` : ''}
             </div>
         `;
     } else if (order.no_contract_required) {
-        contractInfo.innerHTML = `
-            <p class="text-sm text-gray-500 italic">✓ 无需合同</p>
-        `;
+        contractInfo.innerHTML = `<p class="text-gray-500 italic"><i class="fas fa-minus-circle mr-1"></i>无需合同</p>`;
     } else {
-        // 确保函数存在（防止加载顺序问题）
-        if (typeof window.openSignContractModal !== 'function') {
-            console.error('⚠️ openSignContractModal函数未定义，请检查orders.js加载');
-        }
-        if (typeof window.markNoContractRequired !== 'function') {
-            console.error('⚠️ markNoContractRequired函数未定义，请检查orders.js加载');
-        }
-        
-        contractInfo.innerHTML = `
-            <div class="space-y-2">
-                <p class="text-sm text-gray-500 italic">未签署</p>
-                <div class="flex gap-2">
-                    <button onclick="openSignContractModal('${order.id}')" class="text-xs bg-green-600 text-white px-3 py-1.5 rounded hover:bg-green-700">签署合同</button>
-                    <button onclick="markNoContractRequired('${order.id}')" class="text-xs bg-gray-500 text-white px-3 py-1.5 rounded hover:bg-gray-600">标记无需合同</button>
-                </div>
-            </div>
-        `;
+        contractInfo.innerHTML = `<p class="text-orange-500 italic"><i class="fas fa-exclamation-circle mr-1"></i>未签署</p>`;
     }
     
-    // 加载收款记录（直接使用已获取的订单数据）
+    // 加载收款记录
     loadOrderPaymentRecordsFromData(order);
     
-    // 加载售后记录（从API单独获取）
+    // 加载售后记录
     const afterSalesList = document.getElementById('afterSalesList');
     afterSalesList.innerHTML = '<p class="text-gray-400 italic">加载中...</p>';
     try {
-        const aftersalesResult = await api.getOrderAfterSales(orderId);
+        const aftersalesResult = await api.getOrderAfterSales(id);
         if (aftersalesResult.success && Array.isArray(aftersalesResult.data) && aftersalesResult.data.length > 0) {
             afterSalesList.innerHTML = '';
             aftersalesResult.data.forEach(a => {
@@ -2327,7 +2393,29 @@ window.viewOrder = async function(id) {
         afterSalesList.innerHTML = '<p class="text-red-400 italic">加载失败</p>';
     }
     
-    // 显示模态框（和创建订单一样，需要设置inline style）
+    // 加载关联的售后订单列表（销售订单才显示）
+    const aftersaleOrdersList = document.getElementById('aftersaleOrdersList');
+    const aftersaleOrdersContent = document.getElementById('aftersaleOrdersContent');
+    if (aftersaleOrdersList && aftersaleOrdersContent) {
+        if (order.aftersale_orders && order.aftersale_orders.length > 0) {
+            aftersaleOrdersList.classList.remove('hidden');
+            aftersaleOrdersContent.innerHTML = '';
+            order.aftersale_orders.forEach(ao => {
+                const div = document.createElement('div');
+                div.className = 'flex justify-between items-center p-2 bg-white rounded border cursor-pointer hover:bg-gray-50';
+                div.innerHTML = `
+                    <span class="text-blue-600">订单#${ao.id} - ${ao.aftersale_type || '售后'}</span>
+                    <span class="text-xs text-gray-500">${ao.status}</span>
+                `;
+                div.onclick = () => viewOrder(ao.id);
+                aftersaleOrdersContent.appendChild(div);
+            });
+        } else {
+            aftersaleOrdersList.classList.add('hidden');
+        }
+    }
+    
+    // 显示模态框
     modal.classList.remove('hidden');
     modal.style.display = 'flex';
     modal.style.visibility = 'visible';
@@ -2502,6 +2590,202 @@ window.savePayment = async function(event) {
         alert('收款登记失败，请检查网络连接');
     }
 };
+
+// ==================== 售后订单功能（新版：独立订单） ====================
+
+/**
+ * 打开售后订单创建弹窗
+ * @param {number|string} parentOrderId - 原订单ID
+ */
+window.openAftersaleOrderModal = async function(parentOrderId) {
+    const modal = document.getElementById('aftersaleOrderModal');
+    if (!modal) {
+        showNotification('售后订单弹窗未加载，请刷新页面', 'error');
+        return;
+    }
+    
+    // 获取原订单信息
+    try {
+        const result = await window.api.getOrder(parentOrderId);
+        if (!result.success) {
+            showNotification('获取原订单信息失败', 'error');
+            return;
+        }
+        const parentOrder = result.data;
+        
+        // 填充关联订单信息
+        document.getElementById('aftersaleParentId').value = parentOrderId;
+        document.getElementById('aftersaleParentOrderId').textContent = `#${parentOrderId}`;
+        document.getElementById('aftersaleCustomerName').textContent = parentOrder.customer_name || '未知客户';
+        
+        // 设置默认日期
+        document.getElementById('aftersaleOrderDate').value = new Date().toISOString().split('T')[0];
+        
+        // 加载人员下拉框（可选）
+        await loadAftersaleStaffOptions();
+        
+        // 清空表单
+        document.getElementById('aftersaleType').value = '';
+        document.getElementById('aftersaleReason').value = '';
+        document.getElementById('aftersaleTotalAmount').value = '0';
+        document.getElementById('aftersaleTotalCost').value = '0';
+        document.getElementById('aftersaleNegotiationAmount').value = '0';
+        document.getElementById('aftersaleFinalAmount').textContent = '¥0.00';
+        document.getElementById('aftersaleRemarks').value = '';
+        
+        // 绑定金额计算事件
+        ['aftersaleTotalAmount', 'aftersaleNegotiationAmount'].forEach(id => {
+            document.getElementById(id).onchange = calculateAftersaleFinalAmount;
+        });
+        
+        // 显示弹窗
+        modal.classList.remove('hidden');
+        modal.style.display = 'flex';
+    } catch (error) {
+        console.error('打开售后订单弹窗失败:', error);
+        showNotification('打开售后订单弹窗失败', 'error');
+    }
+};
+
+/**
+ * 加载售后订单人员下拉框选项
+ */
+async function loadAftersaleStaffOptions() {
+    try {
+        const usersResult = await window.api.getUsers();
+        if (usersResult.success) {
+            const users = usersResult.data || [];
+            const staffOptions = '<option value="">继承原订单</option>' + 
+                users.map(u => `<option value="${u.id}" data-name="${u.name}">${u.name}</option>`).join('');
+            
+            document.getElementById('aftersaleBusinessStaff').innerHTML = staffOptions;
+            document.getElementById('aftersaleServiceStaff').innerHTML = staffOptions;
+        }
+        
+        const teamsResult = await window.api.getTeams();
+        if (teamsResult.success) {
+            const teams = teamsResult.data || [];
+            document.getElementById('aftersaleTeam').innerHTML = '<option value="">继承原订单</option>' + 
+                teams.map(t => `<option value="${t.id}" data-name="${t.name}">${t.name}</option>`).join('');
+        }
+    } catch (error) {
+        console.error('加载人员选项失败:', error);
+    }
+}
+
+/**
+ * 计算售后订单最终金额
+ */
+function calculateAftersaleFinalAmount() {
+    const totalAmount = parseFloat(document.getElementById('aftersaleTotalAmount').value) || 0;
+    const negotiationAmount = parseFloat(document.getElementById('aftersaleNegotiationAmount').value) || 0;
+    const finalAmount = totalAmount + negotiationAmount;
+    document.getElementById('aftersaleFinalAmount').textContent = `¥${finalAmount.toFixed(2)}`;
+}
+
+/**
+ * 关闭售后订单弹窗
+ */
+window.closeAftersaleOrderModal = function() {
+    const modal = document.getElementById('aftersaleOrderModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+    }
+};
+
+/**
+ * 提交售后订单
+ */
+window.submitAftersaleOrder = async function(event) {
+    if (event) event.preventDefault();
+    
+    const parentOrderId = document.getElementById('aftersaleParentId').value;
+    const aftersaleType = document.getElementById('aftersaleType').value;
+    const aftersaleReason = document.getElementById('aftersaleReason').value;
+    const orderDate = document.getElementById('aftersaleOrderDate').value;
+    
+    if (!parentOrderId || !aftersaleType || !aftersaleReason || !orderDate) {
+        showNotification('请填写必填项', 'error');
+        return;
+    }
+    
+    // 收集表单数据
+    const totalAmount = parseFloat(document.getElementById('aftersaleTotalAmount').value) || 0;
+    const totalCost = parseFloat(document.getElementById('aftersaleTotalCost').value) || 0;
+    const negotiationAmount = parseFloat(document.getElementById('aftersaleNegotiationAmount').value) || 0;
+    const finalAmount = totalAmount + negotiationAmount;
+    
+    // 人员配置
+    const businessStaffSelect = document.getElementById('aftersaleBusinessStaff');
+    const serviceStaffSelect = document.getElementById('aftersaleServiceStaff');
+    const teamSelect = document.getElementById('aftersaleTeam');
+    
+    const businessStaffId = businessStaffSelect.value ? parseInt(businessStaffSelect.value) : null;
+    const businessStaff = businessStaffId ? businessStaffSelect.options[businessStaffSelect.selectedIndex].dataset.name : null;
+    const serviceStaffId = serviceStaffSelect.value ? parseInt(serviceStaffSelect.value) : null;
+    const serviceStaff = serviceStaffId ? serviceStaffSelect.options[serviceStaffSelect.selectedIndex].dataset.name : null;
+    const teamId = teamSelect.value ? parseInt(teamSelect.value) : null;
+    const team = teamId ? teamSelect.options[teamSelect.selectedIndex].dataset.name : null;
+    
+    // 备注
+    const remarksText = document.getElementById('aftersaleRemarks').value.trim();
+    const remarks = remarksText ? [{ date: orderDate, content: remarksText }] : [];
+    
+    // 提交数据
+    const submitData = {
+        parent_order_id: parseInt(parentOrderId),
+        aftersale_type: aftersaleType,
+        aftersale_reason: aftersaleReason,
+        order_date: orderDate,
+        total_amount: totalAmount,
+        total_cost: totalCost,
+        negotiation_amount: negotiationAmount,
+        final_transaction_price: finalAmount,
+        final_amount: finalAmount,
+        final_cost: totalCost,
+        business_staff: businessStaff,
+        business_staff_id: businessStaffId,
+        service_staff: serviceStaff,
+        service_staff_id: serviceStaffId,
+        team: team,
+        team_id: teamId,
+        remarks: remarks,
+        status: '处理中'
+    };
+    
+    // 禁用提交按钮
+    const submitBtn = document.getElementById('aftersaleSubmitBtn');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>创建中...';
+    
+    try {
+        const response = await fetch('/api/orders/aftersale', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify(submitData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification(`售后订单创建成功，订单号: ${result.data.id}`, 'success');
+            closeAftersaleOrderModal();
+            loadOrdersData(); // 刷新订单列表
+        } else {
+            showNotification('创建失败: ' + (result.message || '未知错误'), 'error');
+        }
+    } catch (error) {
+        console.error('提交售后订单失败:', error);
+        showNotification('提交失败: ' + error.message, 'error');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-plus mr-1"></i>创建售后订单';
+    }
+};
+
+// ==================== 售后记录功能（旧版：订单内记录） ====================
 
 window.openAfterSalesModal = async function() {
     const orderId = document.getElementById('detailOrderId').textContent;
