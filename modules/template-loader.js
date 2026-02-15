@@ -81,18 +81,22 @@ function injectTemplate(templateName, html) {
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = html.trim();
         
-        // 获取模板根元素（跳过注释节点，获取第一个元素节点）
-        const templateElement = tempDiv.firstElementChild;
+        // 获取所有子元素（一个模板文件可能包含多个模态框）
+        const elements = Array.from(tempDiv.children);
         
-        if (!templateElement) {
+        if (elements.length === 0) {
             throw new Error('Template is empty or invalid');
         }
 
-        // 注入到body末尾
-        document.body.appendChild(templateElement);
-        console.log(`[TemplateLoader] Template injected: ${templateName}, ID: ${templateElement.id}`);
+        // 注入所有元素到body末尾
+        const injectedIds = [];
+        elements.forEach(el => {
+            document.body.appendChild(el);
+            injectedIds.push(el.id || '(no-id)');
+        });
+        console.log(`[TemplateLoader] Template injected: ${templateName}, IDs: ${injectedIds.join(', ')}`);
         
-        return templateElement;
+        return elements[0]; // 返回第一个元素保持兼容性
     } catch (error) {
         console.error(`[TemplateLoader] Failed to inject template: ${templateName}`, error);
         throw error;
