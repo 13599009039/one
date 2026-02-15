@@ -1463,6 +1463,13 @@ window.closeAddOrderModal = function() {
         submitBtn.textContent = '创建订单';
     }
     
+    // ✅ 关键修复：隐藏操作日志入口（关闭后重置为默认状态）
+    const orderLogEntry = document.getElementById('orderLogEntry');
+    if (orderLogEntry) {
+        orderLogEntry.classList.add('hidden');
+        console.log('✅ [closeAddOrderModal] 操作日志入口已隐藏');
+    }
+    
     console.log('✅ [closeAddOrderModal] 模态框关闭完成');
 };
 
@@ -3307,6 +3314,7 @@ window.markNoContractRequired = async function(orderId) {
  * 打开编辑订单模态框
  */
 window.openEditOrderModal = async function(orderId) {
+    console.log('📝 [编辑订单] 开始加载，订单ID:', orderId);
     
     try {
         // 检查模态框是否存在
@@ -3316,6 +3324,16 @@ window.openEditOrderModal = async function(orderId) {
             showNotification('模态框未找到，请刷新页面', 'error');
             return;
         }
+        
+        // 🔍 关键调试：检查orderLogEntry元素是否存在
+        const orderLogEntryCheck = document.getElementById('orderLogEntry');
+        console.log('🔍 [编辑订单] 打开时orderLogEntry元素状态:', {
+            exists: !!orderLogEntryCheck,
+            element: orderLogEntryCheck,
+            hidden: orderLogEntryCheck?.classList.contains('hidden'),
+            display: orderLogEntryCheck?.style.display,
+            innerHTML: orderLogEntryCheck?.innerHTML.substring(0, 100)
+        });
         
         // 获取订单详情
         const result = await window.api.getOrder(orderId);
@@ -3652,8 +3670,12 @@ window.openEditOrderModal = async function(orderId) {
         
         // ✅ 显示操作日志入口（编辑模式）
         const orderLogEntry = document.getElementById('orderLogEntry');
+        console.log('🔍 [编辑订单] 查找操作日志入口:', orderLogEntry);
         if (orderLogEntry) {
             orderLogEntry.classList.remove('hidden');
+            console.log('✅ [编辑订单] 操作日志入口已显示');
+        } else {
+            console.error('❌ [编辑订单] 操作日志入口元素未找到！请检查模板是否正确加载');
         }
         
         // 显示模态框（关键修复：和创建订单一样，必须设置inline style）
