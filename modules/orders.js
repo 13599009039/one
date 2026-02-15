@@ -3061,12 +3061,26 @@ window.openEditOrderModal = async function(orderId) {
             modalTitle.textContent = '编辑订单';
         }
         
-        // 关键修复：修改按钮文字为“保存修改”
+        // 关键修复：修改按钮文字为"保存修改"
         const submitBtn = document.getElementById('orderSubmitBtn');
         if (submitBtn) {
             submitBtn.textContent = '保存修改';
         }
-        
+                
+        // 🔧 核心修复：预加载服务列表缓存，确保商品选择框有数据
+        if (cachedServices.length === 0) {
+            try {
+                const servicesRes = await fetch('/api/services', { credentials: 'include' });
+                const servicesResult = await servicesRes.json();
+                if (servicesResult.success && servicesResult.data) {
+                    cachedServices = servicesResult.data;
+                    console.log('✅ [编辑订单] 预加载服务列表:', cachedServices.length);
+                }
+            } catch (e) {
+                console.error('❌ 预加载服务列表失败:', e);
+            }
+        }
+                
         // 关键修复：先加载人员、团队、项目下拉框数据
         await loadCustomersToSelect();  // 加载客户下拉框
         await loadOrderFormSelects();   // 加载人员/团队/项目下拉框
@@ -3122,62 +3136,33 @@ window.openEditOrderModal = async function(orderId) {
             dateEl.value = orderDate;
         }
         
-        // 🔧 关键修复：人员、团队、项目下拉框需要设置ID，并强制转换为字符串类型匹配
-        if (businessStaffEl && order.business_staff_id) {
-            businessStaffEl.value = String(order.business_staff_id);
-            // 验证是否设置成功，如果失败尝试按名称匹配
-            if (!businessStaffEl.value && order.business_staff) {
-                for (let opt of businessStaffEl.options) {
-                    if (opt.text === order.business_staff) {
-                        businessStaffEl.value = opt.value;
-                        break;
-                    }
-                }
+        // 🔧 关键修复：人员、团队、项目下拉框需要设置ID，并同步更新searchInput显示值
+        
+        // 辅助函数：设置select值并同步更新可搜索输入框
+        const setSelectAndSyncInput = (selectEl, value, displayText) => {
+            if (!selectEl || !value) return;
+            selectEl.value = String(value);
+            // 同步更新可搜索输入框的显示值
+            const searchInput = selectEl.parentNode?.querySelector('.searchable-staff-input, .searchable-team-input, .searchable-project-input');
+            if (searchInput) {
+                searchInput.value = displayText || '';
             }
+        };
+        
+        if (businessStaffEl && order.business_staff_id) {
+            setSelectAndSyncInput(businessStaffEl, order.business_staff_id, order.business_staff || '');
         }
         if (serviceStaffEl && order.service_staff_id) {
-            serviceStaffEl.value = String(order.service_staff_id);
-            if (!serviceStaffEl.value && order.service_staff) {
-                for (let opt of serviceStaffEl.options) {
-                    if (opt.text === order.service_staff) {
-                        serviceStaffEl.value = opt.value;
-                        break;
-                    }
-                }
-            }
+            setSelectAndSyncInput(serviceStaffEl, order.service_staff_id, order.service_staff || '');
         }
         if (operationStaffEl && order.operation_staff_id) {
-            operationStaffEl.value = String(order.operation_staff_id);
-            if (!operationStaffEl.value && order.operation_staff) {
-                for (let opt of operationStaffEl.options) {
-                    if (opt.text === order.operation_staff) {
-                        operationStaffEl.value = opt.value;
-                        break;
-                    }
-                }
-            }
+            setSelectAndSyncInput(operationStaffEl, order.operation_staff_id, order.operation_staff || '');
         }
         if (teamEl && order.team_id) {
-            teamEl.value = String(order.team_id);
-            if (!teamEl.value && order.team) {
-                for (let opt of teamEl.options) {
-                    if (opt.text === order.team) {
-                        teamEl.value = opt.value;
-                        break;
-                    }
-                }
-            }
+            setSelectAndSyncInput(teamEl, order.team_id, order.team || '');
         }
         if (projectEl && order.project_id) {
-            projectEl.value = String(order.project_id);
-            if (!projectEl.value && order.project) {
-                for (let opt of projectEl.options) {
-                    if (opt.text === order.project) {
-                        projectEl.value = opt.value;
-                        break;
-                    }
-                }
-            }
+            setSelectAndSyncInput(projectEl, order.project_id, order.project || '');
         }
         if (companyEl) {
             companyEl.value = order.company || '';
@@ -3190,8 +3175,15 @@ window.openEditOrderModal = async function(orderId) {
         // 关键修复：填充商品明细之前，先清空现有的商品行
         resetOrderItemsList();
         
+        // 🔧 关键修复：等待第一行服务选项加载完成
+        const firstSelect = document.querySelector('.order-item-select');
+        if (firstSelect && firstSelect.options.length <= 1) {
+            await loadServicesToItemSelect(firstSelect);
+        }
+        
         // 填充商品明细（加载order_items）
         if (order.items && order.items.length > 0) {
+            console.log('📦 [编辑订单] 开始填充商品明细，共', order.items.length, '项');
             
             // 关键修复：循环填充所有商品，而不是只填充第一个
             for (let i = 0; i < order.items.length; i++) {
@@ -3203,57 +3195,47 @@ window.openEditOrderModal = async function(orderId) {
                     row = document.querySelector('.order-item-row');
                 } else {
                     // 额外的商品需要添加新行
-                    window.addOrderItem();  // 关键修复：正确的函数名
+                    window.addOrderItem();
                     const allRows = document.querySelectorAll('.order-item-row');
                     row = allRows[allRows.length - 1];
+                    // 等待新行的服务选项加载
+                    await new Promise(r => setTimeout(r, 50));
                 }
                 
                 if (row) {
                     const select = row.querySelector('.order-item-select');
                     
                     if (select) {
-                        // 关键修复：先加载服务数据，然后再设置选中值
-                        await loadServicesToItemSelect(select);
+                        // 确保服务选项已加载
+                        if (select.options.length <= 1) {
+                            await loadServicesToItemSelect(select);
+                        }
                         
-                        // 检查是否有service_id
+                        console.log(`📦 [编辑订单] 设置商品${i+1}:`, item.service_name, 'service_id=', item.service_id);
+                        
+                        // 设置选中值
+                        let setSuccess = false;
                         if (item.service_id) {
-                            select.value = item.service_id;
-                            // 验证是否设置成功
-                            if (select.value == item.service_id) {
-                                // 触发change事件以更新价格
-                                select.dispatchEvent(new Event('change'));
-                            } else {
-                                console.warn(`8.${i+5} service_id=` + item.service_id + ' 不存在于下拉框，尝试按名称查找');
-                                // fallback到按名称查找
-                                let found = false;
-                                for (let j = 0; j < select.options.length; j++) {
-                                    const optionText = select.options[j].text;
-                                    if (optionText.includes(item.service_name)) {
-                                        select.selectedIndex = j;
-                                        select.dispatchEvent(new Event('change'));
-                                        found = true;
-                                        break;
-                                    }
-                                }
-                                if (!found) {
-                                    console.warn('⚠️ 未找到匹配的服务:', item.service_name);
-                                }
-                            }
-                        } else {
-                            // 如果没有service_id，根据service_name查找
-                            let found = false;
+                            select.value = String(item.service_id);
+                            setSuccess = (select.value == item.service_id);
+                        }
+                        
+                        // 如果ID匹配失败，尝试按名称匹配
+                        if (!setSuccess && item.service_name) {
                             for (let j = 0; j < select.options.length; j++) {
-                                const optionText = select.options[j].text;
-                                if (optionText.includes(item.service_name)) {
+                                const optText = select.options[j].text;
+                                if (optText.includes(item.service_name)) {
                                     select.selectedIndex = j;
-                                    select.dispatchEvent(new Event('change'));
-                                    found = true;
+                                    setSuccess = true;
                                     break;
                                 }
                             }
-                            if (!found) {
-                                console.warn('⚠️ 未找到匹配的服务:', item.service_name);
-                            }
+                        }
+                        
+                        if (setSuccess) {
+                            select.dispatchEvent(new Event('change'));
+                        } else {
+                            console.warn(`⚠️ 商品${i+1}匹配失败:`, item.service_name);
                         }
                         
                         // 设置数量和价格
@@ -3261,6 +3243,13 @@ window.openEditOrderModal = async function(orderId) {
                         const quantityInput = row.querySelector('.order-item-quantity');
                         if (priceInput) priceInput.value = item.price || 0;
                         if (quantityInput) quantityInput.value = item.quantity || 1;
+                        
+                        // 计算该行小计
+                        const totalCell = row.querySelector('.order-item-total');
+                        if (totalCell) {
+                            const total = (parseFloat(item.price) || 0) * (parseInt(item.quantity) || 1);
+                            totalCell.textContent = `¥${total.toFixed(2)}`;
+                        }
                     }
                 }
             }
