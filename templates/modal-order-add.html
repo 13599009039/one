@@ -219,9 +219,9 @@
         <!-- 底部按钮（固定在模态框底部，不随内容滚动） -->
         <div class="flex justify-between items-center pt-4 border-t border-gray-200 flex-shrink-0 bg-white">
             <!-- 左侧：操作日志入口（仅编辑模式显示） -->
-            <div id="orderLogEntry" class="flex-shrink-0" style="display: none;">
-                <button type="button" onclick="showOrderOperationLogs()" class="text-sm text-blue-600 hover:text-blue-800 flex items-center px-2 py-1">
-                    <i class="fas fa-history mr-1"></i>操作日志
+            <div id="orderLogEntry" class="flex-shrink-0" style="display: none; min-width: 80px;">
+                <button type="button" onclick="showOrderOperationLogs()" class="text-sm text-blue-600 hover:text-blue-800 flex items-center px-3 py-2 bg-blue-50 rounded border border-blue-200">
+                    <i class="fas fa-history mr-2"></i>操作日志
                 </button>
             </div>
             <!-- 右侧：操作按钮 -->

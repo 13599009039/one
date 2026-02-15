@@ -213,12 +213,12 @@ window.openProductModal = async function(id = null) {
  * @param {number|null} id - 编辑时传入ID
  * @param {object|null} serviceData - 服务数据（编辑时传入）
  */
-// 服务包已选组合项
-let selectedPackageItems = [];
+// 服务包已选组合项 - 使用全局窗口变量避免与services.js重复声明
+window._productSelectedPackageItems = window._productSelectedPackageItems || [];
 
 window.openServiceModalNew = async function(itemType = 'service', id = null, serviceData = null) {
     currentEditProductId = id;
-    selectedPackageItems = []; // 重置服务包组合项
+    window._productSelectedPackageItems = []; // 重置服务包组合项
     
     // 确保模态框存在
     let modal = document.getElementById('productServiceModal');
@@ -288,14 +288,14 @@ window.openServiceModalNew = async function(itemType = 'service', id = null, ser
         fillServiceForm(serviceData);
         // 如果是服务包，加载已选组合项
         if (itemType === 'package' && serviceData.package_items) {
-            selectedPackageItems = JSON.parse(serviceData.package_items) || [];
+            window._productSelectedPackageItems = JSON.parse(serviceData.package_items) || [];
             renderSelectedPackageItems();
         }
     } else {
         // 新增模式：重置表单
         document.getElementById('psForm').reset();
         document.getElementById('psItemType').value = itemType;
-        selectedPackageItems = [];
+        window._productSelectedPackageItems = [];
         renderSelectedPackageItems();
     }
     
@@ -841,7 +841,7 @@ window.saveProductService = async function() {
     }
     
     // 服务包需要至少添加一个组合项
-    if (itemType === 'package' && selectedPackageItems.length === 0) {
+    if (itemType === 'package' && window._productSelectedPackageItems.length === 0) {
         showNotification('请至少添加一个商品或服务到服务包', 'error');
         switchProductServiceTab('package');
         return;
@@ -874,7 +874,7 @@ window.saveProductService = async function() {
     
     // 服务包保存组合项
     if (itemType === 'package') {
-        data.package_items = JSON.stringify(selectedPackageItems);
+        data.package_items = JSON.stringify(window._productSelectedPackageItems);
     }
     
     try {
@@ -1042,7 +1042,7 @@ window.searchPackageItems = function() {
         const typeLabel = itemType === 'product' ? 
             '<span class="px-1.5 py-0.5 bg-orange-100 text-orange-700 text-xs rounded">商品</span>' :
             '<span class="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-xs rounded">服务</span>';
-        const isSelected = selectedPackageItems.some(s => s.id === item.id);
+        const isSelected = window._productSelectedPackageItems.some(s => s.id === item.id);
         
         return `
             <div class="flex items-center justify-between p-2 hover:bg-gray-50 border-b border-gray-100 ${isSelected ? 'bg-green-50' : ''}">
@@ -1071,11 +1071,11 @@ window.addPackageItem = function(itemId) {
     if (!item) return;
     
     // 检查是否已添加
-    const existing = selectedPackageItems.find(s => s.id === itemId);
+    const existing = window._productSelectedPackageItems.find(s => s.id === itemId);
     if (existing) {
         existing.quantity++;
     } else {
-        selectedPackageItems.push({
+        window._productSelectedPackageItems.push({
             id: item.id,
             name: item.name,
             code: item.code,
@@ -1093,7 +1093,7 @@ window.addPackageItem = function(itemId) {
 
 // 从服务包移除项
 window.removePackageItem = function(itemId) {
-    selectedPackageItems = selectedPackageItems.filter(s => s.id !== itemId);
+    window._productSelectedPackageItems = window._productSelectedPackageItems.filter(s => s.id !== itemId);
     renderSelectedPackageItems();
     searchPackageItems(); // 刷新搜索结果中的状态
     calculatePackagePrice();
@@ -1101,7 +1101,7 @@ window.removePackageItem = function(itemId) {
 
 // 更新服务包项数量
 window.updatePackageItemQty = function(itemId, qty) {
-    const item = selectedPackageItems.find(s => s.id === itemId);
+    const item = window._productSelectedPackageItems.find(s => s.id === itemId);
     if (item) {
         item.quantity = Math.max(1, parseInt(qty) || 1);
         renderSelectedPackageItems();
@@ -1115,15 +1115,15 @@ function renderSelectedPackageItems() {
     const hintEl = document.getElementById('psPackageTotalHint');
     if (!container) return;
     
-    if (selectedPackageItems.length === 0) {
+    if (window._productSelectedPackageItems.length === 0) {
         container.innerHTML = '<div class="text-center text-gray-400 py-6 text-sm">暂未添加任何商品/服务</div>';
         if (hintEl) hintEl.textContent = '共 0 项';
         return;
     }
     
-    if (hintEl) hintEl.textContent = `共 ${selectedPackageItems.length} 项`;
+    if (hintEl) hintEl.textContent = `共 ${window._productSelectedPackageItems.length} 项`;
     
-    container.innerHTML = selectedPackageItems.map(item => {
+    container.innerHTML = window._productSelectedPackageItems.map(item => {
         const typeLabel = item.item_type === 'product' ? 
             '<span class="px-1.5 py-0.5 bg-orange-100 text-orange-700 text-xs rounded">商品</span>' :
             '<span class="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-xs rounded">服务</span>';
@@ -1158,7 +1158,7 @@ function calculatePackagePrice() {
     let totalRetail = 0;
     let totalCost = 0;
     
-    selectedPackageItems.forEach(item => {
+    window._productSelectedPackageItems.forEach(item => {
         totalRetail += item.retail_price * item.quantity;
         totalCost += item.cost_price * item.quantity;
     });

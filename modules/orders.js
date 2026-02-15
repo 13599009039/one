@@ -3677,8 +3677,11 @@ window.openEditOrderModal = async function(orderId) {
         const orderLogEntry = document.getElementById('orderLogEntry');
         console.log('🔍 [编辑订单] 查找操作日志入口:', orderLogEntry);
         if (orderLogEntry) {
-            orderLogEntry.style.display = 'block';
-            console.log('✅ [编辑订单] 操作日志入口已显示, display=block');
+            // 使用flex而不是block，确保在flex布局中正确显示
+            orderLogEntry.style.display = 'flex';
+            orderLogEntry.style.visibility = 'visible';
+            orderLogEntry.style.opacity = '1';
+            console.log('✅ [编辑订单] 操作日志入口已显示, display=flex, visibility=visible');
         } else {
             console.error('❌ [编辑订单] 操作日志入口元素未找到！请检查模板是否正确加载');
         }
