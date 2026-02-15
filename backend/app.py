@@ -2487,6 +2487,9 @@ def add_order():
             conn.commit()
         conn.close()
         
+        # ✅ 记录创建订单操作日志
+        log_order_operation(order_id, 'create', remark=f'创建订单，客户: {customer_name}')
+        
         return jsonify({'success': True, 'data': {'id': order_id}})
     except Exception as e:
         import traceback
@@ -2861,6 +2864,9 @@ def update_order(order_id):
             app.logger.info(f"订单 #{order_id} 明细更新完成，共 {saved_count} 条")
         conn.close()
         
+        # ✅ 记录编辑订单操作日志
+        log_order_operation(order_id, 'edit', remark='编辑订单信息')
+        
         return jsonify({'success': True})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
@@ -2988,6 +2994,9 @@ def audit_business(order_id):
             conn.commit()
         conn.close()
         
+        # ✅ 记录业务审核操作日志
+        log_order_operation(order_id, 'business_audit', remark='业务审核通过')
+        
         return jsonify({'success': True, 'message': '审核成功，任务已自动创建'})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
@@ -3024,6 +3033,9 @@ def audit_finance(order_id):
             conn.commit()
         conn.close()
         
+        # ✅ 记录财务审核操作日志
+        log_order_operation(order_id, 'finance_audit', remark='财务审核通过')
+        
         return jsonify({'success': True})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
@@ -3048,6 +3060,9 @@ def unaudit_business(order_id):
             conn.commit()
         conn.close()
         
+        # ✅ 记录反业务审核操作日志
+        log_order_operation(order_id, 'business_unaudit', remark='反业务审核')
+        
         return jsonify({'success': True})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
@@ -3064,7 +3079,88 @@ def unaudit_finance(order_id):
             conn.commit()
         conn.close()
         
+        # ✅ 记录反财务审核操作日志
+        log_order_operation(order_id, 'finance_unaudit', remark='反财务审核')
+        
         return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+
+# ==================== 订单操作日志 API ====================
+
+def log_order_operation(order_id, operation_type, changes=None, remark=None):
+    """
+    记录订单操作日志
+    :param order_id: 订单ID
+    :param operation_type: 操作类型 (create/edit/business_audit/business_unaudit/finance_audit/finance_unaudit/delete/void)
+    :param changes: 变更详情字典 {field: {old: xxx, new: yyy}}
+    :param remark: 操作备注/审核意见
+    """
+    try:
+        operator_id = session.get('user_id')
+        operator_name = session.get('user_name', '')
+        company_id = session.get('company_id', 1)
+        
+        if not operator_id:
+            return False
+        
+        conn = get_db_connection()
+        with conn.cursor() as cursor:
+            changes_json = json.dumps(changes, ensure_ascii=False) if changes else None
+            cursor.execute("""
+                INSERT INTO order_operation_logs 
+                (order_id, operation_type, operator_id, operator_name, changes_json, remark, company_id)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """, (order_id, operation_type, operator_id, operator_name, changes_json, remark, company_id))
+            conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        app.logger.error(f'记录操作日志失败: {e}')
+        return False
+
+@app.route('/api/orders/<int:order_id>/operation-logs', methods=['GET'])
+def get_order_operation_logs(order_id):
+    """获取订单操作日志列表"""
+    try:
+        company_id = session.get('company_id', 1)
+        
+        conn = get_db_connection()
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                SELECT id, order_id, operation_type, operator_id, operator_name,
+                       operation_time, changes_json, remark
+                FROM order_operation_logs
+                WHERE order_id = %s AND company_id = %s
+                ORDER BY operation_time DESC
+            """, (order_id, company_id))
+            logs = cursor.fetchall()
+        conn.close()
+        
+        # 转换操作类型为中文显示
+        operation_type_map = {
+            'create': '创建订单',
+            'edit': '编辑订单',
+            'business_audit': '业务审核',
+            'business_unaudit': '反业务审核',
+            'finance_audit': '财务审核',
+            'finance_unaudit': '反财务审核',
+            'delete': '删除订单',
+            'void': '作废订单'
+        }
+        
+        for log in logs:
+            log['operation_type_text'] = operation_type_map.get(log['operation_type'], log['operation_type'])
+            # 解析changes_json
+            if log['changes_json']:
+                try:
+                    log['changes'] = json.loads(log['changes_json'])
+                except:
+                    log['changes'] = None
+            else:
+                log['changes'] = None
+        
+        return jsonify({'success': True, 'data': logs})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
 

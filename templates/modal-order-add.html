@@ -216,9 +216,19 @@
             </div>
 
             <!-- 底部按钮 -->
-            <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
-                <button type="button" onclick="closeAddOrderModal()" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50">取消</button>
-                <button type="submit" id="orderSubmitBtn" class="bg-blue-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-blue-700">创建订单</button>
+            <div class="flex justify-between items-center pt-4 border-t border-gray-200">
+                <!-- 左侧：操作日志入口（仅编辑模式显示） -->
+                <div id="orderLogEntry" class="hidden">
+                    <button type="button" onclick="showOrderOperationLogs()" class="text-sm text-blue-600 hover:text-blue-800 flex items-center">
+                        <i class="fas fa-history mr-1"></i>操作日志
+                    </button>
+                </div>
+                <div class="flex-1"></div>
+                <!-- 右侧：操作按钮 -->
+                <div class="flex space-x-3">
+                    <button type="button" onclick="closeAddOrderModal()" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50">取消</button>
+                    <button type="submit" id="orderSubmitBtn" class="bg-blue-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-blue-700">创建订单</button>
+                </div>
             </div>
         </form>
         </div>
@@ -254,5 +264,26 @@
                 <button type="submit" class="bg-blue-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-blue-700">创建</button>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- 操作日志弹窗 -->
+<div id="orderOperationLogsModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center px-4 hidden modal" style="z-index: 12000 !important;">
+    <div class="relative w-full max-w-2xl shadow-lg rounded-md bg-white p-5">
+        <div class="flex justify-between items-center mb-4 pb-3 border-b">
+            <h3 class="text-lg font-bold text-gray-900"><i class="fas fa-history mr-2 text-blue-600"></i>订单操作日志</h3>
+            <button type="button" class="text-gray-400 hover:text-gray-500" onclick="closeOrderOperationLogs()">
+                <span class="text-2xl">&times;</span>
+            </button>
+        </div>
+        <div id="orderOperationLogsList" class="max-h-96 overflow-y-auto">
+            <div class="text-center py-8 text-gray-500">
+                <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                <p>加载中...</p>
+            </div>
+        </div>
+        <div class="flex justify-end pt-4 mt-4 border-t">
+            <button type="button" onclick="closeOrderOperationLogs()" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50">关闭</button>
+        </div>
     </div>
 </div>

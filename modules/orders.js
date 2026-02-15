@@ -307,6 +307,12 @@ function openAddOrderModal() {
         submitBtn.textContent = '创建订单';
     }
     
+    // ✅ 隐藏操作日志入口（创建模式不显示）
+    const orderLogEntry = document.getElementById('orderLogEntry');
+    if (orderLogEntry) {
+        orderLogEntry.classList.add('hidden');
+    }
+    
     // 重置表单
     const form = document.getElementById('orderForm');
     if (form) {
@@ -3360,6 +3366,12 @@ window.openEditOrderModal = async function(orderId) {
             calculateNegotiation();
         }, 200);
         
+        // ✅ 显示操作日志入口（编辑模式）
+        const orderLogEntry = document.getElementById('orderLogEntry');
+        if (orderLogEntry) {
+            orderLogEntry.classList.remove('hidden');
+        }
+        
         // 显示模态框（关键修复：和创建订单一样，必须设置inline style）
         modal.classList.remove('hidden');
         modal.style.display = 'flex';
@@ -4369,4 +4381,190 @@ window.openAddOrderModal = async function() {
 };
 
 console.log('🎉 [orders.js] 文件加载完成！v24.3.16 (含成本管理)');
+
+// ==================== 订单操作日志功能 ====================
+
+/**
+ * 显示订单操作日志弹窗
+ */
+window.showOrderOperationLogs = async function() {
+    const orderId = window.currentEditingOrderId;
+    if (!orderId) {
+        showNotification('无法获取订单ID', 'error');
+        return;
+    }
+    
+    const modal = document.getElementById('orderOperationLogsModal');
+    const listContainer = document.getElementById('orderOperationLogsList');
+    
+    if (!modal || !listContainer) {
+        console.error('操作日志弹窗元素未找到');
+        return;
+    }
+    
+    // 显示弹窗
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+    
+    // 显示加载中
+    listContainer.innerHTML = `
+        <div class="text-center py-8 text-gray-500">
+            <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+            <p>加载中...</p>
+        </div>
+    `;
+    
+    try {
+        const response = await fetch(`/api/orders/${orderId}/operation-logs`, { credentials: 'include' });
+        const result = await response.json();
+        
+        if (result.success && result.data) {
+            renderOperationLogs(result.data, listContainer);
+        } else {
+            listContainer.innerHTML = `
+                <div class="text-center py-8 text-gray-500">
+                    <i class="fas fa-exclamation-circle text-2xl mb-2"></i>
+                    <p>加载失败: ${result.message || '未知错误'}</p>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('加载操作日志失败:', error);
+        listContainer.innerHTML = `
+            <div class="text-center py-8 text-gray-500">
+                <i class="fas fa-exclamation-circle text-2xl mb-2"></i>
+                <p>加载失败: 网络错误</p>
+            </div>
+        `;
+    }
+};
+
+/**
+ * 渲染操作日志列表
+ */
+function renderOperationLogs(logs, container) {
+    if (!logs || logs.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-8 text-gray-500">
+                <i class="fas fa-inbox text-3xl mb-2"></i>
+                <p>暂无操作记录</p>
+            </div>
+        `;
+        return;
+    }
+    
+    // 操作类型颜色映射
+    const typeColorMap = {
+        'create': 'bg-green-100 text-green-800',
+        'edit': 'bg-blue-100 text-blue-800',
+        'business_audit': 'bg-purple-100 text-purple-800',
+        'business_unaudit': 'bg-yellow-100 text-yellow-800',
+        'finance_audit': 'bg-indigo-100 text-indigo-800',
+        'finance_unaudit': 'bg-orange-100 text-orange-800',
+        'delete': 'bg-red-100 text-red-800',
+        'void': 'bg-gray-100 text-gray-800'
+    };
+    
+    // 操作类型图标映射
+    const typeIconMap = {
+        'create': 'fa-plus-circle',
+        'edit': 'fa-edit',
+        'business_audit': 'fa-check-circle',
+        'business_unaudit': 'fa-undo',
+        'finance_audit': 'fa-dollar-sign',
+        'finance_unaudit': 'fa-undo-alt',
+        'delete': 'fa-trash',
+        'void': 'fa-ban'
+    };
+    
+    let html = '<div class="space-y-3">';
+    
+    logs.forEach(log => {
+        const colorClass = typeColorMap[log.operation_type] || 'bg-gray-100 text-gray-800';
+        const iconClass = typeIconMap[log.operation_type] || 'fa-info-circle';
+        const operationTime = new Date(log.operation_time).toLocaleString('zh-CN');
+        
+        html += `
+            <div class="border border-gray-200 rounded-lg p-3 hover:bg-gray-50">
+                <div class="flex items-start justify-between">
+                    <div class="flex items-center">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${colorClass}">
+                            <i class="fas ${iconClass} mr-1"></i>
+                            ${log.operation_type_text || log.operation_type}
+                        </span>
+                        <span class="ml-2 text-sm text-gray-600">
+                            <i class="fas fa-user mr-1"></i>${log.operator_name || '未知用户'}
+                        </span>
+                    </div>
+                    <span class="text-xs text-gray-400">
+                        <i class="fas fa-clock mr-1"></i>${operationTime}
+                    </span>
+                </div>
+                ${log.remark ? `<p class="mt-2 text-sm text-gray-600"><i class="fas fa-comment mr-1"></i>${log.remark}</p>` : ''}
+                ${renderChangesDetail(log.changes)}
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+/**
+ * 渲染变更详情
+ */
+function renderChangesDetail(changes) {
+    if (!changes || Object.keys(changes).length === 0) {
+        return '';
+    }
+    
+    // 字段名称中文映射
+    const fieldNameMap = {
+        'customer_name': '客户',
+        'order_date': '下单日期',
+        'total_amount': '商品总额',
+        'final_amount': '成交金额',
+        'negotiation_amount': '议价金额',
+        'business_staff': '业务人员',
+        'service_staff': '服务人员',
+        'team': '负责团队',
+        'project': '归属项目',
+        'status': '状态',
+        'remarks': '备注'
+    };
+    
+    let html = '<div class="mt-2 text-xs bg-gray-50 rounded p-2">';
+    html += '<p class="font-medium text-gray-700 mb-1"><i class="fas fa-exchange-alt mr-1"></i>变更详情:</p>';
+    html += '<ul class="space-y-1">';
+    
+    for (const [field, change] of Object.entries(changes)) {
+        const fieldLabel = fieldNameMap[field] || field;
+        const oldVal = change.old || '-';
+        const newVal = change.new || '-';
+        html += `
+            <li class="text-gray-600">
+                <span class="font-medium">${fieldLabel}:</span>
+                <span class="text-red-500 line-through">${oldVal}</span>
+                <i class="fas fa-arrow-right mx-1 text-gray-400"></i>
+                <span class="text-green-600">${newVal}</span>
+            </li>
+        `;
+    }
+    
+    html += '</ul></div>';
+    return html;
+}
+
+/**
+ * 关闭操作日志弹窗
+ */
+window.closeOrderOperationLogs = function() {
+    const modal = document.getElementById('orderOperationLogsModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+    }
+};
+
+console.log('📝 [操作日志] 功能加载完成');
 
