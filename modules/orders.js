@@ -327,16 +327,21 @@ function openAddOrderModal() {
         form.reset();
         
         // ✅ 关键修复: 绑定form submit事件
-        // 先移除旧的事件监听器(避免重复绑定)
-        const newForm = form.cloneNode(true);
-        form.parentNode.replaceChild(newForm, form);
+        // 注意：不再使用cloneNode替换表单，避免破坏DOM结构和事件绑定
+        // 改用移除旧事件+重新绑定的方式
         
-        newForm.addEventListener('submit', async function(e) {
-            e.preventDefault(); // 阻止默认提交
-            console.log('📝 [orderForm] 表单提交事件触发');
-            await saveNewOrder();
-        });
-        console.log('✅ [orderForm] submit事件已绑定');
+        // 先移除旧的事件监听器（通过标记检查是否已绑定）
+        if (!form._submitBound) {
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault(); // 阻止默认提交
+                console.log('📝 [orderForm] 表单提交事件触发');
+                await saveNewOrder();
+            });
+            form._submitBound = true;
+            console.log('✅ [orderForm] submit事件已绑定');
+        } else {
+            console.log('ℹ️ [orderForm] submit事件已存在，跳过重复绑定');
+        }
     }
     
     // 重置备注列表
