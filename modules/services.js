@@ -1,8 +1,8 @@
-// 服务管理模块 (v14.0 - 统一商品/服务/服务包)
+// 服务管理模块 (v15.0 - 仅服务/服务包，商品已拆分至products.js)
 
 // 当前编辑的服务ID
 let currentEditServiceId = null;
-let currentServiceItemType = 'product'; // 当前选择的类型: product | service | package
+let currentServiceItemType = 'service'; // 当前选择的类型: service | package (商品已拆分)
 let selectedPackageItems = []; // 服务包已选项目
 let allServices = []; // 全部服务数据（用于搜索）
 let allTeams = []; // 全部团队数据
@@ -17,42 +17,136 @@ window.onProductTemplateChange = function() {
     }
 };
 
-// 初始化服务列表页面(统一入口)
+// 初始化服务列表页面(统一入口 - 仅展示服务，不含服务包)
 function initServicesPage() {
+    console.log('✅ [initServicesPage] 服务列表页面初始化开始');
     renderServicesList();
 }
 
-// 【废弃】保留兼容性
+// 初始化服务包管理页面
 function initServicePackagesPage() {
-    console.warn('initServicePackagesPage已废弃,请使用initServicesPage');
-    renderServicesList();
+    renderServicePackagesList();
 }
 
-// 渲染统一服务列表(商品+服务+服务包)
+// 刷新服务包列表
+function refreshServicePackagesList() {
+    renderServicePackagesList();
+    showNotification('服务包列表已刷新', 'success');
+}
+
+// 搜索服务包
+function searchServicePackages() {
+    const keyword = document.getElementById('servicePackageSearch')?.value || '';
+    renderServicePackagesList(keyword);
+}
+
+// 渲染服务包列表（独立页面）
+async function renderServicePackagesList(searchKeyword = '') {
+    let packages = [];
+    
+    try {
+        const result = await window.api.getServices('package');  // ✅ 传入type='package'参数
+        if (result.success) {
+            packages = result.data || [];
+            console.log(`✅ API加载服务包: ${packages.length}条`);
+        } else {
+            console.warn('⚠️ 服务包列表API返回失败:', result.message);
+        }
+    } catch (error) {
+        console.error('加载服务包列表失败:', error);
+        showNotification('加载服务包列表失败', 'error');
+        return;
+    }
+    
+    // 搜索过滤
+    if (searchKeyword) {
+        const keyword = searchKeyword.toLowerCase();
+        packages = packages.filter(p => {
+            return (p.name && p.name.toLowerCase().includes(keyword)) ||
+                   (p.code && p.code.toLowerCase().includes(keyword));
+        });
+    }
+    
+    const tbody = document.getElementById('servicePackagesTableBody');
+    if (!tbody) return;
+    
+    if (packages.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-gray-500">
+            ${searchKeyword ? `未找到匹配 "${searchKeyword}" 的服务包` : '暂无服务包数据，点击"新增服务包"开始添加'}
+        </td></tr>`;
+        return;
+    }
+    
+    tbody.innerHTML = packages.map(pkg => {
+        const statusLabel = pkg.status === 'active' ?
+            '<span class="px-2 py-0.5 bg-green-100 text-green-800 rounded text-xs">启用</span>' :
+            '<span class="px-2 py-0.5 bg-gray-100 text-gray-800 rounded text-xs">停用</span>';
+        
+        // 服务包包含项目显示
+        let packageItemsDisplay = '-';
+        if (pkg.package_items && pkg.package_items.length > 0) {
+            const itemsText = pkg.package_items.map(item => {
+                return `${item.service_name || '未知'}×${item.quantity}`;
+            }).join(', ');
+            packageItemsDisplay = `<span class="text-xs text-gray-600" title="${itemsText}">${itemsText.substring(0, 30)}${itemsText.length > 30 ? '...' : ''}</span>`;
+        }
+        
+        return `
+            <tr class="hover:bg-gray-50">
+                <td class="px-4 py-3 text-sm text-gray-600">${pkg.code || '-'}</td>
+                <td class="px-4 py-3">
+                    <div class="font-medium text-gray-900">${pkg.name}</div>
+                </td>
+                <td class="px-4 py-3">${packageItemsDisplay}</td>
+                <td class="px-4 py-3 text-right text-sm font-medium text-blue-600">¥${parseFloat(pkg.retail_price || 0).toFixed(2)}</td>
+                <td class="px-4 py-3 text-right text-sm font-medium text-orange-600">¥${parseFloat(pkg.cost_price || 0).toFixed(2)}</td>
+                <td class="px-4 py-3 text-center">${statusLabel}</td>
+                <td class="px-4 py-3 text-center">
+                    <button onclick="editService(${pkg.id})" class="text-green-600 hover:text-green-800 mr-2" title="编辑">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button onclick="deleteService(${pkg.id})" class="text-red-600 hover:text-red-800" title="删除">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// 渲染服务列表(仅显示服务，不含服务包)
 async function renderServicesList(searchKeyword = '') {
+    console.log('\n📝 ========== [renderServicesList] 开始渲染服务列表 ==========');
     let services = [];
     let teams = [];
     
-    // API优先 + LocalStorage降级
     try {
-        console.log('📡 调用 API 加载服务列表...');
+        console.log('📡 调用 API 加载服务列表 (type=service)...');
         const [servicesResult, teamsResult] = await Promise.all([
-            window.api.getServices(),
+            window.api.getServices('service'),  // ✅ 传入type='service'参数，后端直接返回服务类型数据
             window.api.getTeams()
         ]);
+        
+        console.log('📦 [renderServicesList] API响应:', servicesResult);
+        console.log('📦 [renderServicesList] 响应数据类型:', typeof servicesResult.data, Array.isArray(servicesResult.data));
         
         if (servicesResult.success) {
             services = servicesResult.data || [];
             console.log(`✅ API加载服务: ${services.length}条`);
+            if (services.length === 0) {
+                console.warn('⚠️ [警告] API返回空服务列表，可能原因: 1)数据隔离(company_id不匹配) 2)item_type不是"service" 3)status不是"active"');
+            } else {
+                console.log('🔍 [样本] 第一条服务数据:', services[0]);
+            }
+        } else {
+            console.warn('⚠️ 服务列表API返回失败:', servicesResult.message);
         }
         if (teamsResult.success) {
             teams = teamsResult.data || [];
         }
     } catch (error) {
-        console.warn('❌ API加载失败，降级到LocalStorage:', error);
-        const result = db.getServices();
-        if (result.success) services = result.data || [];
-        teams = db.getTeams()?.data || [];
+        console.error('❌ API加载失败:', error);
+        showNotification('加载服务列表失败，请刷新页面重试', 'error');
     }
     
     // 保存全部数据
@@ -72,49 +166,30 @@ async function renderServicesList(searchKeyword = '') {
     }
     
     const tbody = document.getElementById('servicesTableBody');
-    if (!tbody) return;
+    console.log('📍 [renderServicesList] 表格元素 servicesTableBody:', tbody ? '已找到' : '未找到');
+    if (!tbody) {
+        console.error('❌ [renderServicesList] 表格元素 servicesTableBody 不存在，取消渲染');
+        return;
+    }
+    
+    console.log(`📊 [renderServicesList] 准备渲染 ${services.length} 条服务数据`);
     
     if (services.length === 0) {
-        const emptyText = searchKeyword ? `未找到匹配 "${searchKeyword}" 的结果` : '暂无数据';
-        tbody.innerHTML = `<tr><td colspan="10" class="text-center py-8 text-gray-500">${emptyText}</td></tr>`;
+        const emptyText = searchKeyword ? `未找到匹配 "${searchKeyword}" 的结果` : '暂无服务数据，点击"新增服务"开始添加';
+        tbody.innerHTML = `<tr><td colspan="9" class="text-center py-8 text-gray-500">${emptyText}</td></tr>`;
         return;
     }
     
     tbody.innerHTML = services.map(service => {
         const team = teams.find(t => t.id === service.team_id);
         
-        // 统一使用item_type,兼容旧type字段
-        const itemType = service.item_type || service.type || 'service';
-        
-        // 类型标签(三种类型)
-        let typeLabel = '';
-        if (itemType === 'product') {
-            typeLabel = '<span class="px-2 py-0.5 bg-green-100 text-green-800 rounded text-xs">商品</span>';
-        } else if (itemType === 'service') {
-            typeLabel = '<span class="px-2 py-0.5 bg-blue-100 text-blue-800 rounded text-xs">服务</span>';
-        } else if (itemType === 'package') {
-            typeLabel = '<span class="px-2 py-0.5 bg-purple-100 text-purple-800 rounded text-xs">服务包</span>';
-        }
+        // 类型标签(服务)
+        const typeLabel = '<span class="px-2 py-0.5 bg-blue-100 text-blue-800 rounded text-xs">服务</span>';
         
         // 状态标签
         const statusLabel = service.status === 'active' ?
             '<span class="px-2 py-0.5 bg-green-100 text-green-800 rounded text-xs">启用</span>' :
             '<span class="px-2 py-0.5 bg-gray-100 text-gray-800 rounded text-xs">停用</span>';
-        
-        // 库存显示(仅商品)
-        const stockDisplay = itemType === 'product' ? 
-            `<span class="${(service.stock || 0) <= 10 ? 'text-red-600 font-bold' : ''}">${service.stock || 0}</span>` : 
-            '<span class="text-gray-400">-</span>';
-        
-        // 服务包组合项显示
-        let packageItemsDisplay = '-';
-        if (itemType === 'package' && service.package_items && service.package_items.length > 0) {
-            const itemsText = service.package_items.map(item => {
-                const itemService = services.find(s => s.id === item.service_id);
-                return itemService ? `${itemService.name}×${item.quantity}` : '';
-            }).filter(Boolean).join(', ');
-            packageItemsDisplay = `<span class="text-xs text-gray-600" title="${itemsText}">${itemsText.substring(0, 30)}${itemsText.length > 30 ? '...' : ''}</span>`;
-        }
         
         return `
             <tr class="hover:bg-gray-50">
@@ -128,11 +203,13 @@ async function renderServicesList(searchKeyword = '') {
                 <td class="px-4 py-3 text-right text-sm font-medium text-blue-600">¥${parseFloat(service.retail_price || 0).toFixed(2)}</td>
                 <td class="px-4 py-3 text-right text-sm font-medium text-orange-600">¥${parseFloat(service.supply_price || 0).toFixed(2)}</td>
                 <td class="px-4 py-3 text-right text-sm font-medium text-green-600">¥${parseFloat(service.wholesale_price || 0).toFixed(2)}</td>
-                <td class="px-4 py-3 text-center">${stockDisplay}</td>
                 <td class="px-4 py-3 text-center">${statusLabel}</td>
                 <td class="px-4 py-3 text-center">
                     <button onclick="viewServicePrices(${service.id})" class="text-blue-600 hover:text-blue-800 mr-2" title="查看价格">
                         <i class="fas fa-eye"></i>
+                    </button>
+                    <button onclick="viewPriceHistory(${service.id})" class="text-purple-600 hover:text-purple-800 mr-2" title="价格历史">
+                        <i class="fas fa-history"></i>
                     </button>
                     <button onclick="editService(${service.id})" class="text-green-600 hover:text-green-800 mr-2" title="编辑">
                         <i class="fas fa-edit"></i>
@@ -146,15 +223,23 @@ async function renderServicesList(searchKeyword = '') {
     }).join('');
 }
 
-// 【废弃】服务包单独列表渲染(保留兼容性)
-function renderServicePackagesList() {
-    console.warn('renderServicePackagesList已废弃,请使用renderServicesList');
-    renderServicesList();
+// 【废弃】旧版服务包列表渲染
+function renderServicePackagesListOld() {
+    console.warn('renderServicePackagesListOld已废弃');
 }
 
 // 查看服务价格详情
-function viewServicePrices(id) {
-    const services = db.getServices().data || [];
+async function viewServicePrices(id) {
+    // 使用缓存数据或重新加载
+    let services = allServices;
+    if (services.length === 0) {
+        try {
+            const result = await window.api.getServices();
+            if (result.success) services = result.data || [];
+        } catch (error) {
+            console.error('加载服务失败:', error);
+        }
+    }
     const service = services.find(s => s.id === id);
     if (!service) return;
     
@@ -208,7 +293,7 @@ async function openServiceModal(id = null) {
         const result = await window.api.getTeams();
         if (result.success) teams = result.data || [];
     } catch (error) {
-        teams = db.getTeams()?.data || [];
+        console.error('加载团队失败:', error);
     }
     
     const teamSelect = document.getElementById('serviceTeamId');
@@ -224,7 +309,7 @@ async function openServiceModal(id = null) {
             const result = await window.api.getServices();
             if (result.success) services = result.data || [];
         } catch (error) {
-            services = db.getServices()?.data || [];
+            console.error('加载服务失败:', error);
         }
         
         const service = services.find(s => s.id === id);
@@ -589,12 +674,9 @@ async function saveService(event) {
         
         console.log('✅ API操作成功:', result);
     } catch (error) {
-        console.warn('❌ API失败，降级到LocalStorage:', error);
-        if (currentEditServiceId) {
-            result = db.updateService(currentEditServiceId, serviceData);
-        } else {
-            result = db.addService(serviceData);
-        }
+        console.error('❌ API操作失败:', error);
+        showToast(`操作失败: ${error.message}`, 'error');
+        return;
     }
     
     if (result.success) {
@@ -619,9 +701,24 @@ async function saveService(event) {
     }
 }
 
-// 编辑服务(统一入口)
-function editService(id) {
-    openServiceModal(id);
+// 编辑服务(统一入口) - 使用新的productServiceModal
+async function editService(id) {
+    // 获取服务数据
+    const service = allServices.find(s => s.id === id);
+    if (!service) {
+        console.error('未找到服务:', id);
+        return;
+    }
+    
+    const itemType = service.item_type || service.type || 'service';
+    
+    // 【P0-1修复】使用新的统一模态框，服务/服务包会自动隐藏库存标签页
+    if (typeof window.openServiceModalNew === 'function') {
+        await window.openServiceModalNew(itemType, id, service);
+    } else {
+        // 降级到旧模态框
+        openServiceModal(id);
+    }
 }
 
 // 删除服务(统一入口)
@@ -635,8 +732,9 @@ async function deleteService(id) {
         if (!result.success) throw new Error(result.message);
         console.log('✅ API删除成功');
     } catch (error) {
-        console.warn('❌ API失败，降级到LocalStorage:', error);
-        result = db.deleteService(id);
+        console.error('❌ API删除失败:', error);
+        showToast(`删除失败: ${error.message}`, 'error');
+        return;
     }
     
     if (result.success) {
@@ -659,7 +757,7 @@ async function renderPackageItemsSelector() {
             const result = await window.api.getServices();
             if (result.success) services = result.data || [];
         } catch (error) {
-            services = db.getServices()?.data || [];
+            console.error('加载服务列表失败:', error);
         }
         allServices = services; // 缓存到全局变量
     }
@@ -709,7 +807,7 @@ function addToPackage(serviceId) {
 // 渲染已选服务包项目
 function renderSelectedPackageItems() {
     // 使用全局变量allServices（已从API加载）
-    const services = allServices.length > 0 ? allServices : (db.getServices()?.data || []);
+    const services = allServices;
     const container = document.getElementById('selectedPackageItems');
     if (!container) return;
     
@@ -751,13 +849,18 @@ function removePackageItem(index) {
     renderSelectedPackageItems();
 }
 
-// 【废弃】旧的服务包编辑模态框(保留兼容性)
+// 打开服务包模态框(新增/编辑)
 function openServicePackageModal(id = null) {
-    console.warn('openServicePackageModal已废弃,请使用openServiceModal');
-    openServiceModal(id);
+    // 使用新的统一模态框，指定类型为 package
+    if (typeof window.openServiceModalNew === 'function') {
+        window.openServiceModalNew('package', id, null);
+    } else {
+        // 降级到旧模态框
+        openServiceModal(id);
+    }
 }
 
-// 【废弃】保留兼容性
+// 保留兼容性
 let currentEditPackageId = null;
 
 // 【废弃】服务包编辑(保留兼容性)
@@ -840,10 +943,22 @@ window.clearServiceSearch = function() {
     renderServicesList();
 };
 
+// 【P0-1修复】新增服务/服务包模态框入口，自动隐藏库存标签页
+async function openNewServiceModal(itemType = 'service') {
+    // 使用新的统一模态框，服务/服务包会自动隐藏库存标签页
+    if (typeof window.openServiceModalNew === 'function') {
+        await window.openServiceModalNew(itemType, null, null);
+    } else {
+        // 降级到旧模态框
+        openServiceModal();
+    }
+}
+
 // 挂载全局函数供 HTML 调用
 if (typeof window !== 'undefined') {
     window.initServicesPage = initServicesPage;
     window.openServiceModal = openServiceModal;
+    window.openNewServiceModal = openNewServiceModal;
     window.saveService = saveService;
     window.closeServiceModal = closeServiceModal;
     window.editService = editService;
@@ -851,13 +966,19 @@ if (typeof window !== 'undefined') {
     window.onServiceItemTypeChange = onServiceItemTypeChange;
     window.addToPackage = addToPackage; // 修正：addPackageItem -> addToPackage
     window.removePackageItem = removePackageItem;
-    window.updatePackageItemQuantity = updatePackageItemQuantity;
+    // window.updatePackageItemQuantity = updatePackageItemQuantity; // 已废弃：函数未实现
     
     // 商品属性模板相关函数
     window.loadTemplateFields = loadTemplateFields;
     
-    // 保留旧函数兼容(废弃)
+    // 服务包管理相关函数
+    window.openServicePackageModal = openServicePackageModal;
+    window.closeServicePackageModal = closeServicePackageModal;
     window.initServicePackagesPage = initServicePackagesPage;
+    window.refreshServicePackagesList = refreshServicePackagesList;
+    window.searchServicePackages = searchServicePackages;
+    
+    // 保留旧函数兼容(废弃)
     window.editServicePackage = editServicePackage;
     window.deleteServicePackage = deleteServicePackage;
 }
@@ -997,3 +1118,153 @@ function generateFieldHTML(field) {
             return '';
     }
 }
+
+// ==================== P4-3-4: 价格历史功能 ====================
+
+// 查看价格历史
+async function viewPriceHistory(serviceId) {
+    try {
+        // 加载价格历史
+        const result = await window.api.getServicePriceHistory(serviceId);
+        if (!result.success) throw new Error(result.message || 'API返回失败');
+        
+        const history = result.data || [];
+        
+        // 获取服务信息
+        const servicesResult = await window.api.getServices();
+        const service = servicesResult.success ? 
+            (servicesResult.data || []).find(s => s.id === serviceId) : null;
+        
+        if (!service) {
+            showNotification('服务信息加载失败', 'error');
+            return;
+        }
+        
+        // 构建历史记录HTML
+        let historyHtml = '';
+        
+        if (history.length === 0) {
+            historyHtml = '<p class="text-gray-500 text-center py-8">暂无价格变更记录</p>';
+        } else {
+            historyHtml = `
+                <div class="space-y-3">
+                    ${history.map((record, index) => {
+                        const isFirst = index === 0;
+                        const oldPrice = parseFloat(record.old_price || 0).toFixed(2);
+                        const newPrice = parseFloat(record.new_price || 0).toFixed(2);
+                        const oldCost = parseFloat(record.old_cost_price || 0).toFixed(2);
+                        const newCost = parseFloat(record.new_cost_price || 0).toFixed(2);
+                        
+                        const priceChanged = oldPrice !== newPrice;
+                        const costChanged = oldCost !== newCost;
+                        
+                        return `
+                            <div class="relative pl-8 pb-4 ${ isFirst ? '' : 'border-l-2 border-gray-200' }">
+                                <!-- 时间轴节点 -->
+                                <div class="absolute left-0 top-0 w-4 h-4 rounded-full ${ isFirst ? 'bg-purple-500' : 'bg-gray-300' } border-2 border-white"></div>
+                                
+                                <!-- 内容区域 -->
+                                <div class="bg-gray-50 rounded-lg p-4 ml-4">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <div>
+                                            <span class="text-xs text-gray-500">${record.created_at || '-'}</span>
+                                            ${ record.operator_name ? `<span class="ml-2 text-xs text-gray-600">操作人：${record.operator_name}</span>` : '' }
+                                        </div>
+                                        ${ isFirst ? '<span class="px-2 py-1 bg-purple-100 text-purple-600 text-xs rounded">当前价格</span>' : '' }
+                                    </div>
+                                    
+                                    <div class="grid grid-cols-2 gap-3 text-sm">
+                                        ${ priceChanged ? `
+                                            <div>
+                                                <p class="text-gray-500 text-xs mb-1">零售价</p>
+                                                <div class="flex items-center space-x-2">
+                                                    <span class="text-gray-400 line-through">¥${oldPrice}</span>
+                                                    <i class="fas fa-arrow-right text-gray-400 text-xs"></i>
+                                                    <span class="text-blue-600 font-bold">¥${newPrice}</span>
+                                                </div>
+                                            </div>
+                                        ` : `
+                                            <div>
+                                                <p class="text-gray-500 text-xs mb-1">零售价</p>
+                                                <span class="text-gray-600">¥${newPrice}</span>
+                                            </div>
+                                        ` }
+                                        
+                                        ${ costChanged ? `
+                                            <div>
+                                                <p class="text-gray-500 text-xs mb-1">成本价</p>
+                                                <div class="flex items-center space-x-2">
+                                                    <span class="text-gray-400 line-through">¥${oldCost}</span>
+                                                    <i class="fas fa-arrow-right text-gray-400 text-xs"></i>
+                                                    <span class="text-green-600 font-bold">¥${newCost}</span>
+                                                </div>
+                                            </div>
+                                        ` : `
+                                            <div>
+                                                <p class="text-gray-500 text-xs mb-1">成本价</p>
+                                                <span class="text-gray-600">¥${newCost}</span>
+                                            </div>
+                                        ` }
+                                    </div>
+                                    
+                                    ${ record.change_reason ? `
+                                        <div class="mt-2 text-xs text-gray-600">
+                                            <i class="fas fa-comment-alt mr-1"></i>
+                                            ${record.change_reason}
+                                        </div>
+                                    ` : '' }
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        }
+        
+        const modalContent = `
+            <div class="mb-4">
+                <h4 class="text-lg font-bold text-gray-900">${service.name}</h4>
+                <p class="text-sm text-gray-500">${service.code || '-'}</p>
+            </div>
+            <div class="max-h-96 overflow-y-auto">
+                ${historyHtml}
+            </div>
+        `;
+        
+        showModalAlert('价格变更历史', modalContent);
+        
+    } catch (error) {
+        window.Utils.handleApiError(error, '加载价格历史');
+    }
+}
+
+// ==================== 最终全局函数挂载（确保所有函数定义后执行） ====================
+(function() {
+    // 服务管理核心函数
+    window.initServicesPage = initServicesPage;
+    window.openServiceModal = openServiceModal;
+    window.openNewServiceModal = openNewServiceModal;
+    window.saveService = saveService;
+    window.closeServiceModal = closeServiceModal;
+    window.editService = editService;
+    window.deleteService = deleteService;
+    window.onServiceItemTypeChange = onServiceItemTypeChange;
+    window.addToPackage = addToPackage;
+    window.removePackageItem = removePackageItem;
+    window.loadTemplateFields = loadTemplateFields;
+    
+    // 服务包管理函数
+    window.openServicePackageModal = openServicePackageModal;
+    window.closeServicePackageModal = closeServicePackageModal;
+    window.initServicePackagesPage = initServicePackagesPage;
+    window.refreshServicePackagesList = refreshServicePackagesList;
+    window.searchServicePackages = searchServicePackages;
+    window.editServicePackage = editServicePackage;
+    window.deleteServicePackage = deleteServicePackage;
+    
+    // 价格管理函数
+    window.viewServicePrices = viewServicePrices;
+    window.viewPriceHistory = viewPriceHistory;
+    
+    console.log('✅ services.js 全局函数挂载完成');
+})();

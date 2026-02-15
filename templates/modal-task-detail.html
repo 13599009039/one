@@ -1,0 +1,73 @@
+<!-- 任务详情模态框 -->
+<div class="modal fade" id="taskDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-info-circle"></i> 任务详情
+                </h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- 基本信息 -->
+                <div class="task-info-section" style="margin-bottom: 20px;">
+                    <h6 class="border-bottom pb-2">基本信息</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>任务编号:</strong> <span id="detailTaskId">-</span></p>
+                            <p><strong>订单ID:</strong> <span id="detailOrderId">-</span></p>
+                            <p><strong>客户名称:</strong> <span id="detailCustomerName">-</span></p>
+                            <p><strong>任务状态:</strong> <span id="detailTaskStatus" class="badge">-</span></p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>优先级:</strong> <span id="detailTaskPriority" class="badge">-</span></p>
+                            <p><strong>任务来源:</strong> <span id="detailSourceType">-</span></p>
+                            <p><strong>创建时间:</strong> <span id="detailCreatedAt">-</span></p>
+                            <p><strong>接单时间:</strong> <span id="detailAcceptedAt">-</span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 任务描述 -->
+                <div class="task-description-section" style="margin-bottom: 20px;">
+                    <h6 class="border-bottom pb-2">任务描述</h6>
+                    <p id="detailTaskDescription" style="white-space: pre-wrap;">-</p>
+                    <h6 class="border-bottom pb-2 mt-3">任务要求</h6>
+                    <p id="detailTaskRequirements" style="white-space: pre-wrap;">-</p>
+                </div>
+
+                <!-- 参与人员 -->
+                <div class="task-participants-section" style="margin-bottom: 20px;">
+                    <h6 class="border-bottom pb-2">参与人员</h6>
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>姓名</th>
+                                <th>角色</th>
+                                <th>分配方式</th>
+                                <th>接受时间</th>
+                                <th>状态</th>
+                            </tr>
+                        </thead>
+                        <tbody id="detailParticipantsTable">
+                            <!-- 动态渲染 -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 操作历史 -->
+                <div class="task-history-section">
+                    <h6 class="border-bottom pb-2">操作历史</h6>
+                    <div id="detailOperationLogs" style="max-height: 200px; overflow-y: auto;">
+                        <!-- 动态渲染 -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>

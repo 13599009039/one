@@ -1,6 +1,6 @@
 <!-- 手工登记流水模态框 -->
-<div id="transactionModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden modal">
-    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+<div id="transactionModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-start justify-center pt-10 px-4 hidden modal">
+    <div class="relative w-96 shadow-lg rounded-md bg-white p-5">
         <div class="flex justify-between items-center">
             <h3 class="text-lg font-medium text-gray-900" id="modalTitle">手工登记流水</h3>
             <button id="closeTransactionModal" class="text-gray-400 hover:text-gray-500 focus:outline-none focus:text-gray-500 close-modal">
@@ -39,6 +39,22 @@
                     <select id="transactionAccount" name="accountId" class="block w-full px-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" required>
                         <!-- 账户选项将动态生成 -->
                     </select>
+                </div>
+                
+                <!-- P1-UI-2: 订单关联选择 -->
+                <div class="mb-4">
+                    <label for="transactionOrderId" class="block text-sm font-medium text-gray-700 mb-1">
+                        关联订单
+                        <span class="text-xs text-gray-500">（可选）</span>
+                    </label>
+                    <select id="transactionOrderId" name="orderId" class="block w-full px-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out">
+                        <option value="">-- 无关联订单 --</option>
+                        <!-- 订单选项将动态生成 -->
+                    </select>
+                    <p class="mt-1 text-xs text-gray-500">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        收款/退款可关联对应订单，便于对账
+                    </p>
                 </div>
                 
                 <div class="mb-4">

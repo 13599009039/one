@@ -53,8 +53,8 @@ function hideLoading() {
 // 主初始化函数
 document.addEventListener('DOMContentLoaded', function() {
     try {
-        // 自动合并新的模拟数据（如果 localStorage 中已有旧数据）
-        syncMockData();
+        // ✅ 不再同步localStorage模拟数据
+        // ✅ 移除旧代码：syncMockData();
         
         // 初始化登录表单
         initLoginForm();
@@ -63,32 +63,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// 同步新的模拟数据到 localStorage
-function syncMockData() {
-    const savedData = localStorage.getItem('ajkuaiji_data');
-    if (savedData) {
-        try {
-            const data = JSON.parse(savedData);
-            if (data.transactions && data.transactions.length < 30) {
-                console.log('检测到旧数据，正在合并新的模拟流水...');
-                const defaultData = window.db.getDefaultData ? window.db.getDefaultData() : null;
-                if (defaultData) {
-                    // 仅添加不存在的交易（以ID判断）
-                    const existingIds = new Set(data.transactions.map(t => t.id));
-                    defaultData.transactions.forEach(t => {
-                        if (!existingIds.has(t.id)) {
-                            data.transactions.push(t);
-                        }
-                    });
-                    localStorage.setItem('ajkuaiji_data', JSON.stringify(data));
-                    console.log('模拟数据同步完成');
-                }
-            }
-        } catch (e) {
-            console.error('同步模拟数据失败:', e);
-        }
-    }
-}
+
 
 // 登录成功后初始化所有模块
 function initSystem() {
@@ -108,21 +83,11 @@ function initSystem() {
     }
     
     try {
-        // 初始化仪表盘
-        if (typeof initDashboard === 'function') {
-            initDashboard();
-        }
+        // 默认显示首页
+        showPage('home');
+        console.log('✅ 默认显示首页');
     } catch (error) {
-        console.error('初始化仪表盘时发生错误:', error);
-    }
-    
-    try {
-        // 初始化流水记录页面
-        if (typeof loadTransactionData === 'function') {
-            loadTransactionData();
-        }
-    } catch (error) {
-        console.error('初始化流水记录页面时发生错误:', error);
+        console.error('显示首页时发生错误:', error);
     }
 };
 

@@ -1,0 +1,71 @@
+<!-- 签署合同模态框 -->
+<div id="signContractModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center px-4 hidden modal" style="z-index: 10001 !important;">
+    <div class="relative w-full max-w-md shadow-lg rounded-lg bg-white p-6">
+        <!-- 标题栏 -->
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-bold text-gray-900">📝 签署合同</h3>
+            <button type="button" class="text-gray-400 hover:text-gray-500" onclick="closeSignContractModal()">
+                <span class="text-2xl">&times;</span>
+            </button>
+        </div>
+        
+        <!-- 表单内容 -->
+        <div class="space-y-4">
+            <!-- 隐藏字段：订单ID -->
+            <input type="hidden" id="signContractOrderId">
+            
+            <!-- 合同编号 -->
+            <div>
+                <label for="signContractNumber" class="block text-sm font-medium text-gray-700 mb-1">
+                    合同编号 <span class="text-red-500">*</span>
+                </label>
+                <input type="text" id="signContractNumber" 
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                       placeholder="如：HT202602120001">
+                <p class="text-xs text-gray-500 mt-1">请输入完整的合同编号</p>
+            </div>
+            
+            <!-- 签署日期 -->
+            <div>
+                <label for="signContractDate" class="block text-sm font-medium text-gray-700 mb-1">
+                    签署日期 <span class="text-red-500">*</span>
+                </label>
+                <input type="date" id="signContractDate" 
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            
+            <!-- 订单状态 -->
+            <div>
+                <label for="signContractStatus" class="block text-sm font-medium text-gray-700 mb-1">
+                    签署后订单状态
+                </label>
+                <select id="signContractStatus" 
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <option value="服务中">服务中</option>
+                    <option value="待签约">待签约</option>
+                    <option value="已完成">已完成</option>
+                </select>
+                <p class="text-xs text-gray-500 mt-1">合同签署后，订单将自动更新为所选状态</p>
+            </div>
+            
+            <!-- 提示信息 -->
+            <div class="bg-blue-50 border-l-4 border-blue-400 p-3 rounded">
+                <p class="text-sm text-blue-800">
+                    <strong>提示：</strong>签署合同后将记录合同编号和签署日期，订单状态将更新为"服务中"。
+                </p>
+            </div>
+        </div>
+        
+        <!-- 按钮组 -->
+        <div class="flex gap-3 mt-6">
+            <button type="button" onclick="closeSignContractModal()" 
+                    class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                取消
+            </button>
+            <button type="button" onclick="saveContractSign()" 
+                    class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium">
+                ✓ 确认签署
+            </button>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,67 @@
+<!-- 登记收款模态框 -->
+<div id="addPaymentModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-start justify-center pt-10 px-4 hidden" style="z-index: 10002 !important;">
+    <div class="relative w-full max-w-md shadow-lg rounded-lg bg-white p-6" style="z-index: 10003 !important;">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-bold text-gray-900">登记收款</h3>
+            <button type="button" class="text-gray-400 hover:text-gray-500" onclick="closeAddPaymentModal()">
+                <span class="text-2xl">&times;</span>
+            </button>
+        </div>
+        
+        <form id="paymentForm" onsubmit="savePayment(event)" class="space-y-4">
+            <input type="hidden" id="paymentOrderId" />
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">收款金额 *</label>
+                <input type="number" id="paymentAmount" step="0.01" min="0.01" 
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       placeholder="请输入收款金额" required />
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">收款日期 *</label>
+                <input type="date" id="paymentDate"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       required />
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">收款类型 *</label>
+                <select id="paymentType"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required>
+                    <option value="收款">收款</option>
+                    <option value="预收款">预收款</option>
+                    <option value="尾款">尾款</option>
+                </select>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">收款账户 *</label>
+                <select id="paymentAccount"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required>
+                    <option value="">请选择账户</option>
+                </select>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">备注</label>
+                <textarea id="paymentNotes" rows="2"
+                          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="选填"></textarea>
+            </div>
+            
+            <div class="flex justify-end space-x-3 pt-4">
+                <button type="button" onclick="closeAddPaymentModal()"
+                        class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">
+                    取消
+                </button>
+                <button type="submit"
+                        class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                    确认登记
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

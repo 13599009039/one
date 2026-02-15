@@ -1,0 +1,58 @@
+<!-- 任务池管理页面内容 -->
+<div id="taskPoolPage" style="display:none; padding: 20px;">
+    <!-- 页面标题 -->
+    <div class="page-header" style="margin-bottom: 20px;">
+        <h3><i class="fas fa-tasks"></i> 任务管理</h3>
+    </div>
+
+    <!-- 筛选器区域 -->
+    <div class="filter-section" style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+        <div class="row">
+            <div class="col-md-3">
+                <label>任务状态</label>
+                <select id="taskStatusFilter" class="form-control">
+                    <option value="">全部状态</option>
+                    <option value="待接单">待接单</option>
+                    <option value="已接单">已接单</option>
+                    <option value="进行中">进行中</option>
+                    <option value="待验收">待验收</option>
+                    <option value="已完成">已完成</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label>优先级</label>
+                <select id="taskPriorityFilter" class="form-control">
+                    <option value="">全部优先级</option>
+                    <option value="低">低</option>
+                    <option value="中">中</option>
+                    <option value="高">高</option>
+                    <option value="紧急">紧急</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab导航 -->
+    <ul class="nav nav-tabs" style="margin-bottom: 20px;">
+        <li class="nav-item">
+            <a class="nav-link active" href="#" data-task-tab="available">
+                <i class="fas fa-inbox"></i> 待领取任务
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="#" data-task-tab="my">
+                <i class="fas fa-user-check"></i> 我的任务
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="#" data-task-tab="all">
+                <i class="fas fa-list"></i> 全部任务
+            </a>
+        </li>
+    </ul>
+
+    <!-- 任务列表容器 -->
+    <div id="taskListContainer">
+        <!-- 任务卡片将通过JS动态渲染 -->
+    </div>
+</div>

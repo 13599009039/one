@@ -1,0 +1,42 @@
+<!-- 售后服务登记模态框 -->
+<div id="afterSalesModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-start justify-center pt-10 px-4 hidden modal" style="z-index: 10002 !important;">
+    <div class="relative w-full max-w-md shadow-lg rounded-md bg-white p-5">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-bold text-gray-900">售后服务登记</h3>
+            <button type="button" class="text-gray-400 hover:text-gray-500" onclick="closeAfterSalesModal()">
+                <span class="text-2xl">&times;</span>
+            </button>
+        </div>
+        <form id="afterSalesForm" class="space-y-4">
+            <input type="hidden" id="afterSalesOrderId">
+            <div>
+                <label class="block text-sm font-medium text-gray-700">售后类型</label>
+                <select id="afterSalesType" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 sm:text-sm">
+                    <option value="重拍/补拍">重拍/补拍</option>
+                    <option value="修改/重剪">修改/重剪</option>
+                    <option value="投诉处理">投诉处理</option>
+                    <option value="退款申请">退款申请</option>
+                    <option value="其他">其他</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">售后金额 (如退款需填)</label>
+                <input type="number" id="afterSalesAmount" value="0" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 sm:text-sm">
+            </div>
+            <div id="refundAccountSection" class="hidden">
+                <label class="block text-sm font-medium text-gray-700">退款账户</label>
+                <select id="afterSalesAccount" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 sm:text-sm">
+                    <!-- 动态加载 -->
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">情况说明</label>
+                <textarea id="afterSalesContent" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 sm:text-sm" required></textarea>
+            </div>
+            <div class="flex justify-end space-x-3 mt-6">
+                <button type="button" onclick="closeAfterSalesModal()" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700">取消</button>
+                <button type="submit" class="bg-red-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-red-700">保存记录</button>
+            </div>
+        </form>
+    </div>
+</div>

@@ -13,7 +13,8 @@ async function apiRequest(endpoint, options = {}) {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json'
-        }
+        },
+        credentials: 'include'  // ✅ 允许发送Cookie（Session ID）
     };
     
     const finalOptions = { ...defaultOptions, ...options };
@@ -45,6 +46,18 @@ async function apiLogin(username, password) {
     return apiRequest('/users/login', {
         method: 'POST',
         body: { username, password }
+    });
+}
+
+// 获取当前登录用户（Session验证）
+async function apiGetCurrentUser() {
+    return apiRequest('/users/current');
+}
+
+// 用户登出
+async function apiLogout() {
+    return apiRequest('/users/logout', {
+        method: 'POST'
     });
 }
 
@@ -189,6 +202,64 @@ async function apiDeletePosition(posId) {
     });
 }
 
+// 区域管理
+async function apiGetAreas() {
+    return apiRequest('/areas');
+}
+
+async function apiGetArea(areaId) {
+    return apiRequest(`/areas/${areaId}`);
+}
+
+async function apiAddArea(areaData) {
+    return apiRequest('/areas', {
+        method: 'POST',
+        body: areaData
+    });
+}
+
+async function apiUpdateArea(areaId, areaData) {
+    return apiRequest(`/areas/${areaId}`, {
+        method: 'PUT',
+        body: areaData
+    });
+}
+
+async function apiDeleteArea(areaId) {
+    return apiRequest(`/areas/${areaId}`, {
+        method: 'DELETE'
+    });
+}
+
+// 项目管理
+async function apiGetProjects() {
+    return apiRequest('/projects');
+}
+
+async function apiGetProject(projectId) {
+    return apiRequest(`/projects/${projectId}`);
+}
+
+async function apiAddProject(projectData) {
+    return apiRequest('/projects', {
+        method: 'POST',
+        body: projectData
+    });
+}
+
+async function apiUpdateProject(projectId, projectData) {
+    return apiRequest(`/projects/${projectId}`, {
+        method: 'PUT',
+        body: projectData
+    });
+}
+
+async function apiDeleteProject(projectId) {
+    return apiRequest(`/projects/${projectId}`, {
+        method: 'DELETE'
+    });
+}
+
 // ==================== 健康检查 ====================
 
 // API 健康检查
@@ -234,9 +305,10 @@ async function apiDeleteOrder(orderId) {
 
 // ==================== 服务/商品管理 API ====================
 
-// 获取服务列表
-async function apiGetServices() {
-    return apiRequest('/services');
+// 获取服务列表（支持按type过滤: product/service/package）
+async function apiGetServices(type = '') {
+    const url = type ? `/services?type=${type}` : '/services';
+    return apiRequest(url);
 }
 
 // 添加服务
@@ -356,6 +428,8 @@ async function apiGetServiceCustomFields(serviceId) {
 window.api = {
     // 用户
     login: apiLogin,
+    getCurrentUser: apiGetCurrentUser,  // ✅ 新增：获取当前登录用户
+    logout: apiLogout,  // ✅ 新增：登出
     getUsers: apiGetUsers,
     addUser: apiAddUser,
     updateUser: apiUpdateUser,
@@ -384,6 +458,20 @@ window.api = {
     addPosition: apiAddPosition,
     updatePosition: apiUpdatePosition,
     deletePosition: apiDeletePosition,
+    
+    // 区域
+    getAreas: apiGetAreas,
+    getArea: apiGetArea,
+    addArea: apiAddArea,
+    updateArea: apiUpdateArea,
+    deleteArea: apiDeleteArea,
+    
+    // 项目
+    getProjects: apiGetProjects,
+    getProject: apiGetProject,
+    addProject: apiAddProject,
+    updateProject: apiUpdateProject,
+    deleteProject: apiDeleteProject,
     
     // 订单
     getOrders: apiGetOrders,
@@ -425,6 +513,7 @@ window.api = {
     getRecycleServices: apiGetRecycleServices,
     restoreService: apiRestoreService,
     permanentDeleteService: apiPermanentDeleteService,
+    getServicePriceHistory: apiGetServicePriceHistory,  // P4-3-4新增
     
     // 商品属性模板
     getProductTemplates: apiGetProductTemplates,
@@ -449,6 +538,16 @@ window.api = {
     getPurchases: apiGetPurchases,
     addPurchase: apiAddPurchase,
     
+    // 库存管理（P4-3新增）
+    inventoryIn: apiInventoryIn,
+    inventoryOut: apiInventoryOut,
+    inventoryAdjust: apiInventoryAdjust,
+    getInventoryTransactions: apiGetInventoryTransactions,
+    
+    // 售后管理
+    addOrderAfterSales: apiAddOrderAfterSales,
+    getOrderAfterSales: apiGetOrderAfterSales,
+    
     // 系统设置
     getSystemSettings: apiGetSystemSettings,
     updateSystemSetting: apiUpdateSystemSetting,
@@ -469,18 +568,6 @@ async function apiAddCategory(categoryData) {
     return apiRequest('/categories', {
         method: 'POST',
         body: categoryData
-    });
-}
-
-// 服务商品管理
-async function apiGetServices() {
-    return apiRequest('/services');
-}
-
-async function apiAddService(serviceData) {
-    return apiRequest('/services', {
-        method: 'POST',
-        body: serviceData
     });
 }
 
@@ -635,6 +722,74 @@ async function apiBatchAddTransactions(transactionsList) {
         method: 'POST',
         body: { transactions: transactionsList }
     });
+}
+
+// ==================== P4-3: 库存管理API ====================
+
+// 库存入库（采购入库）
+async function apiInventoryIn(inventoryData) {
+    return apiRequest('/inventory/in', {
+        method: 'POST',
+        body: inventoryData
+    });
+}
+
+// 库存出库（任务出库）
+async function apiInventoryOut(inventoryData) {
+    return apiRequest('/inventory/out', {
+        method: 'POST',
+        body: inventoryData
+    });
+}
+
+// 库存盘点调整
+async function apiInventoryAdjust(inventoryData) {
+    return apiRequest('/inventory/adjust', {
+        method: 'POST',
+        body: inventoryData
+    });
+}
+
+// 查询库存流水（支持日期筛选）
+async function apiGetInventoryTransactions(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    return apiRequest(`/inventory/transactions${queryString ? '?' + queryString : ''}`);
+}
+
+// ==================== P4-3-4: 价格历史API ====================
+
+// 获取服务项价格历史记录
+async function apiGetServicePriceHistory(serviceId) {
+    return apiRequest(`/services/${serviceId}/price-history`);
+}
+
+// ==================== 订单售后管理 API ====================
+
+/**
+ * 创建订单售后记录
+ * @param {Object} aftersalesData - 售后数据
+ * @param {number} aftersalesData.order_id - 订单ID
+ * @param {string} aftersalesData.aftersales_type - 售后类型
+ * @param {number} aftersalesData.aftersales_amount - 售后金额
+ * @param {number} aftersalesData.account_id - 账户ID
+ * @param {string} aftersalesData.content - 售后内容
+ * @param {number} aftersalesData.created_by - 创建人ID
+ * @returns {Promise} API响应
+ */
+async function apiAddOrderAfterSales(aftersalesData) {
+    return apiRequest('/aftersales', {
+        method: 'POST',
+        body: aftersalesData
+    });
+}
+
+/**
+ * 获取订单的所有售后记录
+ * @param {number} orderId - 订单ID
+ * @returns {Promise} API响应
+ */
+async function apiGetOrderAfterSales(orderId) {
+    return apiRequest(`/orders/${orderId}/aftersales`);
 }
 
 console.log('API模块已加载');

@@ -1,4 +1,5 @@
 // 用户菜单模块 - 个人信息、修改密码、切换公司、退出登录
+// v24.3.3 - 使用SafeUtils防御性编程，全部getElementById改为safeGetElement
 (function() {
     'use strict';
 
@@ -17,22 +18,26 @@
     }
 
     // 更新用户信息显示
-    function updateUserInfo() {
-        const savedUser = localStorage.getItem('ajkuaiji_current_user');
-        if (!savedUser) return;
-
+    async function updateUserInfo() {
+        // ✅ 不再仏localStorage读取，改用API获取
         try {
-            const user = JSON.parse(savedUser);
+            const result = await window.api.getCurrentUser();
+            if (!result.success || !result.user) {
+                console.warn('[UserMenu] ⚠️ 未获取到用户信息');
+                return;
+            }
+
+            const user = result.user;
             console.log('[UserMenu] 👤 当前用户:', user.username);
 
             // 更新用户名显示
-            const usernameEl = document.getElementById('currentUsername');
+            const usernameEl = SafeUtils.safeGetElement('currentUsername', 'updateUserInfo');
             if (usernameEl) {
                 usernameEl.textContent = user.name || user.username;
             }
 
             // 更新角色显示
-            const roleEl = document.getElementById('currentUserRole');
+            const roleEl = SafeUtils.safeGetElement('currentUserRole', 'updateUserInfo');
             if (roleEl) {
                 const roleMap = {
                     'super_admin': '超级管理员',
@@ -45,7 +50,7 @@
             }
 
             // 更新头像首字母
-            const avatarEl = document.getElementById('userAvatar');
+            const avatarEl = SafeUtils.safeGetElement('userAvatar', 'updateUserInfo');
             if (avatarEl) {
                 const firstChar = (user.name || user.username).charAt(0);
                 avatarEl.textContent = firstChar;
@@ -69,34 +74,21 @@
             if (result.success && result.data) {
                 const company = result.data.find(c => c.id === companyId);
                 if (company) {
-                    const companyEl = document.getElementById('currentCompanyName');
+                    const companyEl = SafeUtils.safeGetElement('currentCompanyName', 'updateCompanyInfo');
                     if (companyEl) {
                         companyEl.textContent = company.name;
                     }
                 }
             }
         } catch (error) {
-            console.log('[UserMenu] ℹ️ 获取公司信息失败，使用LocalStorage降级');
-            // 降级使用database.js
-            if (window.db && window.db.getCompanies) {
-                const result = window.db.getCompanies();
-                if (result.success && result.data) {
-                    const company = result.data.find(c => c.id === companyId);
-                    if (company) {
-                        const companyEl = document.getElementById('currentCompanyName');
-                        if (companyEl) {
-                            companyEl.textContent = company.name;
-                        }
-                    }
-                }
-            }
+            console.error('[UserMenu] ❌ 获取公司信息失败:', error);
         }
     }
 
     // 绑定用户头像点击事件（显示/隐藏下拉菜单）
     function bindUserAvatarClick() {
-        const userMenuBtn = document.getElementById('userMenuButton');
-        const userDropdown = document.getElementById('userDropdown');
+        const userMenuBtn = SafeUtils.safeGetElement('userMenuButton', 'bindUserAvatarClick');
+        const userDropdown = SafeUtils.safeGetElement('userDropdown', 'bindUserAvatarClick');
 
         if (userMenuBtn && userDropdown) {
             userMenuBtn.addEventListener('click', function(e) {
@@ -122,7 +114,7 @@
     // 打开个人信息模态框
     window.openUserProfileModal = function() {
         console.log('[UserMenu] 👤 打开个人信息模态框');
-        const modal = document.getElementById('userProfileModal');
+        const modal = SafeUtils.safeGetElement('userProfileModal', 'openUserProfileModal');
         if (modal) {
             modal.classList.remove('hidden');
             loadUserProfile();
@@ -131,24 +123,27 @@
 
     // 关闭个人信息模态框
     window.closeUserProfileModal = function() {
-        const modal = document.getElementById('userProfileModal');
+        const modal = SafeUtils.safeGetElement('userProfileModal', 'closeUserProfileModal');
         if (modal) {
             modal.classList.add('hidden');
         }
     };
 
     // 加载用户个人信息
-    function loadUserProfile() {
-        const savedUser = localStorage.getItem('ajkuaiji_current_user');
-        if (!savedUser) return;
+    async function loadUserProfile() {
+        // ✅ 改用window.currentUser或API获取
+        if (!window.currentUser) {
+            console.warn('[UserMenu] ⚠️ 未找到当前用户信息');
+            return;
+        }
 
         try {
-            const user = JSON.parse(savedUser);
+            const user = window.currentUser;
             
-            document.getElementById('profileUsername').value = user.username || '';
-            document.getElementById('profileName').value = user.name || '';
-            document.getElementById('profileAlias').value = user.alias || '';
-            document.getElementById('profileRole').value = user.role || '';
+            SafeUtils.safeSetValue('profileUsername', user.username || '');
+            SafeUtils.safeSetValue('profileName', user.name || '');
+            SafeUtils.safeSetValue('profileAlias', user.alias || '');
+            SafeUtils.safeSetValue('profileRole', user.role || '');
 
         } catch (error) {
             console.error('[UserMenu] ❌ 加载用户信息失败:', error);
@@ -159,28 +154,28 @@
     window.saveUserProfile = async function() {
         console.log('[UserMenu] 💾 保存个人信息...');
 
-        const savedUser = localStorage.getItem('ajkuaiji_current_user');
-        if (!savedUser) {
+        // ✅ 改用window.currentUser
+        if (!window.currentUser) {
             alert('未找到当前用户信息');
             return;
         }
 
         try {
-            const user = JSON.parse(savedUser);
+            const user = window.currentUser;
             const userId = user.id;
 
             const userData = {
-                name: document.getElementById('profileName').value,
-                alias: document.getElementById('profileAlias').value
+                name: SafeUtils.safeGetValue('profileName'),
+                alias: SafeUtils.safeGetValue('profileAlias')
             };
 
             // 调用API更新用户信息
             const result = await window.api.updateUser(userId, userData);
 
             if (result.success) {
-                // 更新localStorage中的用户信息
-                const updatedUser = { ...user, ...userData };
-                localStorage.setItem('ajkuaiji_current_user', JSON.stringify(updatedUser));
+                // ✅ 更新window.currentUser
+                window.currentUser = { ...user, ...userData };
+                console.log('[UserMenu] ✅ 已更新window.currentUser');
 
                 // 更新显示
                 updateUserInfo();
@@ -199,17 +194,18 @@
     // 打开修改密码模态框
     window.openChangePasswordModal = function() {
         console.log('[UserMenu] 🔐 打开修改密码模态框');
-        const modal = document.getElementById('changePasswordModal');
+        const modal = SafeUtils.safeGetElement('changePasswordModal', 'openChangePasswordModal');
         if (modal) {
             modal.classList.remove('hidden');
             // 清空表单
-            document.getElementById('changePasswordForm').reset();
+            const form = SafeUtils.safeGetElement('changePasswordForm', 'openChangePasswordModal');
+            if (form) form.reset();
         }
     };
 
     // 关闭修改密码模态框
     window.closeChangePasswordModal = function() {
-        const modal = document.getElementById('changePasswordModal');
+        const modal = SafeUtils.safeGetElement('changePasswordModal', 'closeChangePasswordModal');
         if (modal) {
             modal.classList.add('hidden');
         }
@@ -219,9 +215,9 @@
     window.changePassword = async function() {
         console.log('[UserMenu] 🔑 修改密码...');
 
-        const oldPassword = document.getElementById('oldPassword').value;
-        const newPassword = document.getElementById('newPassword').value;
-        const confirmPassword = document.getElementById('confirmPassword').value;
+        const oldPassword = SafeUtils.safeGetValue('oldPassword');
+        const newPassword = SafeUtils.safeGetValue('newPassword');
+        const confirmPassword = SafeUtils.safeGetValue('confirmPassword');
 
         // 验证
         if (!oldPassword || !newPassword || !confirmPassword) {
@@ -239,14 +235,14 @@
             return;
         }
 
-        const savedUser = localStorage.getItem('ajkuaiji_current_user');
-        if (!savedUser) {
+        // ✅ 改用window.currentUser
+        if (!window.currentUser) {
             alert('未找到当前用户信息');
             return;
         }
 
         try {
-            const user = JSON.parse(savedUser);
+            const user = window.currentUser;
 
             // 先验证旧密码
             const loginResult = await window.api.login(user.username, oldPassword);
@@ -259,8 +255,8 @@
             const result = await window.api.updateUser(user.id, { password: newPassword });
 
             if (result.success) {
-                // 更新localStorage中的密码（Base64编码）
-                localStorage.setItem('ajkuaiji_saved_pwd', btoa(newPassword));
+                // ✅ 不再存储密码到localStorage（安全风险已移除）
+                console.log('[UserMenu] ✅ 密码已更新（不再缓存）');
 
                 alert('密码修改成功！');
                 closeChangePasswordModal();
@@ -276,7 +272,7 @@
     // 打开切换公司模态框
     window.openSwitchCompanyModal = async function() {
         console.log('[UserMenu] 🏢 打开切换公司模态框');
-        const modal = document.getElementById('switchCompanyModal');
+        const modal = SafeUtils.safeGetElement('switchCompanyModal', 'openSwitchCompanyModal');
         if (modal) {
             modal.classList.remove('hidden');
             await loadCompanyList();
@@ -285,7 +281,7 @@
 
     // 关闭切换公司模态框
     window.closeSwitchCompanyModal = function() {
-        const modal = document.getElementById('switchCompanyModal');
+        const modal = SafeUtils.safeGetElement('switchCompanyModal', 'closeSwitchCompanyModal');
         if (modal) {
             modal.classList.add('hidden');
         }
@@ -294,22 +290,31 @@
     // 加载公司列表
     async function loadCompanyList() {
         try {
-            const result = await window.api.getCompanies();
+            // ✅ 修复: 从后端获取用户有权限的公司列表
+            const response = await fetch('/api/users/companies', {
+                credentials: 'include'
+            });
+            
+            if (!response.ok) {
+                throw new Error('获取公司列表失败');
+            }
+            
+            const result = await response.json();
             const companies = result.success ? result.data : [];
 
-            const savedUser = localStorage.getItem('ajkuaiji_current_user');
-            const currentCompanyId = savedUser ? JSON.parse(savedUser).company_id : null;
+            // ✅ 改用window.currentUser
+            const currentCompanyId = window.currentUser ? window.currentUser.company_id : null;
 
-            const listEl = document.getElementById('companyList');
+            const listEl = SafeUtils.safeGetElement('companyList', 'loadCompanyList');
             if (listEl && companies.length > 0) {
                 listEl.innerHTML = companies.map(company => `
                     <div class="company-item flex items-center justify-between p-3 border rounded-lg hover:bg-blue-50 cursor-pointer ${company.id === currentCompanyId ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}"
-                         onclick="switchCompany(${company.id}, '${company.name}')">
+                         onclick="switchCompany(${company.id}, '${SafeUtils.escapeHTML(company.name)}')">
                         <div class="flex items-center">
                             <i class="fas fa-building text-gray-400 mr-3"></i>
                             <div>
-                                <p class="font-medium text-gray-900">${company.name}</p>
-                                <p class="text-xs text-gray-500">${company.tax_number || ''}</p>
+                                <p class="font-medium text-gray-900">${SafeUtils.escapeHTML(company.name)}</p>
+                                <p class="text-xs text-gray-500">${SafeUtils.escapeHTML(company.short_name || '')}</p>
                             </div>
                         </div>
                         ${company.id === currentCompanyId ? '<i class="fas fa-check text-blue-600"></i>' : ''}
@@ -320,58 +325,74 @@
             }
         } catch (error) {
             console.error('[UserMenu] ❌ 加载公司列表失败:', error);
+            const listEl = SafeUtils.safeGetElement('companyList', 'loadCompanyList');
+            if (listEl) {
+                listEl.innerHTML = '<p class="text-center text-red-500">加载失败,请刷新重试</p>';
+            }
         }
     }
 
     // 切换公司
-    window.switchCompany = function(companyId, companyName) {
+    window.switchCompany = async function(companyId, companyName) {
         console.log('[UserMenu] 🔄 切换公司:', companyName);
 
-        const savedUser = localStorage.getItem('ajkuaiji_current_user');
-        if (!savedUser) return;
+        // ✅ 改用window.currentUser
+        if (!window.currentUser) {
+            alert('未找到当前用户信息');
+            return;
+        }
 
         try {
-            const user = JSON.parse(savedUser);
-            user.company_id = companyId;
-            localStorage.setItem('ajkuaiji_current_user', JSON.stringify(user));
+            const user = window.currentUser;
+            
+            // 调用API更新用户的公司信息
+            const result = await window.api.updateUser(user.id, { company_id: companyId });
+            
+            if (result.success) {
+                // ✅ 更新window.currentUser
+                window.currentUser.company_id = companyId;
+                console.log('[UserMenu] ✅ 已更新window.currentUser.company_id');
 
-            // 更新db对象
-            if (window.db && window.db.setCurrentUser) {
-                window.db.setCurrentUser(user);
+                alert('已切换到：' + companyName);
+                closeSwitchCompanyModal();
+
+                // 刷新页面以加载新公司数据
+                location.reload();
+            } else {
+                alert('切换公司失败：' + result.message);
             }
-
-            alert('已切换到：' + companyName);
-            closeSwitchCompanyModal();
-
-            // 刷新页面以加载新公司数据
-            location.reload();
         } catch (error) {
             console.error('[UserMenu] ❌ 切换公司失败:', error);
+            alert('切换公司失败：' + error.message);
         }
     };
 
     // 绑定退出登录事件
     function bindLogoutEvent() {
-        const logoutBtn = document.getElementById('logoutBtn');
+        const logoutBtn = SafeUtils.safeGetElement('logoutBtn', 'bindLogoutEvent');
         if (logoutBtn) {
             logoutBtn.addEventListener('click', handleLogout);
         }
     }
 
     // 退出登录
-    function handleLogout() {
-        console.log('[UserMenu] 🚪 退出登录...');
-
+    async function handleLogout() {
+        console.log('[UserMenu] 🚺 退出登录...');
+    
         if (confirm('确定要退出登录吗？')) {
-            // 清除localStorage中的登录信息
-            localStorage.removeItem('ajkuaiji_logged_in');
-            localStorage.removeItem('ajkuaiji_current_user');
-            localStorage.removeItem('ajkuaiji_saved_pwd');
-
-            console.log('[UserMenu] 🧹 已清除登录信息');
-
-            // 刷新页面跳转到登录页
-            location.reload();
+            try {
+                // ✅ 调用后端API清除Session
+                await window.api.logout();
+                console.log('[UserMenu] ✅ Session已清除');
+    
+                // ✅ 不需要清除localStorage，因为已经不用了
+                    
+                // 刷新页面跳转到登录页
+                location.reload();
+            } catch (error) {
+                console.error('[UserMenu] ❌ 退出登录失败:', error);
+                alert('退出失败，请重试');
+            }
         }
     }
 

@@ -1,13 +1,13 @@
-// 数据库连接和操作模块（V5.0版 - API优先 + LocalStorage降级）
+// 数据库连接和操作模块（V5.0版 - ❗ 已废弃，请使用MySQL API）
 // 全局变量存储当前登录用户和公司信息
 let currentUser = null;
 let currentCompany = null;
 
-// ============ 兼容模式配置 ============
-// 数据访问策略：API优先，失败时自动降级到LocalStorage
-// 客户管理模块（customers.js）已使用API
-// 组织架构模块（organization.js）已使用API
-// 其他模块暂时使用LocalStorage，后续逐步迁移
+// ============ ⚠️ 废弃警告 ============
+// ⚠️ 此文件为LocalStorage旧版架构，已于2026-02-12标记为废弃
+// ⚠️ 新功能开发请使用MySQL API（backend/app.py）
+// ⚠️ 保留此文件仅为兼容性目的，将在未来版本删除
+// ============================================
 
 // 从localStorage加载数据，如果没有则使用默认数据
 function loadDataFromStorage() {

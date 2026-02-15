@@ -9,17 +9,22 @@ async function handleLogin(username, password) {
         if (result.success) {
             console.log('[Login] ✅ 登录成功:', result.user.username);
             
-            // 保存登录状态到 localStorage
-            localStorage.setItem('ajkuaiji_logged_in', 'true');
-            localStorage.setItem('ajkuaiji_current_user', JSON.stringify(result.user));
-            localStorage.setItem('ajkuaiji_saved_pwd', btoa(password));
+            // ✅ 不再使用localStorage，Session由后端管理
+            // ✅ 移除旧代码：localStorage.setItem('ajkuaiji_logged_in', 'true');
+            // ✅ 移除旧代码：localStorage.setItem('ajkuaiji_current_user', JSON.stringify(result.user));
+            // ✅ 移除旧代码：localStorage.setItem('ajkuaiji_saved_pwd', btoa(password));
             
-            console.log('[Login] 💾 已保存登录凭证到localStorage');
+            console.log('[Login] 💾 Session由后端管理，不再使用localStorage');
             
-            // 设置当前用户到db对象（兼容旧模块）
-            if (typeof window.db !== 'undefined' && window.db.setCurrentUser) {
-                window.db.setCurrentUser(result.user);
-                console.log('[Login] ✅ 已设置window.db.currentUser');
+            // 设置全局当前用户
+            window.currentUser = result.user;
+            console.log('[Login] ✅ 已设置window.currentUser:', result.user.username);
+            
+            // 初始化权限管理器
+            console.log('[Login] 🔐 初始化权限管理器...');
+            if (window.PermissionManager) {
+                await window.PermissionManager.init(true); // 强制刷新
+                console.log('[Login] ✅ 权限管理器已初始化');
             }
             
             // 延迟后跳转主页面
@@ -37,8 +42,6 @@ async function handleLogin(username, password) {
                     
                     console.log('[Login] 🎉 已切换到主页面，初始化系统...');
                     initSystem();
-                    // ❌ 移除立即调用 showPage('dashboard')，由 initSystem() 内部的 restoreLastPage() 统一处理
-                    // showPage('dashboard');
                 } else {
                     console.error('[Login] ❌ 页面元素未找到');
                 }
@@ -82,98 +85,70 @@ function initLoginForm() {
     }
 }
 
-// 检查登录状态（localStorage + API验证）
+// 检查登录状态（Session验证）
 async function checkLoginStatus() {
     console.log('[Login] 🔍 开始检查登录状态...');
     
-    const isLoggedIn = localStorage.getItem('ajkuaiji_logged_in') === 'true';
-    const savedUser = localStorage.getItem('ajkuaiji_current_user');
-    const savedPwd = localStorage.getItem('ajkuaiji_saved_pwd');
-    
-    console.log('[Login] 📦 localStorage状态:', {
-        isLoggedIn,
-        hasUser: !!savedUser,
-        hasPwd: !!savedPwd
-    });
+    // ✅ 不再从 localStorage 读取，改用 API 验证 Session
     
     const loginPage = document.getElementById('loginPage');
     const mainPage = document.getElementById('mainPage');
     
-    // 检查是否有完整的登录凭证
-    if (isLoggedIn && savedUser && savedPwd) {
-        try {
-            const user = JSON.parse(savedUser);
-            console.log('[Login] 👤 检测到已登录用户:', user.username);
-            
-            // 检查window.api是否可用
-            if (typeof window.api === 'undefined' || !window.api.login) {
-                console.error('[Login] ❌ window.api未定义，无法验证登录');
-                throw new Error('API模块未加载');
-            }
-            
-            // Base64解码密码
-            const password = atob(savedPwd);
-            console.log('[Login] 🔐 准备调用API验证登录...');
-            
-            // 调用API重新验证登录
-            const result = await window.api.login(user.username, password);
-            
-            if (result.success) {
-                console.log('[Login] ✅ API验证成功！自动登录用户:', result.user.username);
-                
-                // 更新localStorage中的用户信息
-                localStorage.setItem('ajkuaiji_current_user', JSON.stringify(result.user));
-                
-                // 设置当前用户到db对象（兼容旧模块）
-                if (typeof window.db !== 'undefined' && window.db.setCurrentUser) {
-                    window.db.setCurrentUser(result.user);
-                    console.log('[Login] ✅ 已设置window.db.currentUser');
-                }
-                
-                // 切换到主页面
-                if (loginPage && mainPage) {
-                    console.log('[Login] 🎯 切换到主页面...');
-                    loginPage.style.display = 'none';
-                    mainPage.style.display = 'block';
-                    loginPage.classList.add('hidden');
-                    mainPage.classList.remove('hidden');
-                    
-                    console.log('[Login] 🚀 初始化系统...');
-                    initSystem();
-                    // ❌ 移除立即调用 showPage('dashboard')，由 initSystem() 内部的 restoreLastPage() 统一处理
-                    // showPage('dashboard');
-                    
-                    console.log('[Login] ✨ 自动登录完成！');
-                } else {
-                    console.error('[Login] ❌ 页面元素未找到:', { loginPage: !!loginPage, mainPage: !!mainPage });
-                }
-            } else {
-                console.warn('[Login] ⚠️ API验证失败:', result.message);
-                throw new Error(result.message || 'API验证失败');
-            }
-        } catch (error) {
-            console.error('[Login] ❌ 自动登录失败:', error.message);
-            console.error('[Login] 📋 错误详情:', error);
-            
-            // 清除无效的登录状态
-            console.log('[Login] 🧹 清除localStorage中的登录信息...');
-            localStorage.removeItem('ajkuaiji_logged_in');
-            localStorage.removeItem('ajkuaiji_current_user');
-            localStorage.removeItem('ajkuaiji_saved_pwd');
-            
-            // 显示登录页面
-            if (loginPage && mainPage) {
-                console.log('[Login] 🔙 返回登录页面');
-                loginPage.style.display = 'flex';
-                mainPage.style.display = 'none';
-                loginPage.classList.remove('hidden');
-                mainPage.classList.add('hidden');
-            }
+    try {
+        // 检查window.api是否可用
+        if (typeof window.api === 'undefined' || !window.api.getCurrentUser) {
+            console.error('[Login] ❌ window.api未定义，无法验证登录');
+            throw new Error('API模块未加载');
         }
-    } else {
-        console.log('[Login] ℹ️ 未检测到登录凭证，显示登录页面');
-        // 未登录，显示登录页面
+        
+        console.log('[Login] 🔐 准备调用API验证Session...');
+        
+        // 调用API获取当前登录用户（Session验证）
+        const result = await window.api.getCurrentUser();
+        
+        if (result.success) {
+            console.log('[Login] ✅ Session验证成功！自动登录用户:', result.user.username);
+            
+            // 设置全局当前用户
+            window.currentUser = result.user;
+            console.log('[Login] ✅ 已设置window.currentUser:', result.user.username);
+            
+            // 初始化权限管理器
+            console.log('[Login] 🔐 初始化权限管理器...');
+            if (window.PermissionManager) {
+                await window.PermissionManager.init(false); // 尝试从缓存加载
+                console.log('[Login] ✅ 权限管理器已初始化');
+            }
+            
+            // 切换到主页面
+            if (loginPage && mainPage) {
+                console.log('[Login] 🎯 切换到主页面...');
+                loginPage.style.display = 'none';
+                mainPage.style.display = 'block';
+                loginPage.classList.add('hidden');
+                mainPage.classList.remove('hidden');
+                
+                console.log('[Login] 🚀 初始化系统...');
+                initSystem();
+                
+                console.log('[Login] ✨ 自动登录完成！');
+            } else {
+                console.error('[Login] ❌ 页面元素未找到:', { loginPage: !!loginPage, mainPage: !!mainPage });
+            }
+        } else {
+            console.warn('[Login] ⚠️ Session验证失败:', result.message);
+            throw new Error(result.message || 'Session验证失败');
+        }
+    } catch (error) {
+        console.error('[Login] ❌ 自动登录失败:', error.message);
+        console.error('[Login] 📋 错误详情:', error);
+        
+        // ✅ 不需要清除localStorage，因为已经不用了
+        console.log('[Login] ℹ️ Session已过期或未登录');
+        
+        // 显示登录页面
         if (loginPage && mainPage) {
+            console.log('[Login] 🔙 返回登录页面');
             loginPage.style.display = 'flex';
             mainPage.style.display = 'none';
             loginPage.classList.remove('hidden');
@@ -181,3 +156,7 @@ async function checkLoginStatus() {
         }
     }
 }
+
+// 导出到全局
+window.checkLoginStatus = checkLoginStatus;
+console.log('✅ [login.js] checkLoginStatus已导出到window');

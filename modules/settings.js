@@ -3,6 +3,135 @@
 // 全局变量存储系统设置
 let systemSettings = {};
 
+// ==================== 系统配置管理 ====================
+
+/**
+ * 加载系统配置
+ */
+async function loadSystemConfig() {
+    try {
+        const response = await fetch('/api/system-config', {
+            credentials: 'include'
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+            systemSettings = result.data;
+            console.log('[Settings] ✅ 系统配置已加载:', systemSettings);
+            
+            // 更新页面显示
+            updateSystemDisplay();
+            
+            return systemSettings;
+        } else {
+            console.error('[Settings] ❌ 加载配置失败:', result.message);
+        }
+    } catch (error) {
+        console.error('[Settings] ❌ 加载配置异常:', error);
+    }
+    
+    return {};
+}
+
+/**
+ * 更新页面中的系统名称和公司名称显示
+ */
+function updateSystemDisplay() {
+    // 更新页面标题
+    if (systemSettings.system_name) {
+        document.title = systemSettings.system_name;
+        
+        // 更新侧边栏系统名称
+        const sidebarTitle = document.querySelector('.sidebar-header span');
+        if (sidebarTitle) {
+            sidebarTitle.textContent = systemSettings.system_name;
+        }
+    }
+    
+    // 更新右上角公司名称
+    if (systemSettings.company_name) {
+        const companyNameEl = document.getElementById('currentCompanyName');
+        if (companyNameEl) {
+            companyNameEl.textContent = systemSettings.company_name;
+        }
+    }
+}
+
+/**
+ * 保存系统配置（基本设置页面调用）
+ */
+window.saveConfigBasic = async function() {
+    const systemName = document.getElementById('configSystemName').value.trim();
+    const companyName = document.getElementById('configCompanyName').value.trim();
+    
+    if (!systemName || !companyName) {
+        alert('请填写系统名称和公司名称');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/system-config', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+                config: {
+                    system_name: systemName,
+                    company_name: companyName
+                }
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('保存成功！');
+            
+            // 重新加载配置并更新显示
+            await loadSystemConfig();
+        } else {
+            alert('保存失败：' + result.message);
+        }
+    } catch (error) {
+        console.error('[Settings] 保存配置失败:', error);
+        alert('保存失败：' + error.message);
+    }
+};
+
+/**
+ * 加载基本设置页面数据
+ */
+window.loadBasicConfigPage = async function() {
+    // 确保配置已加载
+    if (!systemSettings.system_name) {
+        await loadSystemConfig();
+    }
+    
+    // 填充表单
+    const systemNameInput = document.getElementById('configSystemName');
+    const companyNameInput = document.getElementById('configCompanyName');
+    
+    if (systemNameInput) {
+        systemNameInput.value = systemSettings.system_name || '';
+    }
+    if (companyNameInput) {
+        companyNameInput.value = systemSettings.company_name || '';
+    }
+};
+
+// 页面加载时自动加载系统配置
+// 使用立即执行函数，避免DOMContentLoaded已触发的情况
+(function() {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', loadSystemConfig);
+    } else {
+        // DOM已加载完成，立即执行
+        loadSystemConfig();
+    }
+})();
+
+// ==================== 配置管理数据 ====================
+
 // 配置管理数据
 let configurationData = {
     personnel: [

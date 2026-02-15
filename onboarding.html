@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>企业开通向导 - 秦九大脑</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        }
+        
+        /* 步骤指示器样式 */
+        .step-container {
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3rem;
+        }
+        
+        .step-line {
+            position: absolute;
+            top: 2rem;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #e5e7eb;
+            z-index: 1;
+        }
+        
+        .step-line-progress {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background: #667eea;
+            transition: width 0.5s ease;
+            z-index: 2;
+        }
+        
+        .step-item {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+        }
+        
+        .step-circle {
+            width: 4rem;
+            height: 4rem;
+            border-radius: 50%;
+            background: white;
+            border: 3px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #9ca3af;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .step-circle.active {
+            background: #667eea;
+            border-color: #667eea;
+            color: white;
+            transform: scale(1.1);
+            box-shadow: 0 8px 12px rgba(102, 126, 234, 0.3);
+        }
+        
+        .step-circle.completed {
+            background: #10b981;
+            border-color: #10b981;
+            color: white;
+        }
+        
+        .step-label {
+            margin-top: 0.75rem;
+            font-size: 0.875rem;
+            color: white;
+            font-weight: 500;
+            text-align: center;
+        }
+        
+        /* 卡片动画 */
+        .card-enter {
+            animation: cardSlideIn 0.5s ease-out;
+        }
+        
+        @keyframes cardSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* 输入框焦点效果 */
+        .form-input:focus {
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        /* 按钮悬停效果 */
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        /* 成功动画 */
+        .success-checkmark {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto;
+        }
+        
+        .checkmark-circle {
+            stroke: #10b981;
+            stroke-width: 4;
+            fill: none;
+            animation: checkmark-circle 0.6s ease-in-out;
+        }
+        
+        .checkmark-check {
+            stroke: #10b981;
+            stroke-width: 4;
+            stroke-linecap: round;
+            fill: none;
+            animation: checkmark-check 0.6s 0.3s ease-in-out forwards;
+            stroke-dasharray: 50;
+            stroke-dashoffset: 50;
+        }
+        
+        @keyframes checkmark-circle {
+            from { stroke-dasharray: 0, 300; }
+            to { stroke-dasharray: 300, 300; }
+        }
+        
+        @keyframes checkmark-check {
+            to { stroke-dashoffset: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen flex flex-col items-center justify-center px-4 py-8">
+        <!-- Logo和标题 -->
+        <div class="text-center mb-8 card-enter">
+            <div class="mb-4">
+                <i class="fas fa-brain text-6xl text-white"></i>
+            </div>
+            <h1 class="text-4xl font-bold text-white mb-2">秦九大脑</h1>
+            <p class="text-white text-opacity-90 text-lg">智能财务管理系统</p>
+        </div>
+
+        <!-- 步骤指示器 -->
+        <div class="w-full max-w-4xl mb-8 card-enter" style="animation-delay: 0.1s">
+            <div class="step-container">
+                <div class="step-line">
+                    <div class="step-line-progress" id="progressLine" style="width: 0%"></div>
+                </div>
+                
+                <div class="step-item">
+                    <div class="step-circle active" data-step="1">
+                        <i class="fas fa-key"></i>
+                    </div>
+                    <div class="step-label">验证令牌</div>
+                </div>
+                
+                <div class="step-item">
+                    <div class="step-circle" data-step="2">
+                        <i class="fas fa-user-plus"></i>
+                    </div>
+                    <div class="step-label">创建账号</div>
+                </div>
+                
+                <div class="step-item">
+                    <div class="step-circle" data-step="3">
+                        <i class="fas fa-cog"></i>
+                    </div>
+                    <div class="step-label">基础配置</div>
+                </div>
+                
+                <div class="step-item">
+                    <div class="step-circle" data-step="4">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div class="step-label">完成</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 内容卡片 -->
+        <div class="w-full max-w-2xl">
+            
+            <!-- 步骤1: 验证令牌 -->
+            <div id="step1" class="bg-white rounded-2xl shadow-2xl p-8 card-enter" style="animation-delay: 0.2s">
+                <div class="text-center mb-8">
+                    <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-key text-3xl text-purple-600"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-gray-800 mb-2">验证开通令牌</h2>
+                    <p class="text-gray-600">请输入平台管理员为您生成的开通令牌</p>
+                </div>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-ticket-alt mr-2 text-purple-600"></i>开通令牌
+                        </label>
+                        <input type="text" id="token" 
+                            class="form-input w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none transition-all"
+                            placeholder="请输入32位令牌字符串">
+                    </div>
+                    
+                    <div id="tokenError" class="text-red-600 text-sm hidden"></div>
+                    <div id="companyInfo" class="hidden bg-green-50 border-2 border-green-200 rounded-lg p-4">
+                        <div class="flex items-center mb-2">
+                            <i class="fas fa-check-circle text-green-600 text-xl mr-2"></i>
+                            <p class="text-green-800 font-medium">令牌验证成功</p>
+                        </div>
+                        <p class="text-gray-700 ml-7">
+                            公司名称：<span id="companyName" class="font-bold text-purple-600"></span>
+                        </p>
+                    </div>
+                </div>
+
+                <div class="mt-8 flex justify-end">
+                    <button onclick="verifyToken()" 
+                        class="btn-primary px-8 py-3 text-white font-medium rounded-lg shadow-lg flex items-center space-x-2">
+                        <span>验证并继续</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 步骤2: 创建主账号 -->
+            <div id="step2" class="bg-white rounded-2xl shadow-2xl p-8 hidden">
+                <div class="text-center mb-8">
+                    <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-user-plus text-3xl text-blue-600"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-gray-800 mb-2">创建管理员账号</h2>
+                    <p class="text-gray-600">设置系统管理员账号，拥有最高权限</p>
+                </div>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-user mr-2 text-blue-600"></i>用户名 <span class="text-red-500">*</span>
+                        </label>
+                        <div class="flex gap-2">
+                            <input type="text" id="username" 
+                                class="form-input flex-1 px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
+                                placeholder="登录用户名（全局唯一）">
+                            <button onclick="checkUsername()" 
+                                class="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium transition-colors">
+                                检查可用性
+                            </button>
+                        </div>
+                        <p id="usernameCheck" class="text-sm mt-2"></p>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-lock mr-2 text-blue-600"></i>密码 <span class="text-red-500">*</span>
+                            </label>
+                            <input type="password" id="password" 
+                                class="form-input w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
+                                placeholder="至少6位字符">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-lock mr-2 text-blue-600"></i>确认密码 <span class="text-red-500">*</span>
+                            </label>
+                            <input type="password" id="confirmPassword" 
+                                class="form-input w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
+                                placeholder="再次输入密码">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-id-card mr-2 text-blue-600"></i>真实姓名 <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" id="name" 
+                            class="form-input w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
+                            placeholder="管理员姓名">
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-phone mr-2 text-blue-600"></i>手机号
+                            </label>
+                            <input type="tel" id="phone" 
+                                class="form-input w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
+                                placeholder="联系电话">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-envelope mr-2 text-blue-600"></i>邮箱
+                            </label>
+                            <input type="email" id="email" 
+                                class="form-input w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
+                                placeholder="电子邮箱">
+                        </div>
+                    </div>
+                    
+                    <div id="adminError" class="text-red-600 text-sm hidden"></div>
+                </div>
+
+                <div class="mt-8 flex justify-between">
+                    <button onclick="goToStep(1)" 
+                        class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium transition-colors flex items-center space-x-2">
+                        <i class="fas fa-arrow-left"></i>
+                        <span>上一步</span>
+                    </button>
+                    <button onclick="createAdmin()" 
+                        class="btn-primary px-8 py-3 text-white font-medium rounded-lg shadow-lg flex items-center space-x-2">
+                        <span>创建并继续</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 步骤3: 基础配置 -->
+            <div id="step3" class="bg-white rounded-2xl shadow-2xl p-8 hidden">
+                <div class="text-center mb-8">
+                    <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-cog text-3xl text-indigo-600"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-gray-800 mb-2">基础配置</h2>
+                    <p class="text-gray-600">可选步骤，您也可以稍后在系统中配置</p>
+                </div>
+                
+                <div class="space-y-6">
+                    <!-- 部门配置 -->
+                    <div class="border-2 border-gray-200 rounded-xl p-5 hover:border-indigo-300 transition-colors">
+                        <div class="flex items-center mb-4">
+                            <div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center mr-3">
+                                <i class="fas fa-sitemap text-indigo-600"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-800">部门设置</h3>
+                                <p class="text-sm text-gray-600">预设常用部门（可跳过）</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 flex-wrap">
+                            <button onclick="toggleDepartment(this, '财务部')" class="px-4 py-2 bg-gray-100 rounded-full text-sm hover:bg-indigo-100 hover:text-indigo-700 transition-all">
+                                <i class="fas fa-calculator mr-1"></i>财务部
+                            </button>
+                            <button onclick="toggleDepartment(this, '销售部')" class="px-4 py-2 bg-gray-100 rounded-full text-sm hover:bg-indigo-100 hover:text-indigo-700 transition-all">
+                                <i class="fas fa-handshake mr-1"></i>销售部
+                            </button>
+                            <button onclick="toggleDepartment(this, '行政部')" class="px-4 py-2 bg-gray-100 rounded-full text-sm hover:bg-indigo-100 hover:text-indigo-700 transition-all">
+                                <i class="fas fa-building mr-1"></i>行政部
+                            </button>
+                            <button onclick="toggleDepartment(this, '技术部')" class="px-4 py-2 bg-gray-100 rounded-full text-sm hover:bg-indigo-100 hover:text-indigo-700 transition-all">
+                                <i class="fas fa-code mr-1"></i>技术部
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- 角色配置 -->
+                    <div class="border-2 border-gray-200 rounded-xl p-5 hover:border-indigo-300 transition-colors">
+                        <div class="flex items-center mb-4">
+                            <div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center mr-3">
+                                <i class="fas fa-user-tag text-indigo-600"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-800">角色设置</h3>
+                                <p class="text-sm text-gray-600">预设常用角色（可跳过）</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 flex-wrap">
+                            <button onclick="toggleRole(this, '会计', 'accountant')" class="px-4 py-2 bg-gray-100 rounded-full text-sm hover:bg-indigo-100 hover:text-indigo-700 transition-all">
+                                <i class="fas fa-user-tie mr-1"></i>会计
+                            </button>
+                            <button onclick="toggleRole(this, '出纳', 'cashier')" class="px-4 py-2 bg-gray-100 rounded-full text-sm hover:bg-indigo-100 hover:text-indigo-700 transition-all">
+                                <i class="fas fa-cash-register mr-1"></i>出纳
+                            </button>
+                            <button onclick="toggleRole(this, '经理', 'manager')" class="px-4 py-2 bg-gray-100 rounded-full text-sm hover:bg-indigo-100 hover:text-indigo-700 transition-all">
+                                <i class="fas fa-user-shield mr-1"></i>经理
+                            </button>
+                            <button onclick="toggleRole(this, '普通员工', 'employee')" class="px-4 py-2 bg-gray-100 rounded-full text-sm hover:bg-indigo-100 hover:text-indigo-700 transition-all">
+                                <i class="fas fa-user mr-1"></i>普通员工
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
+                        <div class="flex items-start">
+                            <i class="fas fa-info-circle text-blue-600 text-xl mr-3 mt-0.5"></i>
+                            <p class="text-blue-800 text-sm">
+                                <strong>提示：</strong>基础数据可以稍后在系统设置中配置，不影响使用。您可以直接跳过此步骤。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 flex justify-between">
+                    <button onclick="goToStep(2)" 
+                        class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium transition-colors flex items-center space-x-2">
+                        <i class="fas fa-arrow-left"></i>
+                        <span>上一步</span>
+                    </button>
+                    <button onclick="saveBasicData()" 
+                        class="btn-primary px-8 py-3 text-white font-medium rounded-lg shadow-lg flex items-center space-x-2">
+                        <span>保存并继续</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 步骤4: 完成开通 -->
+            <div id="step4" class="bg-white rounded-2xl shadow-2xl p-8 hidden">
+                <div class="text-center py-8">
+                    <!-- 成功图标动画 -->
+                    <div class="success-checkmark mb-6">
+                        <svg width="100" height="100" viewBox="0 0 100 100">
+                            <circle class="checkmark-circle" cx="50" cy="50" r="45" stroke-dasharray="300" stroke-dashoffset="0"></circle>
+                            <polyline class="checkmark-check" points="25,50 40,65 75,30"></polyline>
+                        </svg>
+                    </div>
+                    
+                    <h2 class="text-3xl font-bold text-gray-800 mb-4">开通完成！</h2>
+                    <p class="text-gray-600 mb-8 text-lg">🎉 恭喜您成功开通秦九大脑系统</p>
+                    
+                    <div class="bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl p-6 mb-8 border-2 border-purple-200">
+                        <h3 class="font-bold text-gray-800 mb-4 text-lg">您的账号信息</h3>
+                        <div class="space-y-3 text-left max-w-md mx-auto">
+                            <div class="flex items-center bg-white rounded-lg p-3">
+                                <i class="fas fa-building text-purple-600 mr-3"></i>
+                                <div>
+                                    <span class="text-sm text-gray-600">公司</span>
+                                    <p class="font-medium text-gray-800" id="finalCompanyName"></p>
+                                </div>
+                            </div>
+                            <div class="flex items-center bg-white rounded-lg p-3">
+                                <i class="fas fa-user text-blue-600 mr-3"></i>
+                                <div>
+                                    <span class="text-sm text-gray-600">用户名</span>
+                                    <p class="font-medium text-gray-800" id="finalUsername"></p>
+                                </div>
+                            </div>
+                            <div class="flex items-center bg-white rounded-lg p-3">
+                                <i class="fas fa-crown text-yellow-600 mr-3"></i>
+                                <div>
+                                    <span class="text-sm text-gray-600">角色</span>
+                                    <p class="font-medium text-gray-800">系统管理员</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button onclick="goToSystem()" 
+                        class="btn-primary px-10 py-4 text-white font-medium rounded-xl shadow-lg text-lg inline-flex items-center space-x-3">
+                        <i class="fas fa-rocket"></i>
+                        <span>立即进入系统</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+        
+        <!-- 页脚 -->
+        <div class="text-center mt-8 text-white text-opacity-75 text-sm">
+            <p>© 2024 秦九大脑 - 智能财务管理系统</p>
+        </div>
+    </div>
+
+    <script src="js/onboarding.js"></script>
+</body>
+</html>

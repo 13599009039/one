@@ -1,0 +1,18 @@
+# Gitee仓库配置
+# 生成时间: 2026-02-15
+
+[gitee]
+username = weng_zhiwei
+email = 421731296@qq.com
+repository_url = https://gitee.com/weng_zhiwei/aj
+ssh_url = git@gitee.com:weng_zhiwei/aj.git
+
+[authentication]
+method = ssh
+ssh_key_path = ~/.ssh/id_rsa
+ssh_pub_key_path = ~/.ssh/id_rsa.pub
+
+[notes]
+# SSH公钥已生成，需要添加到Gitee账号
+# 登录 https://gitee.com/profile/sshkeys
+# 将公钥内容添加到SSH公钥管理

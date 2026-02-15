@@ -133,9 +133,9 @@
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">服务开始日期</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">服务费用</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">引流人员</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">转化人员</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">业务人员</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">服务人员</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状态</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">续费状态</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
                                 </tr>
                             </thead>
@@ -258,120 +258,71 @@
         </main>
     </div>
 
-    <!-- 添加公司模态框 -->
-    <div id="addCompanyModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <!-- 公司编辑模态框（新增/编辑通用） -->
+    <div id="companyModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
         <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md transform transition-all">
             <div class="flex justify-between items-center mb-6">
-                <h3 class="text-xl font-bold text-gray-900">添加公司</h3>
-                <button class="close-modal-btn text-gray-400 hover:text-gray-500">
+                <h3 id="modalTitle" class="text-xl font-bold text-gray-900">添加公司</h3>
+                <button id="cancelCompanyModal" class="text-gray-400 hover:text-gray-500">
                     <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
-            <form id="addCompanyForm" class="space-y-4">
+            <form id="companyForm" class="space-y-4">
                 <div>
                     <label for="companyName" class="block text-sm font-medium text-gray-700 mb-1">公司名称 <span class="text-red-500">*</span></label>
-                    <input type="text" id="companyName" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="输入公司全称">
+                    <input type="text" id="companyName" name="companyName" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="输入公司全称">
                 </div>
                 <div>
                     <label for="shortName" class="block text-sm font-medium text-gray-700 mb-1">公司简称 <span class="text-red-500">*</span></label>
-                    <input type="text" id="shortName" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="输入公司简称">
+                    <input type="text" id="shortName" name="shortName" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="输入公司简称">
                 </div>
                 <div>
                     <label for="contactPerson" class="block text-sm font-medium text-gray-700 mb-1">联系人</label>
-                    <input type="text" id="contactPerson" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="输入联系人姓名">
+                    <input type="text" id="contactPerson" name="contactPerson" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="输入联系人姓名">
                 </div>
                 <div>
                     <label for="contactPhone" class="block text-sm font-medium text-gray-700 mb-1">联系电话</label>
-                    <input type="text" id="contactPhone" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="输入联系电话">
+                    <input type="text" id="contactPhone" name="contactPhone" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="输入联系电话">
                 </div>
                 <div>
-                    <label for="serviceStartDate" class="block text-sm font-medium text-gray-700 mb-1">服务开始日期</label>
-                    <input type="date" id="serviceStartDate" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                    <label for="taxNumber" class="block text-sm font-medium text-gray-700 mb-1">税号</label>
+                    <input type="text" id="taxNumber" name="taxNumber" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="输入税号">
                 </div>
                 <div>
-                    <label for="serviceFee" class="block text-sm font-medium text-gray-700 mb-1">服务费用</label>
-                    <input type="number" id="serviceFee" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="输入服务费用">
-                </div>
-                <div>
-                    <label for="drainagePerson" class="block text-sm font-medium text-gray-700 mb-1">引流人员</label>
-                    <input type="text" id="drainagePerson" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="输入引流人员">
-                </div>
-                <div>
-                    <label for="conversionPerson" class="block text-sm font-medium text-gray-700 mb-1">转化人员</label>
-                    <input type="text" id="conversionPerson" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="输入转化人员">
-                </div>
-                <div>
-                    <label for="servicePerson" class="block text-sm font-medium text-gray-700 mb-1">服务人员</label>
-                    <input type="text" id="servicePerson" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="输入服务人员">
+                    <label for="industry" class="block text-sm font-medium text-gray-700 mb-1">行业</label>
+                    <input type="text" id="industry" name="industry" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="输入行业">
                 </div>
                 <div>
                     <label for="address" class="block text-sm font-medium text-gray-700 mb-1">公司地址</label>
-                    <textarea id="address" rows="2" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="输入公司地址"></textarea>
+                    <textarea id="address" name="address" rows="2" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="输入公司地址"></textarea>
                 </div>
+                
+                <!-- 销售字段 -->
+                <div class="border-t border-gray-200 pt-4 mt-4">
+                    <h4 class="text-sm font-semibold text-gray-700 mb-3">销售信息</h4>
+                    <div class="grid grid-cols-3 gap-3">
+                        <div>
+                            <label for="trafficStaff" class="block text-xs font-medium text-gray-600 mb-1">引流人员</label>
+                            <input type="text" id="trafficStaff" name="trafficStaff" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" placeholder="引流人员">
+                        </div>
+                        <div>
+                            <label for="businessStaff" class="block text-xs font-medium text-gray-600 mb-1">业务人员</label>
+                            <input type="text" id="businessStaff" name="businessStaff" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" placeholder="业务人员">
+                        </div>
+                        <div>
+                            <label for="serviceStaff" class="block text-xs font-medium text-gray-600 mb-1">服务人员</label>
+                            <input type="text" id="serviceStaff" name="serviceStaff" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" placeholder="服务人员">
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <label for="notes" class="block text-sm font-medium text-gray-700 mb-1">备注</label>
+                    <textarea id="notes" name="notes" rows="2" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="其他备注信息"></textarea>
+                </div>
+                
                 <div class="flex justify-end space-x-4 pt-4 border-t border-gray-200">
-                    <button type="button" class="close-modal-btn px-6 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors">
-                        取消
-                    </button>
-                    <button type="submit" class="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors flex items-center">
-                        <i class="fas fa-plus mr-2"></i> 添加
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- 编辑公司模态框 -->
-    <div id="editCompanyModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-        <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md transform transition-all">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-xl font-bold text-gray-900">编辑公司</h3>
-                <button class="close-modal-btn text-gray-400 hover:text-gray-500">
-                    <i class="fas fa-times text-xl"></i>
-                </button>
-            </div>
-            <form id="editCompanyForm" class="space-y-4">
-                <div>
-                    <label for="editCompanyName" class="block text-sm font-medium text-gray-700 mb-1">公司名称 <span class="text-red-500">*</span></label>
-                    <input type="text" id="editCompanyName" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="输入公司全称">
-                </div>
-                <div>
-                    <label for="editShortName" class="block text-sm font-medium text-gray-700 mb-1">公司简称 <span class="text-red-500">*</span></label>
-                    <input type="text" id="editShortName" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="输入公司简称">
-                </div>
-                <div>
-                    <label for="editContactPerson" class="block text-sm font-medium text-gray-700 mb-1">联系人</label>
-                    <input type="text" id="editContactPerson" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="输入联系人姓名">
-                </div>
-                <div>
-                    <label for="editContactPhone" class="block text-sm font-medium text-gray-700 mb-1">联系电话</label>
-                    <input type="text" id="editContactPhone" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="输入联系电话">
-                </div>
-                <div>
-                    <label for="editServiceStartDate" class="block text-sm font-medium text-gray-700 mb-1">服务开始日期</label>
-                    <input type="date" id="editServiceStartDate" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
-                </div>
-                <div>
-                    <label for="editServiceFee" class="block text-sm font-medium text-gray-700 mb-1">服务费用</label>
-                    <input type="number" id="editServiceFee" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="输入服务费用">
-                </div>
-                <div>
-                    <label for="editDrainagePerson" class="block text-sm font-medium text-gray-700 mb-1">引流人员</label>
-                    <input type="text" id="editDrainagePerson" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="输入引流人员">
-                </div>
-                <div>
-                    <label for="editConversionPerson" class="block text-sm font-medium text-gray-700 mb-1">转化人员</label>
-                    <input type="text" id="editConversionPerson" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="输入转化人员">
-                </div>
-                <div>
-                    <label for="editServicePerson" class="block text-sm font-medium text-gray-700 mb-1">服务人员</label>
-                    <input type="text" id="editServicePerson" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="输入服务人员">
-                </div>
-                <div>
-                    <label for="editAddress" class="block text-sm font-medium text-gray-700 mb-1">公司地址</label>
-                    <textarea id="editAddress" rows="2" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="输入公司地址"></textarea>
-                </div>
-                <div class="flex justify-end space-x-4 pt-4 border-t border-gray-200">
-                    <button type="button" class="close-modal-btn px-6 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors">
+                    <button type="button" id="cancelCompanyBtn" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors">
                         取消
                     </button>
                     <button type="submit" class="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors flex items-center">
@@ -382,6 +333,8 @@
         </div>
     </div>
 
+            </div>
+    
     <!-- 编辑用户模态框 -->
     <div id="editUserModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
         <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md transform transition-all">
@@ -473,380 +426,40 @@
     </div>
 
     <script>
-        // 页面加载完成后初始化
-        document.addEventListener('DOMContentLoaded', function() {
-            // 检查登录状态
-            checkLoginStatus();
-            
-            // 登录表单处理
-            const loginForm = document.getElementById('loginForm');
-            loginForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                const username = document.getElementById('username').value;
-                const password = document.getElementById('password').value;
-                const remember = document.getElementById('remember').checked;
-                
-                // 简单的登录验证
-                if (username === 'admin' && password === 'admin123') {
-                    // 保存登录状态
-                    if (remember) {
-                        localStorage.setItem('consoleLoggedIn', 'true');
-                    }
-                    
-                    document.getElementById('loginPage').classList.add('hidden');
-                    document.getElementById('consolePage').classList.remove('hidden');
-                    
-                    // 初始化控制台
-                    initConsole();
-                } else {
-                    alert('用户名或密码错误，请使用超级管理员账号登录');
+        // 页面基础样式和动画
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fade-in-down {
+                from {
+                    opacity: 0;
+                    transform: translateY(-10px);
                 }
-            });
-            
-            // 检查登录状态
-            function checkLoginStatus() {
-                if (localStorage.getItem('consoleLoggedIn') === 'true') {
-                    document.getElementById('loginPage').classList.add('hidden');
-                    document.getElementById('consolePage').classList.remove('hidden');
-                    initConsole();
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
                 }
             }
-
-            // 初始化控制台
-            function initConsole() {
-                // 加载公司数据
-                loadCompanyData();
-                // 加载用户数据
-                loadUserData();
-                // 设置导航事件
-                setupNavigation();
-                // 设置表单处理
-                setupForms();
-            }
-
-            // 加载公司数据
-            function loadCompanyData() {
-                // 模拟公司数据
-                const companies = [
-                    {id: 1, company_name: '许昌爱佳网络科技有限公司', short_name: '爱佳网络', contact_person: '张总', contact_phone: '13800138000', service_start_date: '2026-01-01', service_fee: 10000,引流人员: '小王', 转化人员: '小李', 服务人员: '小张', status: 'active'},
-                    {id: 2, company_name: '许昌雷韵文化传媒有限公司', short_name: '雷韵文化', contact_person: '李总', contact_phone: '13900139000', service_start_date: '2026-01-15', service_fee: 8000,引流人员: '小陈', 转化人员: '小吴', 服务人员: '小郑', status: 'active'}
-                ];
-
-                // 填充公司表格
-                const companyTable = document.getElementById('companyTable');
-                companyTable.innerHTML = '';
-                
-                companies.forEach(company => {
-                    const row = document.createElement('tr');
-                    row.className = 'hover:bg-gray-50 transition-colors';
-                    
-                    row.innerHTML = `
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${company.company_name}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${company.short_name}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${company.contact_person}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${company.contact_phone}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${company.service_start_date}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${company.service_fee}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${company.引流人员}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${company.转化人员}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${company.服务人员}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${company.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
-                                ${company.status === 'active' ? '启用' : '禁用'}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            <div class="flex space-x-2">
-                                <button class="edit-company-btn text-blue-600 hover:text-blue-800" data-id="${company.id}">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="delete-company-btn text-red-600 hover:text-red-800" data-id="${company.id}">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </td>
-                    `;
-                    
-                    companyTable.appendChild(row);
-                });
-                
-                // 添加编辑和删除按钮事件
-                document.querySelectorAll('.edit-company-btn').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        const companyId = this.getAttribute('data-id');
-                        const company = companies.find(c => c.id == companyId);
-                        
-                        if (company) {
-                            // 打开编辑模态框并填充数据
-                            document.getElementById('editCompanyModal').classList.remove('hidden');
-                            document.getElementById('editCompanyName').value = company.company_name;
-                            document.getElementById('editShortName').value = company.short_name;
-                            document.getElementById('editContactPerson').value = company.contact_person;
-                            document.getElementById('editContactPhone').value = company.contact_phone;
-                            document.getElementById('editServiceStartDate').value = company.service_start_date;
-                            document.getElementById('editServiceFee').value = company.service_fee;
-                            document.getElementById('editDrainagePerson').value = company.引流人员;
-                            document.getElementById('editConversionPerson').value = company.转化人员;
-                            document.getElementById('editServicePerson').value = company.服务人员;
-                            document.getElementById('editAddress').value = company.address || '';
-                            
-                            // 存储当前编辑的公司ID
-                            window.currentEditingCompanyId = companyId;
-                        }
-                    });
-                });
-                
-                document.querySelectorAll('.delete-company-btn').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        const companyId = this.getAttribute('data-id');
-                        const company = companies.find(c => c.id == companyId);
-                        
-                        if (company && confirm(`确定要删除公司 "${company.company_name}" 吗？`)) {
-                            // 这里可以添加删除公司的逻辑
-                            alert(`公司 "${company.company_name}" 删除成功！`);
-                            loadCompanyData(); // 重新加载公司数据
-                        }
-                    });
-                });
-                
-                // 编辑公司表单提交
-                const editCompanyForm = document.getElementById('editCompanyForm');
-                if (editCompanyForm) {
-                    editCompanyForm.addEventListener('submit', function(e) {
-                        e.preventDefault();
-                        
-                        const companyId = window.currentEditingCompanyId;
-                        const companyName = document.getElementById('editCompanyName').value;
-                        const shortName = document.getElementById('editShortName').value;
-                        const contactPerson = document.getElementById('editContactPerson').value;
-                        const contactPhone = document.getElementById('editContactPhone').value;
-                        const serviceStartDate = document.getElementById('editServiceStartDate').value;
-                        const serviceFee = document.getElementById('editServiceFee').value;
-                        const drainagePerson = document.getElementById('editDrainagePerson').value;
-                        const conversionPerson = document.getElementById('editConversionPerson').value;
-                        const servicePerson = document.getElementById('editServicePerson').value;
-                        const address = document.getElementById('editAddress').value;
-                        
-                        if (companyName && shortName) {
-                            alert(`公司 "${companyName}" 更新成功！`);
-                            document.getElementById('editCompanyModal').classList.add('hidden');
-                            this.reset();
-                            loadCompanyData();
-                            window.currentEditingCompanyId = null;
-                        } else {
-                            alert('请填写所有必填字段');
-                        }
-                    });
+            @keyframes fade-out-up {
+                from {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+                to {
+                    opacity: 0;
+                    transform: translateY(-10px);
                 }
             }
-
-            // 加载用户数据
-            function loadUserData() {
-                // 模拟用户数据
-                const users = [
-                    {id: 1, username: 'admin', name: '系统管理员', role: 'admin', status: 'enabled', companies: ['爱佳网络', '雷韵文化']}
-                ];
-
-                // 填充用户表格
-                const userTable = document.getElementById('userTable');
-                userTable.innerHTML = '';
-                
-                users.forEach(user => {
-                    const row = document.createElement('tr');
-                    row.className = 'hover:bg-gray-50 transition-colors';
-                    
-                    row.innerHTML = `
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${user.username}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${user.name}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.role === 'admin' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'}">
-                                ${user.role === 'admin' ? '超级管理员' : '普通用户'}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.status === 'enabled' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
-                                ${user.status === 'enabled' ? '启用' : '禁用'}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${user.companies.join(', ')}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            <div class="flex space-x-2">
-                                <button class="edit-user-btn text-blue-600 hover:text-blue-800" data-id="${user.id}">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="delete-user-btn ${user.role === 'admin' ? 'text-gray-400 cursor-not-allowed' : 'text-red-600 hover:text-red-800'}" data-id="${user.id}" ${user.role === 'admin' ? 'disabled' : ''}>
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </td>
-                    `;
-                    
-                    userTable.appendChild(row);
-                });
-                
-                // 添加编辑和删除按钮事件
-                document.querySelectorAll('.edit-user-btn').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        const userId = this.getAttribute('data-id');
-                        const user = users.find(u => u.id == userId);
-                        
-                        if (user) {
-                            // 打开编辑模态框并填充数据
-                            document.getElementById('editUserModal').classList.remove('hidden');
-                            document.getElementById('editUserUsername').value = user.username;
-                            document.getElementById('editUserName').value = user.name;
-                            document.getElementById('editUserPhone').value = user.phone || '';
-                            document.getElementById('editUserStatus').value = user.status;
-                            
-                            // 存储当前编辑的用户ID
-                            window.currentEditingUserId = userId;
-                        }
-                    });
-                });
-                
-                document.querySelectorAll('.delete-user-btn').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        if (this.disabled) return;
-                        
-                        const userId = this.getAttribute('data-id');
-                        const user = users.find(u => u.id == userId);
-                        
-                        if (user && confirm(`确定要删除用户 "${user.username}" 吗？`)) {
-                            // 这里可以添加删除用户的逻辑
-                            alert(`用户 "${user.username}" 删除成功！`);
-                            loadUserData(); // 重新加载用户数据
-                        }
-                    });
-                });
-                
-                // 编辑用户表单提交
-                const editUserForm = document.getElementById('editUserForm');
-                if (editUserForm) {
-                    editUserForm.addEventListener('submit', function(e) {
-                        e.preventDefault();
-                        
-                        const userId = window.currentEditingUserId;
-                        const username = document.getElementById('editUserUsername').value;
-                        const password = document.getElementById('editUserPassword').value;
-                        const name = document.getElementById('editUserName').value;
-                        const phone = document.getElementById('editUserPhone').value;
-                        const status = document.getElementById('editUserStatus').value;
-                        
-                        if (username && name && phone) {
-                            alert(`用户 "${username}" 更新成功！`);
-                            document.getElementById('editUserModal').classList.add('hidden');
-                            this.reset();
-                            loadUserData();
-                            window.currentEditingUserId = null;
-                        } else {
-                            alert('请填写所有必填字段');
-                        }
-                    });
-                }
+            .animate-fade-in-down {
+                animation: fade-in-down 0.3s ease-out;
             }
-
-            // 设置导航事件
-            function setupNavigation() {
-                // 主导航
-                const navLinks = document.querySelectorAll('.nav-link');
-                navLinks.forEach(link => {
-                    link.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        
-                        // 更新导航样式
-                        navLinks.forEach(l => {
-                            l.classList.remove('text-purple-600', 'border-purple-200');
-                            l.classList.add('text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
-                        });
-                        this.classList.remove('text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
-                        this.classList.add('text-purple-600', 'border-purple-200');
-                        
-                        // 显示对应模块
-                        const targetModule = this.getAttribute('data-target');
-                        document.querySelectorAll('.module-content').forEach(module => {
-                            module.classList.add('hidden');
-                        });
-                        document.getElementById(`${targetModule}Module`).classList.remove('hidden');
-                    });
-                });
+            .animate-fade-out-up {
+                animation: fade-out-up 0.3s ease-out;
             }
-
-            // 设置表单处理
-            function setupForms() {
-                // 系统设置表单
-                const systemSettingsForm = document.getElementById('systemSettingsForm');
-                systemSettingsForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    alert('系统设置保存成功！');
-                });
-
-                // 添加公司模态框
-                const addCompanyBtn = document.getElementById('addCompanyBtn');
-                const addCompanyModal = document.getElementById('addCompanyModal');
-                const closeModalBtns = document.querySelectorAll('.close-modal-btn');
-                const addCompanyForm = document.getElementById('addCompanyForm');
-
-                addCompanyBtn.addEventListener('click', function() {
-                    addCompanyModal.classList.remove('hidden');
-                });
-
-                closeModalBtns.forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        addCompanyModal.classList.add('hidden');
-                        document.getElementById('addUserModal').classList.add('hidden');
-                        document.getElementById('editCompanyModal').classList.add('hidden');
-                        document.getElementById('editUserModal').classList.add('hidden');
-                    });
-                });
-
-                addCompanyForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    const companyName = document.getElementById('companyName').value;
-                    const shortName = document.getElementById('shortName').value;
-                    const serviceStartDate = document.getElementById('serviceStartDate').value;
-                    const serviceFee = document.getElementById('serviceFee').value;
-                    const drainagePerson = document.getElementById('drainagePerson').value;
-                    const conversionPerson = document.getElementById('conversionPerson').value;
-                    const servicePerson = document.getElementById('servicePerson').value;
-                    
-                    if (companyName && shortName) {
-                        alert(`公司 "${companyName}" 添加成功！`);
-                        addCompanyModal.classList.add('hidden');
-                        this.reset();
-                        loadCompanyData();
-                    } else {
-                        alert('请填写所有必填字段');
-                    }
-                });
-
-                // 添加用户模态框
-                const addUserBtn = document.getElementById('addUserBtn');
-                const addUserModal = document.getElementById('addUserModal');
-                const addUserForm = document.getElementById('addUserForm');
-
-                addUserBtn.addEventListener('click', function() {
-                    addUserModal.classList.remove('hidden');
-                });
-
-                addUserForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    const username = document.getElementById('userUsername').value;
-                    const password = document.getElementById('userPassword').value;
-                    const name = document.getElementById('userName').value;
-                    const phone = document.getElementById('userPhone').value;
-                    const status = document.getElementById('userStatus').value;
-                    
-                    if (username && password && name && phone) {
-                        alert(`用户 "${username}" 添加成功！`);
-                        addUserModal.classList.add('hidden');
-                        this.reset();
-                        loadUserData();
-                    } else {
-                        alert('请填写所有必填字段');
-                    }
-                });
-            }
-        });
+        `;
+        document.head.appendChild(style);
     </script>
+    
+    <!-- 控制台业务逻辑 -->
+    <script src="/js/console.js"></script>
 </body>
 </html>

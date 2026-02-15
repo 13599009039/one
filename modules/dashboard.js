@@ -1,5 +1,10 @@
 // 仪表盘模块
 
+// 全局变量：当前日期筛选范围
+let currentDateRange = 'month'; // 默认显示本月
+let customStartDate = null;
+let customEndDate = null;
+
 // 初始化仪表盘
 function initDashboard() {
     // 加载最近交易
@@ -12,6 +17,188 @@ function initDashboard() {
     initCharts();
 }
 
+// 设置仪表盘日期范围
+function setDashboardDateRange(range) {
+    currentDateRange = range;
+    customStartDate = null;
+    customEndDate = null;
+    
+    // 更新按钮样式
+    updateDateRangeButtonStyles(range);
+    
+    // 隐藏自定义日期选择器
+    const customPicker = document.getElementById('customDateRangePicker');
+    if (customPicker) {
+        customPicker.classList.add('hidden');
+    }
+    
+    // 重新加载数据
+    refreshDashboardData();
+}
+
+// 切换自定义日期范围选择器
+function toggleCustomDateRangePicker() {
+    const customPicker = document.getElementById('customDateRangePicker');
+    if (customPicker) {
+        customPicker.classList.toggle('hidden');
+        
+        // 如果显示，初始化日期输入框
+        if (!customPicker.classList.contains('hidden')) {
+            const today = new Date();
+            const startDate = new Date(today.getFullYear(), today.getMonth(), 1); // 本月第一天
+            const endDate = today;
+            
+            document.getElementById('dashStartDate').value = formatDateForInput(startDate);
+            document.getElementById('dashEndDate').value = formatDateForInput(endDate);
+        }
+    }
+}
+
+// 应用自定义日期范围
+function applyCustomDateRange() {
+    const startDateInput = document.getElementById('dashStartDate').value;
+    const endDateInput = document.getElementById('dashEndDate').value;
+    
+    if (!startDateInput || !endDateInput) {
+        alert('请选择开始日期和结束日期');
+        return;
+    }
+    
+    if (new Date(startDateInput) > new Date(endDateInput)) {
+        alert('开始日期不能大于结束日期');
+        return;
+    }
+    
+    currentDateRange = 'custom';
+    customStartDate = startDateInput;
+    customEndDate = endDateInput;
+    
+    // 更新按钮样式
+    updateDateRangeButtonStyles('custom');
+    
+    // 隐藏选择器
+    const customPicker = document.getElementById('customDateRangePicker');
+    if (customPicker) {
+        customPicker.classList.add('hidden');
+    }
+    
+    // 重新加载数据
+    refreshDashboardData();
+}
+
+// 更新日期范围按钮样式
+function updateDateRangeButtonStyles(activeRange) {
+    const buttons = {
+        'today': document.getElementById('btnDashToday'),
+        'week': document.getElementById('btnDashWeek'),
+        'month': document.getElementById('btnDashMonth'),
+        'quarter': document.getElementById('btnDashQuarter'),
+        'year': document.getElementById('btnDashYear'),
+        'custom': document.getElementById('btnDashCustom')
+    };
+    
+    Object.keys(buttons).forEach(key => {
+        const btn = buttons[key];
+        if (btn) {
+            if (key === activeRange) {
+                btn.className = 'px-3 py-1.5 text-sm rounded-md border border-gray-300 bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500';
+            } else {
+                btn.className = 'px-3 py-1.5 text-sm rounded-md border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500';
+            }
+        }
+    });
+}
+
+// 格式化日期为输入框格式 (YYYY-MM-DD)
+function formatDateForInput(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+// 获取当前日期范围
+function getCurrentDateRange() {
+    const today = new Date();
+    let startDate, endDate;
+    
+    switch (currentDateRange) {
+        case 'today':
+            startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+            endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
+            break;
+            
+        case 'week':
+            const dayOfWeek = today.getDay();
+            const monday = new Date(today);
+            monday.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+            startDate = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate());
+            endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
+            break;
+            
+        case 'month':
+            startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+            endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
+            break;
+            
+        case 'quarter':
+            const currentQuarter = Math.floor(today.getMonth() / 3);
+            startDate = new Date(today.getFullYear(), currentQuarter * 3, 1);
+            endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
+            break;
+            
+        case 'year':
+            startDate = new Date(today.getFullYear(), 0, 1);
+            endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
+            break;
+            
+        case 'custom':
+            if (customStartDate && customEndDate) {
+                startDate = new Date(customStartDate);
+                endDate = new Date(customEndDate + ' 23:59:59');
+            } else {
+                // 默认本月
+                startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+                endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
+            }
+            break;
+            
+        default:
+            startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+            endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
+    }
+    
+    return { startDate, endDate };
+}
+
+// 刷新仪表盘数据
+function refreshDashboardData() {
+    loadRecentTransactions();
+    calculateAndDisplayStats();
+    initCharts();
+}
+
+// 过滤交易数据根据日期范围
+function filterTransactionsByDateRange(transactions) {
+    const { startDate, endDate } = getCurrentDateRange();
+    
+    return transactions.filter(transaction => {
+        const transDate = new Date(transaction.transaction_date);
+        return transDate >= startDate && transDate <= endDate;
+    });
+}
+
+// 过滤订单数据根据日期范围
+function filterOrdersByDateRange(orders) {
+    const { startDate, endDate } = getCurrentDateRange();
+    
+    return orders.filter(order => {
+        // 优先使用contract_date，如果没有则使用created_at
+        const orderDate = new Date(order.contract_date || order.created_at);
+        return orderDate >= startDate && orderDate <= endDate;
+    });
+}
+
 // 加载最近交易
 function loadRecentTransactions() {
     const recentTransactionsContainer = document.getElementById('recentTransactions');
@@ -19,11 +206,14 @@ function loadRecentTransactions() {
         // 清空容器
         recentTransactionsContainer.innerHTML = '';
         
-        // 从localStorage获取交易数据
+        // 从数据源获取交易数据
         const result = getTransactions();
         if (result.success) {
+            // 根据日期范围过滤交易
+            const filteredTransactions = filterTransactionsByDateRange(result.data);
+            
             // 获取最近5条交易
-            const recentTransactions = result.data.slice(0, 5);
+            const recentTransactions = filteredTransactions.slice(0, 5);
             
             // 渲染最近交易
             recentTransactions.forEach(transaction => {
@@ -58,9 +248,10 @@ function calculateAndDisplayStats() {
     const customerResult = db.getCustomers();
     
     if (transactionResult.success && orderResult.success && customerResult.success) {
-        const transactions = transactionResult.data;
-        const orders = orderResult.data;
-        const customers = customerResult.data;
+        // 根据日期范围过滤数据
+        const transactions = filterTransactionsByDateRange(transactionResult.data);
+        const orders = filterOrdersByDateRange(orderResult.data);
+        const customers = customerResult.data; // 客户不需要日期筛选
         
         // 计算总收入
         let totalIncome = 0;
@@ -68,8 +259,13 @@ function calculateAndDisplayStats() {
             if (t.transaction_type === '收入') totalIncome += t.amount;
         });
         
-        // 计算待收账款
-        let totalOrderAmount = orders.reduce((sum, o) => sum + o.total_amount, 0);
+        // 计算待收账款（✅ 使用final_amount作为订单总金额基准）
+        // final_amount = 商品原价合计 + 议价/加价/减价金额 = 最终成交金额
+        let totalOrderAmount = orders.reduce((sum, o) => {
+            // 优先使用final_amount，其次使用total_amount
+            const amount = o.final_amount || o.total_amount || 0;
+            return sum + amount;
+        }, 0);
         let pendingPayments = totalOrderAmount - totalIncome;
         if (pendingPayments < 0) pendingPayments = 0;
         
@@ -87,7 +283,24 @@ function calculateAndDisplayStats() {
 }
 
 // 初始化图表
+let chartInitRetryCount = 0;
+const MAX_CHART_RETRY = 10; // 最多重试10次
+
 function initCharts() {
+    // 检查Chart.js是否已加载
+    if (typeof Chart === 'undefined') {
+        if (chartInitRetryCount < MAX_CHART_RETRY) {
+            chartInitRetryCount++;
+            console.warn(`[Dashboard] Chart.js尚未加载，延迟初始化图表 (${chartInitRetryCount}/${MAX_CHART_RETRY})`);
+            setTimeout(initCharts, 100);
+        } else {
+            console.error('[Dashboard] Chart.js加载失败，已达最大重试次数，放弃初始化图表');
+        }
+        return;
+    }
+    
+    console.log('[Dashboard] Chart.js加载成功，开始初始化图表');
+
     // 获取所有交易数据
     const result = getTransactions();
     if (!result.success) {
@@ -95,7 +308,8 @@ function initCharts() {
         return;
     }
     
-    const transactions = result.data;
+    // 根据日期范围过滤交易
+    const transactions = filterTransactionsByDateRange(result.data);
     
     // 收支趋势图表
     const incomeExpenseCtx = document.getElementById('incomeExpenseChart');

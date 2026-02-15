@@ -1,0 +1,61 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+*.egg-info/
+dist/
+build/
+
+# 日志文件
+*.log
+backend/*.log
+backend/venv/
+
+# 数据库备份
+*.sql
+!backend/init_*.sql
+!backend/upgrade_*.sql
+!backend/rollback_*.sql
+!backend/permission_system_schema.sql
+!backend/create_*.sql
+!task_management_schema.sql
+
+# 测试覆盖率
+.coverage
+htmlcov/
+.pytest_cache/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 临时文件
+*.bak
+*.backup
+*.tmp
+.DS_Store
+
+# 敏感配置
+.env
+.env.local
+db_config.py
+config.local.py
+
+# 大文件
+*.csv
+shangjaimingxi.csv
+
+# Node.js (如有前端构建)
+node_modules/
+package-lock.json
+
+# Gitee配置（已保存）
+# .gitee_config 保留用于记录

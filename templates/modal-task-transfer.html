@@ -1,0 +1,33 @@
+<!-- 转交任务模态框 -->
+<div class="modal fade" id="transferTaskModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-exchange-alt"></i> 转交任务
+                </h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="transferTaskId">
+                <div class="form-group">
+                    <label>转交给 <span class="text-danger">*</span></label>
+                    <select class="form-control" id="transferToUserId" required>
+                        <option value="">请选择转交对象</option>
+                        <!-- 动态加载服务人员列表 -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>转交原因 <span class="text-danger">*</span></label>
+                    <textarea class="form-control" id="transferReason" rows="3" placeholder="请输入转交原因" required></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-warning" onclick="confirmTransferTask()">确认转交</button>
+            </div>
+        </div>
+    </div>
+</div>
