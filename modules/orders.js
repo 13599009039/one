@@ -3142,10 +3142,24 @@ window.openEditOrderModal = async function(orderId) {
         const setSelectAndSyncInput = (selectEl, value, displayText) => {
             if (!selectEl || !value) return;
             selectEl.value = String(value);
-            // 同步更新可搜索输入框的显示值
-            const searchInput = selectEl.parentNode?.querySelector('.searchable-staff-input, .searchable-team-input, .searchable-project-input');
+            
+            // 🔧 修复：查找可搜索输入框，支持多种容器结构
+            // 结构可能是：
+            // 1. container > [searchInput, select] - select.parentNode是container
+            // 2. td > [container > searchInput], [select] - 需要在父元素中查找
+            let searchInput = selectEl.parentNode?.querySelector('.searchable-staff-input, .searchable-team-input, .searchable-project-input');
+            
+            // 如果在parentNode中找不到，尝试在前一个兄弟元素中查找
+            if (!searchInput && selectEl.previousElementSibling) {
+                searchInput = selectEl.previousElementSibling.querySelector?.('input') || 
+                              (selectEl.previousElementSibling.tagName === 'INPUT' ? selectEl.previousElementSibling : null);
+            }
+            
             if (searchInput) {
                 searchInput.value = displayText || '';
+                console.log('✅ [同步显示]', selectEl.id, '->', displayText);
+            } else {
+                console.warn('⚠️ 未找到searchInput:', selectEl.id);
             }
         };
         
@@ -3162,7 +3176,16 @@ window.openEditOrderModal = async function(orderId) {
             setSelectAndSyncInput(teamEl, order.team_id, order.team || '');
         }
         if (projectEl && order.project_id) {
-            setSelectAndSyncInput(projectEl, order.project_id, order.project || '');
+            // 🔧 核心修复：如果order.project是数字（历史数据问题），从select中查找对应名称
+            let projectDisplayName = order.project || '';
+            if (/^\d+$/.test(projectDisplayName)) {
+                // project字段存的是ID，需要查找对应名称
+                const projectOpt = projectEl.querySelector(`option[value="${order.project_id}"]`);
+                if (projectOpt) {
+                    projectDisplayName = projectOpt.textContent.split(' (')[0]; // 去掉状态后缀
+                }
+            }
+            setSelectAndSyncInput(projectEl, order.project_id, projectDisplayName);
         }
         if (companyEl) {
             companyEl.value = order.company || '';
@@ -3215,9 +3238,13 @@ window.openEditOrderModal = async function(orderId) {
                         
                         // 设置选中值
                         let setSuccess = false;
+                        let selectedText = '';
                         if (item.service_id) {
                             select.value = String(item.service_id);
                             setSuccess = (select.value == item.service_id);
+                            if (setSuccess) {
+                                selectedText = select.options[select.selectedIndex]?.text || item.service_name;
+                            }
                         }
                         
                         // 如果ID匹配失败，尝试按名称匹配
@@ -3226,6 +3253,7 @@ window.openEditOrderModal = async function(orderId) {
                                 const optText = select.options[j].text;
                                 if (optText.includes(item.service_name)) {
                                     select.selectedIndex = j;
+                                    selectedText = optText;
                                     setSuccess = true;
                                     break;
                                 }
@@ -3234,6 +3262,16 @@ window.openEditOrderModal = async function(orderId) {
                         
                         if (setSuccess) {
                             select.dispatchEvent(new Event('change'));
+                            
+                            // 🔧 核心修复：同步更新可搜索输入框的显示值
+                            const serviceSearchInput = select.parentNode?.querySelector('.searchable-service-input') ||
+                                                       select.previousElementSibling?.querySelector?.('input');
+                            if (serviceSearchInput) {
+                                // 去掉价格后缀，只显示服务名称
+                                const cleanName = item.service_name || selectedText.split(' (')[0];
+                                serviceSearchInput.value = cleanName;
+                                console.log(`✅ [商品${i+1}] 同步显示:`, cleanName);
+                            }
                         } else {
                             console.warn(`⚠️ 商品${i+1}匹配失败:`, item.service_name);
                         }
