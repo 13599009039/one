@@ -55,8 +55,57 @@ function sendLogToServer(level, message, data = {}) {
     }, 500);
 }
 
+// ===================== UI可视化状态监控 =====================
+
 /**
- * 拦截fetch API，自动记录请求和响应
+ * 记录UI状态变化（供后端监控可视化层）
+ * @param {string} action - 操作类型: click/show/hide/render
+ * @param {string} target - 目标元素/模块
+ * @param {Object} details - 详细信息
+ */
+window.logUIState = function(action, target, details = {}) {
+    const uiLog = {
+        action,
+        target,
+        visible: details.visible !== undefined ? details.visible : null,
+        classList: details.classList || null,
+        display: details.display || null,
+        innerHTML: details.innerHTML ? (details.innerHTML.substring(0, 100) + '...') : null
+    };
+    
+    sendLogToServer('info', `[UI] ${action} ${target}`, uiLog);
+    console.log(`👁️ [UI监控] ${action} ${target}`, details);
+};
+
+/**
+ * 监控页面切换
+ */
+window.logPageSwitch = function(fromPage, toPage) {
+    sendLogToServer('info', `[UI] 页面切换: ${fromPage} -> ${toPage}`, {
+        from: fromPage,
+        to: toPage,
+        timestamp: Date.now()
+    });
+    console.log(`🔄 [UI监控] 页面切换: ${fromPage} -> ${toPage}`);
+};
+
+/**
+ * 监控模态框状态
+ */
+window.logModalState = function(modalId, state, error = null) {
+    const modal = document.getElementById(modalId);
+    sendLogToServer('info', `[UI] 模态框 ${modalId} ${state}`, {
+        modalId,
+        state,
+        exists: !!modal,
+        visible: modal ? !modal.classList.contains('hidden') : false,
+        error
+    });
+    console.log(`📋 [UI监控] 模态框 ${modalId} ${state}`);
+};
+
+/**
+ * 拦戮fetch API，自动记录请求和响应
  */
 if (window.fetch && !window._fetchIntercepted) {
     const originalFetch = window.fetch;
@@ -400,8 +449,16 @@ window.openModal = function(modalId) {
     if (modal) {
         modal.classList.remove('hidden');
         console.log(`✅ 模态框已打开: ${modalId}`);
+        // 记录UI状态
+        if (window.logModalState) {
+            window.logModalState(modalId, 'opened');
+        }
     } else {
         console.error(`❌ 模态框不存在: ${modalId}`);
+        // 记录错误
+        if (window.logModalState) {
+            window.logModalState(modalId, 'error', 'Modal element not found');
+        }
     }
 };
 

@@ -235,6 +235,14 @@ function updatePageTitle(title) {
 
 // 显示指定页面
 function showPage(pageId) {
+    // 记录页面切换开始
+    const currentVisible = document.querySelector('[id$="Page"]:not(.hidden)');
+    const fromPage = currentVisible ? currentVisible.id : 'unknown';
+    if (window.logPageSwitch) {
+        window.logPageSwitch(fromPage, pageId);
+    }
+    console.log(`📡 [Navigation] 切换页面: ${fromPage} -> ${pageId}`);
+    
     // 所有页面ID列表（完整ID，不需要拼接Page后缀）
     const pages = [
         'homePage', 'dashboardPage', 'customersPage', 'ordersPage', 'orderRecyclePage', 'transactionsPage', 'reportsPage',
@@ -274,8 +282,24 @@ function showPage(pageId) {
     const pageEl = document.getElementById(targetPageId);
     if (pageEl) {
         pageEl.classList.remove('hidden');
+        // 记录页面显示成功
+        if (window.logUIState) {
+            window.logUIState('show', targetPageId, {
+                visible: true,
+                classList: Array.from(pageEl.classList),
+                display: window.getComputedStyle(pageEl).display
+            });
+        }
+        console.log(`✅ [Navigation] 页面已显示: ${targetPageId}`);
     } else {
         console.warn(`页面元素未找到: ${targetPageId}`);
+        // 记录页面未找到错误
+        if (window.logUIState) {
+            window.logUIState('error', targetPageId, {
+                error: 'Element not found',
+                searched: targetPageId
+            });
+        }
     }
     
     // 页面初始化逻辑
