@@ -593,23 +593,34 @@ window.openAddWarehouseModal = function() {
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">联系电话 <span class="text-red-500">*</span></label>
-                        <input type="text" class="w-full border border-gray-300 rounded-md py-2 px-3 text-sm focus:ring-blue-500 focus:border-blue-500" name="contact_phone" required>
+                        <input type="text" class="w-full border border-gray-300 rounded-md py-2 px-3 text-sm focus:ring-blue-500 focus:border-blue-500" name="contact_phone" required placeholder="11位手机号">
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">省份 <span class="text-red-500">*</span></label>
-                        <input type="text" class="w-full border border-gray-300 rounded-md py-2 px-3 text-sm focus:ring-blue-500 focus:border-blue-500" name="province" required>
+                    
+                    <!-- 省市区三级联动 -->
+                    <div class="grid grid-cols-3 gap-3">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">省份 <span class="text-red-500">*</span></label>
+                            <select id="warehouse-province" class="w-full border border-gray-300 rounded-md py-2 px-3 text-sm focus:ring-blue-500 focus:border-blue-500" name="province" required>
+                                <option value="">请选择</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">城市 <span class="text-red-500">*</span></label>
+                            <select id="warehouse-city" class="w-full border border-gray-300 rounded-md py-2 px-3 text-sm focus:ring-blue-500 focus:border-blue-500" name="city" required disabled>
+                                <option value="">请选择</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">区/县 <span class="text-red-500">*</span></label>
+                            <select id="warehouse-district" class="w-full border border-gray-300 rounded-md py-2 px-3 text-sm focus:ring-blue-500 focus:border-blue-500" name="district" required disabled>
+                                <option value="">请选择</option>
+                            </select>
+                        </div>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">城市 <span class="text-red-500">*</span></label>
-                        <input type="text" class="w-full border border-gray-300 rounded-md py-2 px-3 text-sm focus:ring-blue-500 focus:border-blue-500" name="city" required>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">区/县 <span class="text-red-500">*</span></label>
-                        <input type="text" class="w-full border border-gray-300 rounded-md py-2 px-3 text-sm focus:ring-blue-500 focus:border-blue-500" name="district" required>
-                    </div>
+                    
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">详细地址 <span class="text-red-500">*</span></label>
-                        <textarea class="w-full border border-gray-300 rounded-md py-2 px-3 text-sm focus:ring-blue-500 focus:border-blue-500" name="address" required rows="3"></textarea>
+                        <textarea class="w-full border border-gray-300 rounded-md py-2 px-3 text-sm focus:ring-blue-500 focus:border-blue-500" name="address" required rows="3" placeholder="请输入街道、楼栋号、房间号等详细信息"></textarea>
                     </div>
                     <div class="flex items-center">
                         <input type="checkbox" name="is_default" value="1" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
@@ -625,6 +636,9 @@ window.openAddWarehouseModal = function() {
     `;
     
     document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // 初始化省市区联动
+    initWarehouseRegionSelector();
     
     // 绑定form submit事件
     document.getElementById('add-warehouse-form').addEventListener('submit', function(e) {
@@ -664,6 +678,181 @@ window.submitWarehouse = async function() {
         showMessage('添加失败', 'error');
     }
 };
+
+// ===================== 省市区三级联动数据 =====================
+const CHINA_REGIONS = {
+    '北京市': {
+        '北京市': ['东城区', '西城区', '朝阳区', '丰台区', '石景山区', '海淀区', '门头沟区', '房山区', '通州区', '顺义区', '昌平区', '大兴区', '怀柔区', '平谷区', '密云区', '延庆区']
+    },
+    '上海市': {
+        '上海市': ['黄浦区', '徐汇区', '长宁区', '静安区', '普陀区', '虹口区', '杨浦区', '闵行区', '宝山区', '嘉定区', '浦东新区', '金山区', '松江区', '青浦区', '奉贤区', '崇明区']
+    },
+    '广东省': {
+        '广州市': ['越秀区', '海珠区', '荔湾区', '天河区', '白云区', '黄埔区', '番禺区', '花都区', '南沙区', '增城区', '从化区'],
+        '深圳市': ['罗湖区', '福田区', '南山区', '宝安区', '龙岗区', '盐田区', '坤山新区', '龙华区', '光明区'],
+        '东莞市': ['东城街道', '南城街道', '莫鹤街道', '塘厦镇', '长安镇', '虎门镇', '松山湖', '常平镇'],
+        '佛山市': ['禅城区', '南海区', '顾德区', '三水区', '高明区'],
+        '珠海市': ['香洲区', '斗门区', '金湾区'],
+        '中山市': ['东区', '西区', '南区', '五桂区', '火炬开发区'],
+        '惠州市': ['惠城区', '惠阳区', '惠东县', '博罗县', '龙门县'],
+        '江门市': ['蓬江区', '江海区', '新会区', '台山市', '开平市', '恩平市', '鹤山市']
+    },
+    '浙江省': {
+        '杭州市': ['上城区', '下城区', '江干区', '拱墅区', '西湖区', '滨江区', '萧山区', '余杭区', '富阳区', '临安区', '桐庐市', '建德市', '淳安县'],
+        '宁波市': ['海曙区', '江北区', '北仑区', '镇海区', '鲑州区', '奉化区', '余姚市', '慈溪市', '宁海市', '象山县'],
+        '温州市': ['鹿城区', '龙湾区', '瓯海区', '洞头区', '永嘉市', '瑞安市', '乐清市', '苍南县', '平阳县', '泰顺县', '文成县'],
+        '绍兴市': ['越城区', '柯桥区', '上虑区', '诸暨市', '嵊州市', '新昌县']
+    },
+    '江苏省': {
+        '南京市': ['玄武区', '秦淮区', '建邺区', '鼓楼区', '栖霞区', '雨花台区', '江宁区', '浦口区', '六合区', '溧水区', '高淳区'],
+        '苏州市': ['姑苏区', '虎丘区', '吴中区', '相城区', '吴江区', '昆山市', '太仓市', '常熟市', '张家港市'],
+        '无锡市': ['梁溪区', '锡山区', '惠山区', '滨湖区', '江阴市', '宜兴市'],
+        '常州市': ['天宁区', '钟楼区', '新北区', '武进区', '金坛区', '溧阳市'],
+        '南通市': ['崇川区', '海门区', '通州区', '启东市', '海安市', '如皋市']
+    },
+    '山东省': {
+        '青岛市': ['市南区', '市北区', '黄岛区', '崂山区', '李沧区', '城阳区', '即墨区', '胶州市', '平度市', '莱西市'],
+        '济南市': ['历下区', '市中区', '槐荫区', '天桥区', '历城区', '长清区', '章丘区', '济阳区', '莆中区', '平阴区', '商河县'],
+        '烟台市': ['芗苝区', '福山区', '牡丹区', '莱山区', '龙口市', '莱阳市', '莱州市', '招远市', '蓬莱市', '栖霞市', '海阳市', '长岛县'],
+        '潍坊市': ['潍城区', '寒亭区', '坊城区', '奎文区', '临朐市', '诸城市', '高密市', '安丘市', '昌邑县', '昌乐县'],
+        '临沂市': ['兰山区', '罗庄区', '河东区', '郯城区', '兰陵县', '费县', '平邑县', '蒙阴县', '临沭县']
+    },
+    '河南省': {
+        '郑州市': ['中原区', '二七区', '管城回族区', '金水区', '上街区', '惠济区', '中牟县', '巩义市', '荥阳市', '新密市', '新郑市', '登封市'],
+        '洛阳市': ['老城区', '西工区', '瀍河回族区', '吉利区', '洛龙区', '孟津县', '新安县', '栾川县', '偃师县', '宜阳县', '洛宁县'],
+        '开封市': ['龙亭区', '顺河回族区', '鼓楼区', '禹王台区', '祥符区', '兰考县', '杞县', '通许县', '尉氏县']
+    },
+    '湖北省': {
+        '武汉市': ['江岸区', '江汉区', '硚口区', '汉阳区', '武昌区', '青山区', '洪山区', '东西湖区', '蔡甸区', '江夏区', '黄陂区', '新洲区', '汉南区'],
+        '宜昌市': ['西陵区', '伍家岗区', '点军区', '猇亭区', '当阳市', '枝江市', '宜都市'],
+        '襄阳市': ['襄城区', '樊城区', '南漳区', '谷城区', '保康县', '老河口市', '枣阳市']
+    },
+    '湖南省': {
+        '长沙市': ['芝麻区', '天心区', '岳麓区', '开福区', '雨花区', '望城区', '长沙县', '浏阳市', '宁乡市'],
+        '株洲市': ['荷塘区', '芦淞区', '石峰区', '天元区', '渌县', '茶陵县', '炎陵县', '醴陵市']
+    },
+    '四川省': {
+        '成都市': ['锦江区', '青羊区', '金牛区', '武侯区', '成华区', '龙泉驿区', '青白江区', '新都区', '温江区', '双流区', '郫都区', '崇州市', '都江堰市', '彭州市', '邵陵市', '金堂县', '大邑县', '蒲江县', '新津县', '简阳市'],
+        '绵阳市': ['涪城区', '游仙区', '安州区', '三台县', '盐亭县', '梓潼县', '北川羌族自治县', '平武县', '江油市']
+    },
+    '重庆市': {
+        '重庆市': ['渝中区', '渝北区', '渝东区', '渝西区', '南岸区', '北碚区', '南碚区', '巴南区', '江北区', '沙坪坝区', '九龙坡区', '大渡口区', '渝中区', '渝北区', '渝东区', '渝西区']
+    },
+    '陕西省': {
+        '西安市': ['新城区', '碑林区', '莲湖区', '灰埕区', '未央区', '雁塔区', '高陵区', '鄙邑区', '长安区', '蓝田县', '周至县', '户县', '高陵区']
+    },
+    '天津市': {
+        '天津市': ['和平区', '河东区', '河西区', '南开区', '河北区', '红桥区', '东丽区', '西青区', '津南区', '北辰区', '武清区', '宝坻区', '宁河区', '静海区', '蓟县', '宝坡区']
+    },
+    '河北省': {
+        '石家庄市': ['长安区', '桥西区', '新华区', '裕华区', '藁城区', '井陉矿区', '栈城区', '鹿泉区', '藁城区', '正定县', '行唐县', '灵寿县', '高邑县', '赞皇县', '无极县'],
+        '唐山市': ['路南区', '路北区', '古冶区', '开平区', '丰南区', '丰润区', '曹妃甸区', '滦州市', '滦南县', '乐亭县', '迁西县', '玉田县', '遵化县', '迁安市']
+    },
+    '福建省': {
+        '福州市': ['鼓楼区', '台江区', '仓山区', '马尾区', '晋安区', '长乐区', '闽侯区', '闽清县', '连江县', '罗源县', '闽侯县', '永泰县', '福清市'],
+        '厦门市': ['思明区', '海沧区', '湖里区', '集美区', '同安区', '翔安区'],
+        '泉州市': ['鲤城区', '丰泽区', '洛江区', '泉港区', '洗江区', '惠安县', '安溪县', '永春县', '德化县', '金门县', '石狮市', '南安市', '晋江市']
+    },
+    '安徽省': {
+        '合肥市': ['瑶海区', '庐阳区', '蜀山区', '包河区', '长丰县', '肥东县', '肥西县', '庐江县', '巢湖市'],
+        '芍湖市': ['镜湖区', '弋江区', '鸠江区', '三山区', '苜湖县', '繁昌县', '南陵县', '无为县']
+    },
+    '江西省': {
+        '南昌市': ['东湖区', '西湖区', '青云谱区', '青山湖区', '新建区', '红谷滩区', '南昌县', '进贤县', '安义县'],
+        '赣州市': ['章贡区', '南康区', '赣县', '南康市', '瑞金市', '于都县', '宁都县', '会昌县', '寻乌县', '石城县', '安远县', '龙南县']
+    },
+    '辽宁省': {
+        '沈阳市': ['和平区', '沈河区', '大东区', '皇姑区', '铁西区', '苏家屯区', '浑南区', '沈北区', '于洪区', '辽中县', '康平县', '法库县', '新民市'],
+        '大连市': ['中山区', '西岗区', '沙河口区', '甘井子区', '旅顺口区', '金州区', '普兰店区', '瓦房店市', '庄河市', '长海县']
+    },
+    '吉林省': {
+        '长春市': ['南关区', '宽城区', '朝阳区', '二道区', '绿园区', '双阳区', '九台区', '农安县', '德惠市', '榆树市']
+    },
+    '黑龙江省': {
+        '哈尔滨市': ['道里区', '南岗区', '道外区', '香坊区', '平房区', '松北区', '呼兰区', '阿城区', '双城区', '呼兰县', '宾县', '巴彦县', '木兰县', '通河县', '延寿县', '尚志市', '依兰县']
+    },
+    '山西省': {
+        '太原市': ['小店区', '迎泽区', '杏花岭区', '尖草坪区', '万柏林区', '晋源区', '清徐县', '阳曲县', '娄烦县', '古交县']
+    },
+    '云南省': {
+        '昆明市': ['五华区', '盘龙区', '官渡区', '西山区', '东川区', '呈贡区', '晋宁区', '富民县', '宜良县', '嵩明县', '石林彝族自治县', '禄劝彝族苗族自治县', '寻甸回族彝族自治县', '安宁市']
+    },
+    '贵州省': {
+        '贵阳市': ['南明区', '云岩区', '花溪区', '乌当区', '白云区', '观山湖区', '开阳县', '息烽县', '修文县', '清镇县']
+    },
+    '海南省': {
+        '海口市': ['秀英区', '龙华区', '琼山区', '美兰区'],
+        '三亚市': ['海棠区', '吉阳区', '天涯区', '崖州区']
+    },
+    '内蒙古自治区': {
+        '呼和浩特市': ['新城区', '回民区', '玉泉区', '赛罕区', '土默特左旗', '托克托县', '和林格尔县', '清水河县', '武川县']
+    }
+};
+
+// 初始化仓库地址的省市区选择器
+function initWarehouseRegionSelector() {
+    const provinceSelect = document.getElementById('warehouse-province');
+    const citySelect = document.getElementById('warehouse-city');
+    const districtSelect = document.getElementById('warehouse-district');
+    
+    if (!provinceSelect || !citySelect || !districtSelect) {
+        console.error('省市区选择器初始化失败：未找到元素');
+        return;
+    }
+    
+    // 填充省份
+    Object.keys(CHINA_REGIONS).sort().forEach(province => {
+        const option = document.createElement('option');
+        option.value = province;
+        option.textContent = province;
+        provinceSelect.appendChild(option);
+    });
+    
+    // 省份变化时更新城市
+    provinceSelect.addEventListener('change', function() {
+        const selectedProvince = this.value;
+        
+        // 清空城市和区县
+        citySelect.innerHTML = '<option value="">请选择</option>';
+        districtSelect.innerHTML = '<option value="">请选择</option>';
+        districtSelect.disabled = true;
+        
+        if (selectedProvince && CHINA_REGIONS[selectedProvince]) {
+            citySelect.disabled = false;
+            const cities = CHINA_REGIONS[selectedProvince];
+            Object.keys(cities).sort().forEach(city => {
+                const option = document.createElement('option');
+                option.value = city;
+                option.textContent = city;
+                citySelect.appendChild(option);
+            });
+        } else {
+            citySelect.disabled = true;
+        }
+    });
+    
+    // 城市变化时更新区县
+    citySelect.addEventListener('change', function() {
+        const selectedProvince = provinceSelect.value;
+        const selectedCity = this.value;
+        
+        // 清空区县
+        districtSelect.innerHTML = '<option value="">请选择</option>';
+        
+        if (selectedProvince && selectedCity && CHINA_REGIONS[selectedProvince][selectedCity]) {
+            districtSelect.disabled = false;
+            const districts = CHINA_REGIONS[selectedProvince][selectedCity];
+            districts.sort().forEach(district => {
+                const option = document.createElement('option');
+                option.value = district;
+                option.textContent = district;
+                districtSelect.appendChild(option);
+            });
+        } else {
+            districtSelect.disabled = true;
+        }
+    });
+}
 
 // ===================== 全局导出 =====================
 window.initLogisticsAccountsPage = initLogisticsAccountsPage;
