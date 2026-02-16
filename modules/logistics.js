@@ -97,9 +97,14 @@ async function loadLogisticsOrders() {
             search: LogisticsModule.ordersFilter.search
         });
         
-        const response = await fetch(`/api/logistics/orders?${params}`, {
+        const response = await fetch(`/api/tenant/logistics_accounts?${params}`, {
             credentials: 'include'
         });
+        
+        // 添加响应状态检查
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
         
         const result = await response.json();
         
@@ -118,10 +123,26 @@ async function loadLogisticsOrders() {
         }
     } catch (error) {
         console.error('[Logistics] 加载订单失败:', error);
+        
+        // 区分错误类型，给出友好提示
+        let errorMsg = '网络错误，请稍后重试';
+        if (error.message.includes('HTTP 404')) {
+            errorMsg = '接口不存在，请联系管理员';
+        } else if (error.message.includes('HTTP 401')) {
+            errorMsg = '未登录或登录已过期';
+        } else if (error.message.includes('HTTP 403')) {
+            errorMsg = '无权访问该资源';
+        } else if (error.message.includes('HTTP 500')) {
+            errorMsg = '服务器内部错误';
+        }
+        
         container.innerHTML = `
             <tr>
                 <td colspan="9" class="px-6 py-8 text-center text-red-500">
-                    网络错误，请稍后重试
+                    <i class="fas fa-exclamation-circle mr-2"></i>${errorMsg}
+                    <button onclick="loadLogisticsOrders()" class="ml-4 text-blue-600 hover:underline">
+                        <i class="fas fa-redo mr-1"></i>重试
+                    </button>
                 </td>
             </tr>
         `;
@@ -305,9 +326,13 @@ function filterLogisticsOrders() {
  */
 async function viewLogisticsTrack(orderId) {
     try {
-        const response = await fetch(`/api/logistics/orders/${orderId}/track`, {
+        const response = await fetch(`/api/tenant/logistics_accounts/${orderId}/track`, {
             credentials: 'include'
         });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
         const result = await response.json();
         
         if (result.success) {
@@ -316,7 +341,12 @@ async function viewLogisticsTrack(orderId) {
             showNotification(result.message, 'error');
         }
     } catch (error) {
-        showNotification('获取轨迹失败', 'error');
+        console.error('[Logistics] 获取轨迹失败:', error);
+        let errorMsg = '获取轨迹失败';
+        if (error.message.includes('HTTP')) {
+            errorMsg = '服务异常，请稍后重试';
+        }
+        showNotification(errorMsg, 'error');
     }
 }
 
@@ -392,12 +422,16 @@ function closeTrackModal() {
  */
 async function printLogisticsWaybill(orderId) {
     try {
-        const response = await fetch(`/api/logistics/orders/${orderId}/print`, {
+        const response = await fetch(`/api/tenant/logistics_accounts/${orderId}/print`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
             body: JSON.stringify({})
         });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
         
         const result = await response.json();
         
@@ -409,7 +443,12 @@ async function printLogisticsWaybill(orderId) {
             showNotification(result.message, 'error');
         }
     } catch (error) {
-        showNotification('打印失败', 'error');
+        console.error('[Logistics] 打印失败:', error);
+        let errorMsg = '打印失败';
+        if (error.message.includes('HTTP')) {
+            errorMsg = '服务异常，请稍后重试';
+        }
+        showNotification(errorMsg, 'error');
     }
 }
 
@@ -421,12 +460,16 @@ async function markLogisticsException(orderId) {
     if (!reason) return;
     
     try {
-        const response = await fetch(`/api/logistics/orders/${orderId}/exception`, {
+        const response = await fetch(`/api/tenant/logistics_accounts/${orderId}/exception`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
             body: JSON.stringify({ reason })
         });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
         
         const result = await response.json();
         
@@ -476,9 +519,13 @@ async function loadLogisticsPlatforms() {
     `;
     
     try {
-        const response = await fetch('/api/logistics/platforms', {
+        const response = await fetch('/api/tenant/logistics_accounts', {
             credentials: 'include'
         });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
         
         const result = await response.json();
         
@@ -494,9 +541,18 @@ async function loadLogisticsPlatforms() {
         }
     } catch (error) {
         console.error('[Logistics] 加载平台列表失败:', error);
+        
+        let errorMsg = '网络错误，请稍后重试';
+        if (error.message.includes('HTTP 404')) {
+            errorMsg = '接口不存在，请联系管理员';
+        }
+        
         container.innerHTML = `
             <div class="p-4 text-center text-red-500">
-                网络错误，请稍后重试
+                <i class="fas fa-exclamation-circle mr-2"></i>${errorMsg}
+                <button onclick="loadLogisticsPlatforms()" class="ml-4 text-blue-600 hover:underline">
+                    <i class="fas fa-redo mr-1"></i>重试
+                </button>
             </div>
         `;
     }
@@ -584,9 +640,13 @@ async function loadPlatformConfigForm(platformCode) {
     // 获取该平台已有的配置
     let existingConfig = null;
     try {
-        const response = await fetch(`/api/logistics/config?platform=${platformCode}`, {
+        const response = await fetch(`/api/tenant/logistics_accounts?cp_code=${platformCode}`, {
             credentials: 'include'
         });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
         const result = await response.json();
         if (result.success && result.data.length > 0) {
             existingConfig = result.data[0];
@@ -674,12 +734,16 @@ async function savePlatformConfig(event) {
     data.extra_config = extraConfig;
     
     try {
-        const response = await fetch('/api/logistics/config', {
+        const response = await fetch('/api/tenant/logistics_accounts', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
             body: JSON.stringify(data)
         });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
         
         const result = await response.json();
         
@@ -700,10 +764,16 @@ async function savePlatformConfig(event) {
  */
 async function togglePlatformConfig(configId, currentStatus) {
     try {
-        const response = await fetch(`/api/logistics/config/${configId}/toggle`, {
-            method: 'POST',
-            credentials: 'include'
+        const response = await fetch(`/api/tenant/logistics_accounts/${configId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ status: currentStatus === 'enabled' ? 0 : 1 })
         });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
         
         const result = await response.json();
         
@@ -726,10 +796,14 @@ async function deletePlatformConfig(configId) {
     if (!confirm('确定要删除该配置吗？')) return;
     
     try {
-        const response = await fetch(`/api/logistics/config/${configId}`, {
+        const response = await fetch(`/api/tenant/logistics_accounts/${configId}`, {
             method: 'DELETE',
             credentials: 'include'
         });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
         
         const result = await response.json();
         
@@ -772,9 +846,13 @@ async function loadPrintTemplates() {
     `;
     
     try {
-        const response = await fetch('/api/logistics/templates', {
+        const response = await fetch('/api/tenant/warehouses', {
             credentials: 'include'
         });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
         
         const result = await response.json();
         
@@ -790,10 +868,20 @@ async function loadPrintTemplates() {
             `;
         }
     } catch (error) {
+        console.error('[Logistics] 加载模板列表失败:', error);
+        
+        let errorMsg = '网络错误，请稍后重试';
+        if (error.message.includes('HTTP 404')) {
+            errorMsg = '接口不存在，请联系管理员';
+        }
+        
         container.innerHTML = `
             <tr>
                 <td colspan="6" class="px-6 py-8 text-center text-red-500">
-                    网络错误，请稍后重试
+                    <i class="fas fa-exclamation-circle mr-2"></i>${errorMsg}
+                    <button onclick="loadPrintTemplates()" class="ml-4 text-blue-600 hover:underline">
+                        <i class="fas fa-redo mr-1"></i>重试
+                    </button>
                 </td>
             </tr>
         `;
