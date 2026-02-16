@@ -536,7 +536,7 @@ window.openAddLogisticsAccountModal = function() {
     `;
     
     document.body.insertAdjacentHTML('beforeend', modalHTML);
-    $('#add-logistics-modal').modal('show');
+    openModal('add-logistics-modal');  // 使用utils.js中的openModal而非jQuery
 };
 
 // 提交新增物流账号
@@ -566,6 +566,98 @@ window.submitLogisticsAccount = async function() {
     }
 };
 
+// 新增发货地址弹窗
+window.openAddWarehouseModal = function() {
+    const modalHTML = `
+        <div class="modal" id="add-warehouse-modal">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4>新增发货地址</h4>
+                        <button type="button" class="close" onclick="closeModal('add-warehouse-modal')">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="add-warehouse-form">
+                            <div class="form-group">
+                                <label>地址名称 <span class="required">*</span></label>
+                                <input type="text" class="form-control" name="name" required 
+                                       placeholder="如：北京总仓、上海分仓">
+                            </div>
+                            <div class="form-group">
+                                <label>联系人 <span class="required">*</span></label>
+                                <input type="text" class="form-control" name="contact_name" required>
+                            </div>
+                            <div class="form-group">
+                                <label>联系电话 <span class="required">*</span></label>
+                                <input type="text" class="form-control" name="contact_phone" required>
+                            </div>
+                            <div class="form-group">
+                                <label>省份 <span class="required">*</span></label>
+                                <input type="text" class="form-control" name="province" required>
+                            </div>
+                            <div class="form-group">
+                                <label>城市 <span class="required">*</span></label>
+                                <input type="text" class="form-control" name="city" required>
+                            </div>
+                            <div class="form-group">
+                                <label>区/县 <span class="required">*</span></label>
+                                <input type="text" class="form-control" name="district" required>
+                            </div>
+                            <div class="form-group">
+                                <label>详细地址 <span class="required">*</span></label>
+                                <textarea class="form-control" name="address" required rows="3"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" name="is_default" value="1">
+                                    设为默认发货地址
+                                </label>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-default" onclick="closeModal('add-warehouse-modal')">取消</button>
+                        <button class="btn btn-primary" onclick="submitWarehouse()">保存</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    openModal('add-warehouse-modal');
+};
+
+// 提交新增发货地址
+window.submitWarehouse = async function() {
+    const form = document.getElementById('add-warehouse-form');
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData);
+    
+    // 处理checkbox
+    data.is_default = data.is_default ? 1 : 0;
+    
+    try {
+        const response = await fetch('/api/tenant/warehouses', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+            closeModal('add-warehouse-modal');
+            showMessage('添加成功！', 'success');
+            loadWarehouses();
+        } else {
+            showMessage(result.message || '添加失败', 'error');
+        }
+    } catch (error) {
+        console.error('添加失败:', error);
+        showMessage('添加失败', 'error');
+    }
+};
+
 // ===================== 全局导出 =====================
 window.initLogisticsAccountsPage = initLogisticsAccountsPage;
 window.loadLogisticsAccounts = loadLogisticsAccounts;
@@ -580,5 +672,7 @@ window.loadWarehouses = loadWarehouses;
 window.setDefaultWarehouse = setDefaultWarehouse;
 window.editWarehouse = editWarehouse;
 window.deleteWarehouse = deleteWarehouse;
+window.openAddWarehouseModal = openAddWarehouseModal;  // 新增导出
+window.submitWarehouse = submitWarehouse;  // 新增导出
 
 console.log('[Logistics] 租户物流管理模块加载完成 v2.0.0');
