@@ -2,10 +2,10 @@
 # 生成时间: 2026-02-15
 
 [gitee]
-username = weng_zhiwei
-email = 421731296@qq.com
-repository_url = https://gitee.com/weng_zhiwei/aj
-ssh_url = git@gitee.com:weng_zhiwei/aj.git
+username = zhiweiweng
+email = 18039997705@189.cn
+repository_url = https://gitee.com/zhiweiweng/one.git
+ssh_url = git@gitee.com:zhiweiweng/one.git
 
 [authentication]
 method = ssh

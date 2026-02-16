@@ -2155,7 +2155,7 @@ async function loadOrdersData() {
             // 操作按钮（根据审核状态动态显示）
             let actionButtons = `
                 <button class="text-blue-600 hover:text-blue-900 mr-1" onclick="viewOrder('${order.id}')" title="查看">查看</button>
-                <button class="text-green-600 hover:text-green-900 mr-1" onclick="openPaymentModal('${order.id}')" title="登记收款">收款</button>
+                <button class="text-green-600 hover:text-green-900 mr-1" onclick="openPaymentModal('${order.id}')" title="${isAftersaleOrder ? '登记退款' : '登记收款'}">${isAftersaleOrder ? '退款' : '收款'}</button>
             `;
             
             // 销售订单才显示售后按钮
@@ -2190,10 +2190,15 @@ async function loadOrdersData() {
             // 金额展示优化：优先使用final_amount（最终成交金额），其次使用contract_amount
             const displayAmount = parseFloat(order.final_amount || order.contract_amount || order.total_amount || 0) || 0;
             
-            // 售后订单显示关联原订单号
-            const orderIdDisplay = isAftersaleOrder && order.parent_order_id
-                ? `${order.id} <span class="text-red-500">(关联#${order.parent_order_id})</span>`
-                : `${order.id}`;
+            // 售后订单显示关联原订单号，原订单显示"有售后"标记
+            let orderIdDisplay = `${order.id}`;
+            if (isAftersaleOrder && order.parent_order_id) {
+                // 售后订单：显示关联的原订单号
+                orderIdDisplay = `${order.id} <span class="text-red-500">(关联#${order.parent_order_id})</span>`;
+            } else if (order.has_aftersale) {
+                // 原订单：如果有售后订单，显示红色"有售后"标记
+                orderIdDisplay = `${order.id} <span class="text-red-500 text-xs">[有售后]</span>`;  
+            }
             
             tr.innerHTML = `
                 <td class="px-4 py-3 text-sm">
@@ -2228,6 +2233,82 @@ async function loadOrdersData() {
         
         // 渲染分页控件
         renderOrderPagination();
+    }
+}
+
+/**
+ * 加载原订单的完整信息（用于售后订单详情页展示）
+ */
+async function loadParentOrderInfo(parentOrderId) {
+    try {
+        const result = await window.api.getOrder(parentOrderId);
+        if (!result.success || !result.data) {
+            console.error('加载原订单信息失败');
+            return;
+        }
+        
+        const parentOrder = result.data;
+        
+        // 获取客户信息
+        let customerName = '未知客户';
+        try {
+            const customersResult = await window.api.getCustomers();
+            if (customersResult.success && customersResult.data) {
+                const customer = customersResult.data.find(c => c.id === parentOrder.customer_id);
+                if (customer) customerName = customer.shop_name;
+            }
+        } catch (e) {}
+        
+        // 填充摘要信息
+        const parentCustomer = document.getElementById('parentCustomer');
+        const parentAmount = document.getElementById('parentAmount');
+        const parentService = document.getElementById('parentService');
+        const parentStatus = document.getElementById('parentStatus');
+        
+        if (parentCustomer) parentCustomer.textContent = customerName;
+        
+        const finalAmount = parseFloat(parentOrder.final_amount || parentOrder.total_amount || 0) || 0;
+        if (parentAmount) parentAmount.textContent = `¥${finalAmount.toFixed(2)}`;
+        
+        if (parentService) parentService.textContent = parentOrder.service_name || '未指定';
+        
+        if (parentStatus) {
+            parentStatus.textContent = parentOrder.status || '-';
+            parentStatus.className = `font-medium ${getStatusClass(parentOrder.status).replace('bg-', 'text-').replace('-100', '-600')}`;
+        }
+        
+        // 填充详细信息
+        const parentOrderDate = document.getElementById('parentOrderDate');
+        const parentBusinessStaff = document.getElementById('parentBusinessStaff');
+        const parentTeam = document.getElementById('parentTeam');
+        const parentPaidAmount = document.getElementById('parentPaidAmount');
+        
+        if (parentOrderDate) parentOrderDate.textContent = formatDate(parentOrder.order_date);
+        if (parentBusinessStaff) parentBusinessStaff.textContent = parentOrder.business_staff || '-';
+        if (parentTeam) parentTeam.textContent = parentOrder.team || '-';
+        
+        const paidAmount = parseFloat(parentOrder.paid_amount || parentOrder.net_paid || 0) || 0;
+        if (parentPaidAmount) parentPaidAmount.textContent = `¥${paidAmount.toFixed(2)}`;
+        
+        // 填充收款记录
+        const parentPaymentRecords = document.getElementById('parentPaymentRecords');
+        if (parentPaymentRecords) {
+            if (Array.isArray(parentOrder.payments) && parentOrder.payments.length > 0) {
+                const recordsHtml = parentOrder.payments.map(p => {
+                    const amount = parseFloat(p.amount) || 0;
+                    const isRefund = p.type === '退款' || amount < 0;
+                    return `<div class="flex justify-between py-1 border-b border-blue-100 last:border-0">
+                        <span>${formatDate(p.payment_date)} - ${p.type || '收款'}</span>
+                        <span class="${isRefund ? 'text-red-600' : 'text-green-600'} font-medium">¥${Math.abs(amount).toFixed(2)}</span>
+                    </div>`;
+                }).join('');
+                parentPaymentRecords.innerHTML = recordsHtml;
+            } else {
+                parentPaymentRecords.innerHTML = '<p class="text-gray-400 italic">暂无收款记录</p>';
+            }
+        }
+    } catch (error) {
+        console.error('加载原订单信息异常:', error);
     }
 }
 
@@ -2295,12 +2376,34 @@ window.viewOrder = async function(id) {
             document.getElementById('detailAftersaleType').textContent = order.aftersale_type || '-';
             document.getElementById('detailAftersaleReason').textContent = order.aftersale_reason || '-';
         }
-        // 显示关联原订单
+        // 显示关联原订单完整信息
         if (parentOrderInfo && order.parent_order_id) {
             parentOrderInfo.classList.remove('hidden');
             const parentLink = document.getElementById('parentOrderLink');
             parentLink.textContent = `订单号 ${order.parent_order_id}`;
             parentLink.onclick = () => viewOrder(order.parent_order_id);
+            
+            // 加载原订单的完整信息
+            loadParentOrderInfo(order.parent_order_id);
+            
+            // 绑定展开/收起按钮
+            const toggleBtn = document.getElementById('toggleParentDetails');
+            const detailsDiv = document.getElementById('parentOrderDetails');
+            if (toggleBtn && detailsDiv) {
+                toggleBtn.onclick = () => {
+                    const isHidden = detailsDiv.classList.contains('hidden');
+                    if (isHidden) {
+                        detailsDiv.classList.remove('hidden');
+                        toggleBtn.innerHTML = '<i class="fas fa-chevron-up mr-1"></i>收起详情';
+                    } else {
+                        detailsDiv.classList.add('hidden');
+                        toggleBtn.innerHTML = '<i class="fas fa-chevron-down mr-1"></i>展开详情';
+                    }
+                };
+                // 重置为收起状态
+                detailsDiv.classList.add('hidden');
+                toggleBtn.innerHTML = '<i class="fas fa-chevron-down mr-1"></i>展开详情';
+            }
         }
     } else {
         if (aftersaleInfo) aftersaleInfo.classList.add('hidden');

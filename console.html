@@ -61,49 +61,137 @@
 
     <!-- 控制台主页面 -->
     <div id="consolePage" class="hidden">
-        <!-- 顶部导航栏 -->
-        <nav class="bg-white shadow-lg border-b border-gray-200">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between h-16">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0 flex items-center">
-                            <i class="fas fa-cogs text-purple-600 text-2xl mr-3"></i>
-                            <span class="text-xl font-bold text-gray-800">系统控制台</span>
-                        </div>
-                        <div class="hidden sm:ml-10 sm:flex sm:space-x-8">
-                            <a href="#" class="nav-link text-purple-600 border-purple-200 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium" data-target="companies">
-                                <i class="fas fa-building mr-2"></i> 公司管理
-                            </a>
-                            <a href="#" class="nav-link text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium" data-target="users">
-                                <i class="fas fa-users mr-2"></i> 用户管理
-                            </a>
-                            <a href="#" class="nav-link text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium" data-target="system">
-                                <i class="fas fa-cog mr-2"></i> 系统设置
-                            </a>
-                        </div>
+        <!-- 左侧导航栏 -->
+        <aside id="sidebar" class="fixed left-0 top-0 h-full bg-gradient-to-b from-purple-700 to-purple-900 text-white z-40 transition-all duration-300" style="width: 240px;">
+            <!-- Logo区域 -->
+            <div class="h-16 flex items-center justify-between px-4 border-b border-purple-600">
+                <div class="flex items-center sidebar-logo">
+                    <i class="fas fa-cogs text-white text-2xl mr-3"></i>
+                    <span class="text-xl font-bold sidebar-text">系统控制台</span>
+                </div>
+                <button id="sidebarToggle" class="p-2 rounded-lg hover:bg-purple-600 transition-colors" title="折叠/展开">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            
+            <!-- 用户信息 -->
+            <div class="p-4 border-b border-purple-600">
+                <div class="flex items-center sidebar-user-info">
+                    <div class="bg-purple-500 rounded-full p-2 mr-3">
+                        <i class="fas fa-user-shield text-sm"></i>
                     </div>
-                    <div class="flex items-center">
-                        <div class="ml-3 relative">
-                            <div class="flex items-center">
-                                <div class="bg-purple-100 text-purple-800 rounded-full p-1 mr-2">
-                                    <i class="fas fa-user-shield text-sm"></i>
-                                </div>
-                                <span class="text-sm font-medium text-gray-700">超级管理员</span>
-                                <div class="ml-1">
-                                    <button type="button" class="bg-white p-1 rounded-full text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500" id="userMenuButton">
-                                        <span class="sr-only">打开用户菜单</span>
-                                        <i class="fas fa-chevron-down text-xs"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="sidebar-text">
+                        <div class="text-sm font-medium" id="sidebarUsername">超级管理员</div>
+                        <div class="text-xs text-purple-300">平台管理员</div>
                     </div>
                 </div>
             </div>
-        </nav>
+            
+            <!-- 导航菜单 -->
+            <nav class="flex-1 py-4 overflow-y-auto sidebar-nav" style="height: calc(100vh - 180px);">
+                <!-- 基础功能 -->
+                <div class="px-4 mb-2">
+                    <span class="text-xs font-semibold text-purple-300 uppercase tracking-wider sidebar-text">基础功能</span>
+                </div>
+                
+                <a href="#" class="nav-link active flex items-center px-4 py-3 text-sm hover:bg-purple-600 transition-colors" data-target="companies">
+                    <i class="fas fa-building w-6 text-center"></i>
+                    <span class="ml-3 sidebar-text">公司管理</span>
+                </a>
+                
+                <a href="#" class="nav-link flex items-center px-4 py-3 text-sm hover:bg-purple-600 transition-colors" data-target="users">
+                    <i class="fas fa-users w-6 text-center"></i>
+                    <span class="ml-3 sidebar-text">用户管理</span>
+                </a>
+                
+                <a href="#" class="nav-link flex items-center px-4 py-3 text-sm hover:bg-purple-600 transition-colors" data-target="system">
+                    <i class="fas fa-cog w-6 text-center"></i>
+                    <span class="ml-3 sidebar-text">系统设置</span>
+                </a>
+                
+                <!-- 服务商配置中心 -->
+                <div class="px-4 mt-6 mb-2">
+                    <span class="text-xs font-semibold text-purple-300 uppercase tracking-wider sidebar-text">服务商配置</span>
+                </div>
+                
+                <div class="nav-group">
+                    <a href="#" class="nav-link nav-parent flex items-center justify-between px-4 py-3 text-sm hover:bg-purple-600 transition-colors" data-toggle="provider-submenu">
+                        <div class="flex items-center">
+                            <i class="fas fa-cloud w-6 text-center"></i>
+                            <span class="ml-3 sidebar-text">服务商配置</span>
+                        </div>
+                        <i class="fas fa-chevron-down text-xs transition-transform sidebar-text submenu-arrow"></i>
+                    </a>
+                    
+                    <!-- 服务商子菜单 -->
+                    <div id="provider-submenu" class="submenu bg-purple-800 overflow-hidden transition-all duration-300" style="max-height: 0;">
+                        <a href="#" class="nav-link provider-menu flex items-center px-4 py-2 pl-14 text-sm hover:bg-purple-700 transition-colors" data-target="provider-config" data-provider="cainiao">
+                            <i class="fas fa-truck w-5 text-center text-xs"></i>
+                            <span class="ml-2 sidebar-text">菜鸟物流</span>
+                        </a>
+                        <a href="#" class="nav-link provider-menu flex items-center px-4 py-2 pl-14 text-sm hover:bg-purple-700 transition-colors" data-target="provider-config" data-provider="jd">
+                            <i class="fas fa-box w-5 text-center text-xs"></i>
+                            <span class="ml-2 sidebar-text">京东物流</span>
+                        </a>
+                        <a href="#" class="nav-link provider-menu flex items-center px-4 py-2 pl-14 text-sm hover:bg-purple-700 transition-colors" data-target="provider-config" data-provider="kuaidi100">
+                            <i class="fas fa-shipping-fast w-5 text-center text-xs"></i>
+                            <span class="ml-2 sidebar-text">快递100</span>
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- 业务管理中心 -->
+                <div class="px-4 mt-6 mb-2">
+                    <span class="text-xs font-semibold text-purple-300 uppercase tracking-wider sidebar-text">业务管理</span>
+                </div>
+                
+                <div class="nav-group">
+                    <a href="#" class="nav-link nav-parent flex items-center justify-between px-4 py-3 text-sm hover:bg-purple-600 transition-colors" data-toggle="business-submenu">
+                        <div class="flex items-center">
+                            <i class="fas fa-tasks w-6 text-center"></i>
+                            <span class="ml-3 sidebar-text">业务管理</span>
+                        </div>
+                        <i class="fas fa-chevron-down text-xs transition-transform sidebar-text submenu-arrow"></i>
+                    </a>
+                    
+                    <!-- 业务子菜单 -->
+                    <div id="business-submenu" class="submenu bg-purple-800 overflow-hidden transition-all duration-300" style="max-height: 0;">
+                        <a href="#" class="nav-link flex items-center px-4 py-2 pl-14 text-sm hover:bg-purple-700 transition-colors" data-target="express-rules">
+                            <i class="fas fa-list-alt w-5 text-center text-xs"></i>
+                            <span class="ml-2 sidebar-text">快递规则</span>
+                        </a>
+                        <a href="#" class="nav-link flex items-center px-4 py-2 pl-14 text-sm hover:bg-purple-700 transition-colors" data-target="express-orders">
+                            <i class="fas fa-shipping-fast w-5 text-center text-xs"></i>
+                            <span class="ml-2 sidebar-text">快递订单</span>
+                        </a>
+                        <a href="#" class="nav-link flex items-center px-4 py-2 pl-14 text-sm hover:bg-purple-700 transition-colors" data-target="tenant-quotas">
+                            <i class="fas fa-chart-pie w-5 text-center text-xs"></i>
+                            <span class="ml-2 sidebar-text">租户配额</span>
+                        </a>
+                        <a href="#" class="nav-link flex items-center px-4 py-2 pl-14 text-sm hover:bg-purple-700 transition-colors" data-target="cainiao-logs">
+                            <i class="fas fa-history w-5 text-center text-xs"></i>
+                            <span class="ml-2 sidebar-text">调用日志</span>
+                        </a>
+                    </div>
+                </div>
+            </nav>
+            
+            <!-- 底部操作 -->
+            <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-purple-600">
+                <a href="financial_system.html" class="flex items-center px-2 py-2 text-sm hover:bg-purple-600 rounded-lg transition-colors">
+                    <i class="fas fa-arrow-left w-6 text-center"></i>
+                    <span class="ml-3 sidebar-text">返回系统</span>
+                </a>
+                <button id="logoutBtn" class="w-full flex items-center px-2 py-2 mt-2 text-sm hover:bg-purple-600 rounded-lg transition-colors text-red-300 hover:text-red-200">
+                    <i class="fas fa-sign-out-alt w-6 text-center"></i>
+                    <span class="ml-3 sidebar-text">退出登录</span>
+                </button>
+            </div>
+        </aside>
 
         <!-- 主内容区域 -->
-        <main class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <main id="mainContent" class="transition-all duration-300" style="margin-left: 240px;">
+            <div class="p-6">
             <!-- 公司管理模块 -->
             <div id="companiesModule" class="module-content">
                 <div class="mb-8">
@@ -255,6 +343,679 @@
                     </div>
                 </div>
             </div>
+
+            <!-- ======================== 物流控制台模块 ======================== -->
+            
+            <!-- 物流服务商配置中心（原菜鸟账号配置模块升级） -->
+            <div id="providerConfigModule" class="module-content hidden">
+                <div class="mb-8">
+                    <h1 class="text-3xl font-bold text-gray-900">物流服务商配置</h1>
+                    <p class="text-gray-600 mt-2">配置平台接入的各物流服务商云平台信息</p>
+                </div>
+
+                <!-- 服务商标签页导航 -->
+                <div class="bg-white rounded-t-xl shadow-md border-b border-gray-200 overflow-x-auto">
+                    <div id="providerTabsContainer" class="flex space-x-1 px-4 min-w-max">
+                        <!-- 标签将由 JS 动态生成 -->
+                    </div>
+                </div>
+
+                <!-- 服务商配置表单容器 -->
+                <div id="providerFormsContainer" class="bg-white rounded-b-xl shadow-md p-6">
+                    <!-- 菜鸟ISV配置表单（全新重构） -->
+                    <div id="providerForm-cainiao" class="provider-form" data-provider="cainiao">
+                        <!-- ISV服务商配置区域 -->
+                        <div class="bg-purple-50 border border-purple-200 rounded-lg p-6 mb-6">
+                            <h3 class="text-lg font-bold text-purple-800 mb-4 flex items-center">
+                                <i class="fas fa-cog mr-2"></i> ISV服务商配置（平台管理员）
+                            </h3>
+                            <form id="cainiaoISVConfigForm" class="space-y-4">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">AppKey <span class="text-red-500">*</span></label>
+                                        <input type="text" id="cnIsvAppKey" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" placeholder="请填写菜鸟ISV AppKey">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">AppSecret <span class="text-red-500">*</span></label>
+                                        <input type="password" id="cnIsvAppSecret" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" placeholder="请填写菜鸟ISV AppSecret">
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">授权回调地址</label>
+                                        <input type="text" id="cnCallbackUrl" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" placeholder="https://your-domain.com/api/cainiao_isv/auth/callback">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">环境</label>
+                                        <select id="cnEnv" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                                            <option value="prod">生产环境</option>
+                                            <option value="test">测试环境</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="flex items-center justify-end space-x-4 pt-2">
+                                    <button type="button" onclick="loadCainiaoISVConfig()" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">
+                                        <i class="fas fa-sync-alt mr-2"></i> 加载配置
+                                    </button>
+                                    <button type="submit" class="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg">
+                                        <i class="fas fa-save mr-2"></i> 保存ISV配置
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- 租户管理区域 -->
+                        <div class="border border-gray-200 rounded-lg p-6 mb-6">
+                            <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                                <i class="fas fa-users mr-2"></i> 租户管理
+                            </h3>
+                            <div class="flex items-center justify-between mb-4">
+                                <p class="text-sm text-gray-600">管理使用本系统的客户租户（每个租户独立使用自己的快递账号）</p>
+                                <button type="button" onclick="openCreateTenantModal()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg">
+                                    <i class="fas fa-plus mr-2"></i> 新增租户
+                                </button>
+                            </div>
+                            <div id="tenantList" class="overflow-x-auto">
+                                <!-- 租户列表将在这里显示 -->
+                                <div class="text-center text-gray-500 py-8">加载中...</div>
+                            </div>
+                        </div>
+
+                        <!-- 仓库管理区域 -->
+                        <div class="border border-gray-200 rounded-lg p-6 mb-6">
+                            <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                                <i class="fas fa-warehouse mr-2"></i> 仓库管理
+                            </h3>
+                            <div class="flex items-center justify-between mb-4">
+                                <p class="text-sm text-gray-600">当前租户：<span id="currentTenantName" class="font-semibold text-purple-600">未选择</span></p>
+                                <button type="button" onclick="openCreateWarehouseModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">
+                                    <i class="fas fa-plus mr-2"></i> 新增仓库
+                                </button>
+                            </div>
+                            <div id="warehouseList" class="overflow-x-auto">
+                                <!-- 仓库列表将在这里显示 -->
+                                <div class="text-center text-gray-500 py-8">请先选择租户</div>
+                            </div>
+                        </div>
+
+                        <!-- 物流账号管理区域（核心：支持多网点） -->
+                        <div class="border border-gray-200 rounded-lg p-6 mb-6">
+                            <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                                <i class="fas fa-truck mr-2"></i> 物流账号管理（多网点支持）
+                            </h3>
+                            <div class="flex items-center justify-between mb-4">
+                                <p class="text-sm text-gray-600">同一快递公司可绑定多个不同网点/分部账号</p>
+                                <button type="button" onclick="openCreateLogisticsAccountModal()" class="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg">
+                                    <i class="fas fa-plus mr-2"></i> 新增物流账号
+                                </button>
+                            </div>
+                            <div id="logisticsAccountList" class="overflow-x-auto">
+                                <!-- 物流账号列表将在这里显示 -->
+                                <div class="text-center text-gray-500 py-8">请先选择租户</div>
+                            </div>
+                        </div>
+
+                        <!-- 电子面单功能区域 -->
+                        <div class="border border-gray-200 rounded-lg p-6">
+                            <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                                <i class="fas fa-print mr-2"></i> 电子面单打印功能
+                            </h3>
+                            
+                            <!-- 功能标签页 -->
+                            <div class="border-b border-gray-200 mb-4">
+                                <ul class="flex space-x-4">
+                                    <li>
+                                        <button onclick="switchCainiaoTab('order')" class="cn-tab-btn px-4 py-2 border-b-2 border-purple-600 text-purple-600 font-medium">
+                                            订单下单
+                                        </button>
+                                    </li>
+                                    <li>
+                                        <button onclick="switchCainiaoTab('list')" class="cn-tab-btn px-4 py-2 border-b-2 border-transparent text-gray-500 hover:text-gray-700">
+                                            面单列表
+                                        </button>
+                                    </li>
+                                    <li>
+                                        <button onclick="switchCainiaoTab('print')" class="cn-tab-btn px-4 py-2 border-b-2 border-transparent text-gray-500 hover:text-gray-700">
+                                            打印管理
+                                        </button>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <!-- 订单下单面板 -->
+                            <div id="cnPanelOrder" class="cn-panel">
+                                <form id="cainiaoOrderForm" class="space-y-4">
+                                    <h4 class="font-semibold text-gray-800 mb-2">收件人信息</h4>
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div>
+                                            <label class="block text-sm text-gray-700 mb-1">姓名 <span class="text-red-500">*</span></label>
+                                            <input type="text" id="cnReceiverName" class="w-full px-3 py-2 border rounded" required>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm text-gray-700 mb-1">手机号 <span class="text-red-500">*</span></label>
+                                            <input type="text" id="cnReceiverPhone" class="w-full px-3 py-2 border rounded" required>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm text-gray-700 mb-1">详细地址 <span class="text-red-500">*</span></label>
+                                            <input type="text" id="cnReceiverAddress" class="w-full px-3 py-2 border rounded" required>
+                                        </div>
+                                    </div>
+                                    
+                                    <h4 class="font-semibold text-gray-800 mb-2 mt-4">寄件人信息</h4>
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div>
+                                            <label class="block text-sm text-gray-700 mb-1">姓名 <span class="text-red-500">*</span></label>
+                                            <input type="text" id="cnSenderName" class="w-full px-3 py-2 border rounded" required>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm text-gray-700 mb-1">手机号 <span class="text-red-500">*</span></label>
+                                            <input type="text" id="cnSenderPhone" class="w-full px-3 py-2 border rounded" required>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm text-gray-700 mb-1">详细地址 <span class="text-red-500">*</span></label>
+                                            <input type="text" id="cnSenderAddress" class="w-full px-3 py-2 border rounded" required>
+                                        </div>
+                                    </div>
+
+                                    <h4 class="font-semibold text-gray-800 mb-2 mt-4">物流选择</h4>
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div>
+                                            <label class="block text-sm text-gray-700 mb-1">订单号 <span class="text-red-500">*</span></label>
+                                            <input type="text" id="cnOrderNo" class="w-full px-3 py-2 border rounded" required>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm text-gray-700 mb-1">物流账号 <span class="text-red-500">*</span></label>
+                                            <select id="cnLogisticsAccount" class="w-full px-3 py-2 border rounded" required>
+                                                <option value="">请选择物流账号（含网点）</option>
+                                            </select>
+                                        </div>
+                                        <div class="flex items-end">
+                                            <button type="submit" class="w-full px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded">
+                                                <i class="fas fa-file-invoice mr-2"></i> 获取面单
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <!-- 面单列表面板 -->
+                            <div id="cnPanelList" class="cn-panel hidden">
+                                <div class="flex items-center justify-between mb-4">
+                                    <div class="flex items-center space-x-4">
+                                        <select id="cnFilterPrintStatus" class="px-3 py-2 border rounded" onchange="loadCainiaoWaybills()">
+                                            <option value="">全部状态</option>
+                                            <option value="0">未打印</option>
+                                            <option value="1">已打印</option>
+                                            <option value="2">打印失败</option>
+                                        </select>
+                                    </div>
+                                    <button type="button" onclick="loadCainiaoWaybills()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded">
+                                        <i class="fas fa-sync-alt mr-2"></i> 刷新
+                                    </button>
+                                </div>
+                                <div id="cainiaoWaybillList" class="overflow-x-auto">
+                                    <!-- 面单列表将在这里显示 -->
+                                </div>
+                            </div>
+
+                            <!-- 打印管理面板 -->
+                            <div id="cnPanelPrint" class="cn-panel hidden">
+                                <div class="space-y-4">
+                                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                        <h4 class="font-semibold text-blue-800 mb-2">打印组件状态</h4>
+                                        <p class="text-sm text-gray-700">本地打印组件地址：<code class="bg-white px-2 py-1 rounded">ws://localhost:13000</code></p>
+                                        <p class="text-sm text-gray-600 mt-2">请确保已安装菜鸟云打印组件</p>
+                                        <button type="button" onclick="testCainiaoPrinter()" class="mt-3 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded">
+                                            <i class="fas fa-check-circle mr-2"></i> 测试打印机连接
+                                        </button>
+                                    </div>
+                                    <div id="printLogList">
+                                        <!-- 打印日志将在这里显示 -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 京东物流配置表单（占位） -->
+                    <div id="providerForm-jd" class="provider-form hidden" data-provider="jd">
+                        <form class="space-y-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">AppKey <span class="text-red-500">*</span></label>
+                                    <input type="text" id="jdAppKey" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" placeholder="输入京东AppKey">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">AppSecret <span class="text-red-500">*</span></label>
+                                    <input type="password" id="jdAppSecret" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" placeholder="输入京东AppSecret">
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between pt-4 border-t border-gray-200">
+                                <div class="text-sm text-gray-500">京东物流配置功能开发中...</div>
+                                <div class="flex space-x-4">
+                                    <button type="button" onclick="testProviderConnection()" class="px-6 py-2 border border-purple-600 text-purple-600 rounded-lg hover:bg-purple-50 transition-colors flex items-center">
+                                        <i class="fas fa-plug mr-2"></i> 测试连接
+                                    </button>
+                                    <button type="submit" class="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors flex items-center">
+                                        <i class="fas fa-save mr-2"></i> 保存配置
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- 快递100配置表单（占位） -->
+                    <div id="providerForm-kuaidi100" class="provider-form hidden" data-provider="kuaidi100">
+                        <form id="kuaidi100ConfigForm" class="space-y-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">客户编码 <span class="text-red-500">*</span></label>
+                                    <input type="text" id="kd100Customer" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" placeholder="输入快递100客户编码">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">授权Key <span class="text-red-500">*</span></label>
+                                    <input type="text" id="kd100AuthKey" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" placeholder="输入快递100授权Key">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">签名密钥 <span class="text-red-500">*</span></label>
+                                    <input type="password" id="kd100Secret" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" placeholder="输入签名密钥">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">接入点地址</label>
+                                    <input type="text" id="kd100EndpointUrl" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" value="https://poll.kuaidi100.com">
+                                </div>
+                            </div>
+                            <div class="border-t border-gray-200 pt-4">
+                                <h4 class="text-sm font-semibold text-gray-700 mb-3">回调配置（订阅推送）</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">回调地址</label>
+                                        <input type="text" id="kd100CallbackUrl" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" placeholder="https://your-domain.com/callback">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">回调验签密钥</label>
+                                        <input type="password" id="kd100CallbackSecret" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" placeholder="用于验证回调签名">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between pt-4 border-t border-gray-200">
+                                <div id="kd100TestStatus" class="text-sm"></div>
+                                <div class="flex space-x-4">
+                                    <button type="button" onclick="testProviderConnection()" class="px-6 py-2 border border-purple-600 text-purple-600 rounded-lg hover:bg-purple-50 transition-colors flex items-center">
+                                        <i class="fas fa-plug mr-2"></i> 测试连接
+                                    </button>
+                                    <button type="submit" class="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors flex items-center">
+                                        <i class="fas fa-save mr-2"></i> 保存配置
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                        
+                        
+                        <!-- 功能操作面板 -->
+                        <div class="mt-8 border-t border-gray-200 pt-6">
+                            <h3 class="text-xl font-bold text-gray-900 mb-4">功能操作</h3>
+                            
+                            <!-- 标签页导航 -->
+                            <div class="flex space-x-4 border-b border-gray-200 mb-6">
+                                <button onclick="switchKd100Tab('query')" id="kd100TabQuery" class="kd100-tab active px-4 py-2 text-sm font-medium border-b-2 border-purple-600 text-purple-600">
+                                    <i class="fas fa-search mr-2"></i>物流查询
+                                </button>
+                                <button onclick="switchKd100Tab('order')" id="kd100TabOrder" class="kd100-tab px-4 py-2 text-sm font-medium border-b-2 border-transparent text-gray-600 hover:text-purple-600">
+                                    <i class="fas fa-file-invoice mr-2"></i>电子面单下单
+                                </button>
+                                <button onclick="switchKd100Tab('list')" id="kd100TabList" class="kd100-tab px-4 py-2 text-sm font-medium border-b-2 border-transparent text-gray-600 hover:text-purple-600">
+                                    <i class="fas fa-list mr-2"></i>订单列表
+                                </button>
+                            </div>
+                            
+                            <!-- 物流查询面板 -->
+                            <div id="kd100PanelQuery" class="kd100-panel">
+                                <div class="bg-white rounded-lg border border-gray-200 p-6">
+                                    <h4 class="text-lg font-semibold text-gray-800 mb-4">快递物流轨迹查询</h4>
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">快递公司</label>
+                                            <select id="kd100QueryCom" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                                                <option value="yuantong">圆通速递</option>
+                                                <option value="shunfeng">顺丰速运</option>
+                                                <option value="zhongtong">中通快递</option>
+                                                <option value="shentong">申通快递</option>
+                                                <option value="yunda">韵达快递</option>
+                                                <option value="jtexpress">极兔速递</option>
+                                                <option value="jd">京东物流</option>
+                                                <option value="ems">邮政EMS</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">快递单号 <span class="text-red-500">*</span></label>
+                                            <input type="text" id="kd100QueryNum" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" placeholder="请输入快递单号">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">手机号后4位 <span class="text-xs text-gray-500">(顺丰必填)</span></label>
+                                            <input type="text" id="kd100QueryPhone" maxlength="4" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" placeholder="1234">
+                                        </div>
+                                    </div>
+                                    <button onclick="queryKd100Express()" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center">
+                                        <i class="fas fa-search mr-2"></i> 查询物流
+                                    </button>
+                                    
+                                    <!-- 查询结果展示区 -->
+                                    <div id="kd100QueryResult" class="mt-6 hidden">
+                                        <h5 class="text-md font-semibold text-gray-800 mb-3">物流轨迹</h5>
+                                        <div id="kd100QueryTimeline" class="space-y-3">
+                                            <!-- 动态填充 -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 电子面单下单面板 -->
+                            <div id="kd100PanelOrder" class="kd100-panel hidden">
+                                <div class="bg-white rounded-lg border border-gray-200 p-6">
+                                    <h4 class="text-lg font-semibold text-gray-800 mb-4">创建电子面单订单</h4>
+                                    <form id="kd100OrderForm" class="space-y-6">
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">快递公司 <span class="text-red-500">*</span></label>
+                                                <select id="kd100OrderCom" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                                                    <option value="yuantong">圆通速递</option>
+                                                    <option value="shunfeng">顺丰速运</option>
+                                                    <option value="zhongtong">中通快递</option>
+                                                    <option value="shentong">申通快递</option>
+                                                    <option value="yunda">韵达快递</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">物品名称</label>
+                                                <input type="text" id="kd100OrderCargo" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" placeholder="商品" value="商品">
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="border-t border-gray-200 pt-4">
+                                            <h5 class="text-md font-semibold text-gray-800 mb-3">收件人信息</h5>
+                                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700 mb-1">姓名 <span class="text-red-500">*</span></label>
+                                                    <input type="text" id="kd100OrderRecName" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" placeholder="收件人姓名">
+                                                </div>
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700 mb-1">手机号 <span class="text-red-500">*</span></label>
+                                                    <input type="text" id="kd100OrderRecMobile" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" placeholder="13800138000">
+                                                </div>
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700 mb-1">详细地址 <span class="text-red-500">*</span></label>
+                                                    <input type="text" id="kd100OrderRecAddress" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" placeholder="XX省XX市XX区XX街道XX号">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="border-t border-gray-200 pt-4">
+                                            <h5 class="text-md font-semibold text-gray-800 mb-3">寄件人信息</h5>
+                                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700 mb-1">姓名 <span class="text-red-500">*</span></label>
+                                                    <input type="text" id="kd100OrderSendName" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" placeholder="寄件人姓名">
+                                                </div>
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700 mb-1">手机号 <span class="text-red-500">*</span></label>
+                                                    <input type="text" id="kd100OrderSendMobile" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" placeholder="13900139000">
+                                                </div>
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700 mb-1">详细地址 <span class="text-red-500">*</span></label>
+                                                    <input type="text" id="kd100OrderSendAddress" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" placeholder="XX省XX市XX区XX街道XX号">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="flex justify-end space-x-4 pt-4 border-t border-gray-200">
+                                            <button type="button" onclick="resetKd100OrderForm()" class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                                                重置
+                                            </button>
+                                            <button type="submit" class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex items-center">
+                                                <i class="fas fa-check mr-2"></i> 创建订单
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                            
+                            <!-- 订单列表面板 -->
+                            <div id="kd100PanelList" class="kd100-panel hidden">
+                                <div class="bg-white rounded-lg border border-gray-200 p-6">
+                                    <h4 class="text-lg font-semibold text-gray-800 mb-4">电子面单订单列表</h4>
+                                    <div id="kd100OrderList" class="overflow-x-auto">
+                                        <table class="min-w-full divide-y divide-gray-200">
+                                            <thead class="bg-gray-50">
+                                                <tr>
+                                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">订单号</th>
+                                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">快递公司</th>
+                                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">快递单号</th>
+                                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">收件人</th>
+                                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">状态</th>
+                                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">创建时间</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="kd100OrderTableBody" class="bg-white divide-y divide-gray-200">
+                                                <!-- 动态填充 -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div class="mt-4 flex justify-between items-center">
+                                        <button onclick="loadKd100Orders()" class="px-4 py-2 text-sm text-purple-600 hover:text-purple-700">
+                                            <i class="fas fa-sync-alt mr-1"></i> 刷新
+                                        </button>
+                                        <div id="kd100OrderPagination" class="flex space-x-2">
+                                            <!-- 分页按钮 -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 快递规则配置模块 -->
+            <div id="expressRulesModule" class="module-content hidden">
+                <div class="mb-8">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h1 class="text-3xl font-bold text-gray-900">快递规则配置</h1>
+                            <p class="text-gray-600 mt-2">配置不同快递公司的默认寄件人信息</p>
+                        </div>
+                        <button onclick="showExpressRuleModal()" class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center">
+                            <i class="fas fa-plus mr-2"></i> 新增规则
+                        </button>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">规则名称</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">快递公司</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">默认寄件人</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">默认</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">状态</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="expressRulesTable" class="bg-white divide-y divide-gray-200">
+                                <tr><td colspan="6" class="px-6 py-8 text-center text-gray-500">加载中...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 快递订单管理模块 -->
+            <div id="expressOrdersModule" class="module-content hidden">
+                <div class="mb-8">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h1 class="text-3xl font-bold text-gray-900">快递订单管理</h1>
+                            <p class="text-gray-600 mt-2">管理所有快递订单，查看物流轨迹</p>
+                        </div>
+                        <button onclick="showCreateOrderModal()" class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center">
+                            <i class="fas fa-plus mr-2"></i> 创建订单
+                        </button>
+                    </div>
+                </div>
+                <!-- 筛选栏 -->
+                <div class="bg-white rounded-xl shadow-md p-4 mb-6">
+                    <div class="flex flex-wrap gap-4 items-end">
+                        <div class="flex-1 min-w-[150px]">
+                            <label class="block text-xs text-gray-500 mb-1">状态</label>
+                            <select id="orderStatusFilter" class="w-full px-3 py-2 border rounded-lg text-sm" onchange="loadExpressOrders()">
+                                <option value="">全部状态</option>
+                                <option value="created">已创建</option>
+                                <option value="waybill_created">已获取面单</option>
+                                <option value="dispatched">已派单</option>
+                                <option value="picked">已取件</option>
+                                <option value="in_transit">运输中</option>
+                                <option value="signed">已签收</option>
+                                <option value="cancelled">已取消</option>
+                            </select>
+                        </div>
+                        <div class="flex-1 min-w-[150px]">
+                            <label class="block text-xs text-gray-500 mb-1">快递公司</label>
+                            <select id="orderCpFilter" class="w-full px-3 py-2 border rounded-lg text-sm" onchange="loadExpressOrders()">
+                                <option value="">全部</option>
+                                <option value="SF">顺丰</option>
+                                <option value="YTO">圆通</option>
+                                <option value="ZTO">中通</option>
+                                <option value="STO">申通</option>
+                                <option value="YUNDA">韵达</option>
+                            </select>
+                        </div>
+                        <div class="flex-1 min-w-[200px]">
+                            <label class="block text-xs text-gray-500 mb-1">搜索</label>
+                            <input type="text" id="orderSearchInput" placeholder="运单号/寄件人/收件人" class="w-full px-3 py-2 border rounded-lg text-sm" onkeyup="if(event.key==='Enter')loadExpressOrders()">
+                        </div>
+                        <button onclick="loadExpressOrders()" class="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm hover:bg-purple-700">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+                <!-- 订单列表 -->
+                <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">订单信息</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">寄件人</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">收件人</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">快递公司</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">状态</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">创建时间</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="expressOrdersTable" class="bg-white divide-y divide-gray-200">
+                                <tr><td colspan="7" class="px-6 py-8 text-center text-gray-500">加载中...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="expressOrdersPagination" class="px-6 py-4 border-t border-gray-200 flex justify-end"></div>
+                </div>
+            </div>
+
+            <!-- 租户配额管理模块 -->
+            <div id="tenantQuotasModule" class="module-content hidden">
+                <div class="mb-8">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h1 class="text-3xl font-bold text-gray-900">租户配额管理</h1>
+                            <p class="text-gray-600 mt-2">管理各租户的快递服务配额</p>
+                        </div>
+                        <button onclick="showQuotaModal()" class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center">
+                            <i class="fas fa-plus mr-2"></i> 新增配额
+                        </button>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">租户</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">月配额</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">本月已用</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">超额设置</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">状态</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tenantQuotasTable" class="bg-white divide-y divide-gray-200">
+                                <tr><td colspan="6" class="px-6 py-8 text-center text-gray-500">加载中...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 调用日志模块 -->
+            <div id="cainiaoLogsModule" class="module-content hidden">
+                <div class="mb-8">
+                    <h1 class="text-3xl font-bold text-gray-900">接口调用日志</h1>
+                    <p class="text-gray-600 mt-2">查看菜鸟API调用历史记录</p>
+                </div>
+                <!-- 筛选栏 -->
+                <div class="bg-white rounded-xl shadow-md p-4 mb-6">
+                    <div class="flex flex-wrap gap-4 items-end">
+                        <div class="flex-1 min-w-[150px]">
+                            <label class="block text-xs text-gray-500 mb-1">API方法</label>
+                            <select id="logApiFilter" class="w-full px-3 py-2 border rounded-lg text-sm" onchange="loadCainiaoLogs()">
+                                <option value="">全部</option>
+                                <option value="ADDRLIB_DIV_FULLPARSE">地址解析</option>
+                                <option value="TMS_DISPATCH_FIND_SEND_BRANCH">网点查询</option>
+                                <option value="TMS_WAYBILL_GET">获取面单</option>
+                                <option value="TMS_CREATE_ORDER_OFFLINE_NOTIFY">创建订单</option>
+                                <option value="TMS_ORDER_CANCEL">取消订单</option>
+                            </select>
+                        </div>
+                        <div class="flex-1 min-w-[120px]">
+                            <label class="block text-xs text-gray-500 mb-1">状态</label>
+                            <select id="logSuccessFilter" class="w-full px-3 py-2 border rounded-lg text-sm" onchange="loadCainiaoLogs()">
+                                <option value="">全部</option>
+                                <option value="1">成功</option>
+                                <option value="0">失败</option>
+                            </select>
+                        </div>
+                        <button onclick="loadCainiaoLogs()" class="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm hover:bg-purple-700">
+                            <i class="fas fa-search"></i> 查询
+                        </button>
+                    </div>
+                </div>
+                <!-- 日志列表 -->
+                <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">请求时间</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">API方法</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">耗时</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">状态</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">响应消息</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cainiaoLogsTable" class="bg-white divide-y divide-gray-200">
+                                <tr><td colspan="6" class="px-6 py-8 text-center text-gray-500">加载中...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="cainiaoLogsPagination" class="px-6 py-4 border-t border-gray-200 flex justify-end"></div>
+                </div>
+            </div>
+
+            </div><!-- 结束p-6 -->
         </main>
     </div>
 
@@ -455,6 +1216,144 @@
             .animate-fade-out-up {
                 animation: fade-out-up 0.3s ease-out;
             }
+            
+            /* 侧边栏样式 */
+            #sidebar {
+                overflow-x: hidden;
+            }
+            
+            /* 导航链接激活状态 */
+            #sidebar .nav-link.active {
+                background: rgba(255, 255, 255, 0.1);
+                border-left: 3px solid white;
+            }
+            
+            /* 折叠状态 */
+            #sidebar.collapsed {
+                width: 60px !important;
+            }
+            
+            #sidebar.collapsed .sidebar-text {
+                display: none;
+            }
+            
+            #sidebar.collapsed .sidebar-logo {
+                justify-content: center;
+            }
+            
+            #sidebar.collapsed .sidebar-logo i {
+                margin-right: 0;
+            }
+            
+            #sidebar.collapsed .sidebar-user-info {
+                justify-content: center;
+            }
+            
+            #sidebar.collapsed .sidebar-user-info > div:last-child {
+                display: none;
+            }
+            
+            #sidebar.collapsed .nav-link {
+                justify-content: center;
+                padding-left: 0;
+                padding-right: 0;
+            }
+            
+            #sidebar.collapsed .nav-link i {
+                margin: 0;
+            }
+            
+            #sidebar.collapsed .nav-link span {
+                display: none;
+            }
+            
+            #sidebar.collapsed .nav-parent {
+                display: none;
+            }
+            
+            #sidebar.collapsed .submenu {
+                display: none;
+            }
+            
+            #sidebar.collapsed .px-4 {
+                padding-left: 0;
+                padding-right: 0;
+                text-align: center;
+            }
+            
+            #sidebar.collapsed #sidebarToggle {
+                padding: 0.5rem;
+            }
+            
+            #sidebar.collapsed .h-16 {
+                justify-content: center;
+            }
+            
+            /* 子菜单展开箭头旋转 */
+            .submenu-arrow.expanded {
+                transform: rotate(180deg);
+            }
+            
+            /* 主内容区域响应式 */
+            #mainContent.expanded {
+                margin-left: 60px !important;
+            }
+            
+            /* 服务商标签页样式 */
+            .provider-tab {
+                padding: 0.875rem 1.5rem;
+                font-size: 0.875rem;
+                font-weight: 500;
+                color: #6b7280;
+                border-bottom: 2px solid transparent;
+                transition: all 0.2s;
+                cursor: pointer;
+                white-space: nowrap;
+                position: relative;
+            }
+            
+            .provider-tab:hover:not(.active) {
+                color: #9333ea;
+                background: rgba(147, 51, 234, 0.05);
+            }
+            
+            .provider-tab.active {
+                color: #9333ea;
+                border-bottom-color: #9333ea;
+                font-weight: 600;
+                background: rgba(147, 51, 234, 0.05);
+            }
+            
+            .provider-tab .badge {
+                display: inline-block;
+                margin-left: 0.5rem;
+                padding: 0.125rem 0.5rem;
+                font-size: 0.75rem;
+                border-radius: 9999px;
+                background: #e5e7eb;
+                color: #6b7280;
+            }
+            
+            .provider-tab.active .badge {
+                background: #9333ea;
+                color: white;
+            }
+            
+            /* 服务商表单切换动画 */
+            .provider-form {
+                animation: fadeInUp 0.3s ease-out;
+            }
+            
+            @keyframes fadeInUp {
+                from {
+                    opacity: 0;
+                    transform: translateY(10px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
         `;
         document.head.appendChild(style);
     </script>
@@ -462,4 +1361,21 @@
     <!-- 控制台业务逻辑 -->
     <script src="/js/console.js"></script>
 </body>
-</html>
+</html>    <style>
+        /* 快递100功能面板样式 */
+        .kd100-tab {
+            transition: all 0.2s;
+        }
+        .kd100-tab.active {
+            border-bottom-color: #9333ea;
+            color: #9333ea;
+        }
+        .kd100-panel {
+            animation: fadeIn 0.3s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>

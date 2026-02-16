@@ -12,12 +12,37 @@
             </button>
         </div>
         
-        <!-- 售后订单：显示关联的原订单信息 -->
+        <!-- 售后订单：显示关联的原订单完整信息 -->
         <div id="parentOrderInfo" class="hidden mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <p class="text-sm text-yellow-800">
-                <i class="fas fa-link mr-1"></i>
-                关联原订单：<span id="parentOrderLink" class="font-medium text-blue-600 cursor-pointer hover:underline"></span>
-            </p>
+            <div class="flex items-center justify-between mb-2">
+                <p class="text-sm text-yellow-800 font-semibold">
+                    <i class="fas fa-link mr-1"></i>关联原订单：<span id="parentOrderLink" class="font-medium text-blue-600 cursor-pointer hover:underline"></span>
+                </p>
+                <button type="button" id="toggleParentDetails" class="text-xs text-blue-600 hover:underline">
+                    <i class="fas fa-chevron-down mr-1"></i>展开详情
+                </button>
+            </div>
+            <!-- 原订单核心信息摘要 -->
+            <div id="parentOrderSummary" class="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs bg-white p-2 rounded">
+                <div><span class="text-gray-500">客户：</span><span id="parentCustomer" class="text-gray-900 font-medium"></span></div>
+                <div><span class="text-gray-500">金额：</span><span id="parentAmount" class="text-green-600 font-medium"></span></div>
+                <div><span class="text-gray-500">服务项目：</span><span id="parentService" class="text-gray-900"></span></div>
+                <div><span class="text-gray-500">状态：</span><span id="parentStatus" class="font-medium"></span></div>
+            </div>
+            <!-- 原订单完整详情（默认收起） -->
+            <div id="parentOrderDetails" class="hidden mt-2 pt-2 border-t border-yellow-200 text-xs space-y-2">
+                <div class="grid grid-cols-2 gap-2">
+                    <div><span class="text-gray-500">下单日期：</span><span id="parentOrderDate" class="text-gray-900"></span></div>
+                    <div><span class="text-gray-500">业务人员：</span><span id="parentBusinessStaff" class="text-gray-900"></span></div>
+                    <div><span class="text-gray-500">负责团队：</span><span id="parentTeam" class="text-gray-900"></span></div>
+                    <div><span class="text-gray-500">已收金额：</span><span id="parentPaidAmount" class="text-green-600"></span></div>
+                </div>
+                <!-- 原订单收款记录 -->
+                <div class="bg-blue-50 p-2 rounded">
+                    <p class="text-gray-600 font-medium mb-1"><i class="fas fa-money-bill-wave mr-1 text-blue-500"></i>原订单收款记录</p>
+                    <div id="parentPaymentRecords" class="text-gray-700"></div>
+                </div>
+            </div>
         </div>
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">

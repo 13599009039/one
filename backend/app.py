@@ -2288,7 +2288,7 @@ def get_orders():
             cursor.execute(data_sql, params + [page_size, offset])
             orders = cursor.fetchall()
             
-            # 为每个订单添加第一个商品的服务名称
+            # 为每个订单添加第一个商品的服务名称，并检查是否有关联售后订单
             for order in orders:
                 cursor.execute("""
                     SELECT oi.service_name, s.name as service_real_name 
@@ -2303,6 +2303,18 @@ def get_orders():
                     order['service_name'] = item['service_real_name'] or item['service_name']
                 else:
                     order['service_name'] = '自定义服务'
+                
+                # 检查原订单是否有关联的售后订单（仅对非售后订单检查）
+                if order.get('order_type') != 'aftersale':
+                    cursor.execute("""
+                        SELECT COUNT(*) as aftersale_count 
+                        FROM orders 
+                        WHERE parent_order_id = %s AND is_deleted = 0
+                    """, (order['id'],))
+                    aftersale_result = cursor.fetchone()
+                    order['has_aftersale'] = (aftersale_result.get('aftersale_count', 0) or 0) > 0
+                else:
+                    order['has_aftersale'] = False
         conn.close()
         
         return jsonify({'success': True, 'data': orders, 'total': total})
@@ -2621,8 +2633,9 @@ def create_aftersale_order():
             ))
             order_id = cursor.lastrowid
             
-            # 插入订单明细（如果有）
+            # 插入订单明细（优先继承原订单的服务项目，若前端未传则自动复制）
             if 'items' in data and data['items']:
+                # 前端显式传入的items
                 item_sql = """INSERT INTO order_items (order_id, service_id, service_name, service_type, price, quantity, total)
                              VALUES (%s, %s, %s, %s, %s, %s, %s)"""
                 for item in data['items']:
@@ -2635,6 +2648,13 @@ def create_aftersale_order():
                         item.get('quantity', 1),
                         item.get('subtotal', 0)
                     ))
+            else:
+                # 自动继承原订单的服务项目
+                cursor.execute("""
+                    INSERT INTO order_items (order_id, service_id, service_name, service_type, price, quantity, total)
+                    SELECT %s, service_id, service_name, service_type, price, quantity, total
+                    FROM order_items WHERE order_id = %s
+                """, (order_id, parent_order_id))
             
             conn.commit()
         conn.close()
@@ -7013,6 +7033,56 @@ except ImportError as e:
     print(f"⚠️ 物流管理API注册失败: {e}")
 except Exception as e:
     print(f"⚠️ 物流管理API注册异常: {e}")
+
+# ==================== 注册平台物流控制台API Blueprint ====================
+try:
+    from platform_cainiao_api import platform_cainiao_bp
+    app.register_blueprint(platform_cainiao_bp)
+    print("✅ 平台物流控制台API已注册: /api/platform/cainiao/*")
+except ImportError as e:
+    print(f"⚠️ 平台物流控制台API注册失败: {e}")
+except Exception as e:
+    print(f"⚠️ 平台物流控制台API注册异常: {e}")
+
+# ==================== 注册快递100 API Blueprint ====================
+try:
+    from platform_kuaidi100_api import platform_kuaidi100_bp
+    app.register_blueprint(platform_kuaidi100_bp)
+    print("✅ 快递100 API已注册: /api/platform/kuaidi100/*")
+except ImportError as e:
+    print(f"⚠️ 快递100 API注册失败: {e}")
+except Exception as e:
+    print(f"⚠️ 快递100 API注册异常: {e}")
+
+# ==================== 注册菜鸟ISV API Blueprint ====================
+try:
+    from cainiao_isv_api import cainiao_isv_bp
+    app.register_blueprint(cainiao_isv_bp)
+    print("✅ 菜鸟ISV API已注册: /api/cainiao_isv/*")
+except ImportError as e:
+    print(f"⚠️ 菜鸟ISV API注册失败: {e}")
+except Exception as e:
+    print(f"⚠️ 菜鸟ISV API注册异常: {e}")
+
+# ==================== 注册租户物流账号管理API ====================
+try:
+    from tenant_logistics_api import tenant_logistics_bp
+    app.register_blueprint(tenant_logistics_bp)
+    print("✅ 租户物流账号API已注册: /api/tenant/logistics_accounts/*")
+except ImportError as e:
+    print(f"⚠️ 租户物流账号API注册失败: {e}")
+except Exception as e:
+    print(f"⚠️ 租户物流账号API注册异常: {e}")
+
+# ==================== 注册租户仓库/发货地址管理API ====================
+try:
+    from tenant_warehouse_api import tenant_warehouse_bp
+    app.register_blueprint(tenant_warehouse_bp)
+    print("✅ 租户仓库/发货地址API已注册: /api/tenant/warehouses/*")
+except ImportError as e:
+    print(f"⚠️ 租户仓库/发货地址API注册失败: {e}")
+except Exception as e:
+    print(f"⚠️ 租户仓库/发货地址API注册异常: {e}")
 
 
 if __name__ == '__main__':

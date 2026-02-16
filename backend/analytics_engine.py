@@ -105,6 +105,7 @@ class AnalyticsEngine:
               AND order_date >= %s AND order_date < %s
               AND status != '已取消'
               AND is_deleted = 0
+              AND (order_type IS NULL OR order_type != 'aftersale')
         """, (company_id, start_date, end_date))
         sales_data = cursor.fetchone() or {}
         
@@ -176,6 +177,7 @@ class AnalyticsEngine:
               AND o.order_date >= %s AND o.order_date < %s
               AND o.status != '已取消'
               AND o.is_deleted = 0
+              AND (o.order_type IS NULL OR o.order_type != 'aftersale')
             GROUP BY o.team
         """, (company_id, start_date, end_date))
         
@@ -250,6 +252,7 @@ class AnalyticsEngine:
               AND o.order_date >= %s AND o.order_date < %s
               AND o.status != '已取消'
               AND o.is_deleted = 0
+              AND (o.order_type IS NULL OR o.order_type != 'aftersale')
             GROUP BY u.id
             HAVING COUNT(o.id) > 0
         """, (company_id, company_id, start_date, end_date))
@@ -334,6 +337,7 @@ class AnalyticsEngine:
               AND o.order_date >= %s AND o.order_date < %s
               AND o.status != '已取消'
               AND o.is_deleted = 0
+              AND (o.order_type IS NULL OR o.order_type != 'aftersale')
             GROUP BY u.id
             HAVING COUNT(o.id) > 0
         """, (company_id, company_id, start_date, end_date))
@@ -398,6 +402,7 @@ class AnalyticsEngine:
               AND o.order_date >= %s AND o.order_date < %s
               AND o.status != '已取消'
               AND o.is_deleted = 0
+              AND (o.order_type IS NULL OR o.order_type != 'aftersale')
             GROUP BY u.id
             HAVING COUNT(o.id) > 0
         """, (company_id, company_id, start_date, end_date))
