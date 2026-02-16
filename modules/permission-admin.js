@@ -26,7 +26,6 @@
     // editRolePermissions在第385行定义，不需要在此处导出
     window.permissionAdmin.toggleRoleStatus = toggleRoleStatus;
     window.permissionAdmin.deleteRole = deleteRole;
-    window.permissionAdmin.assignUserRoles = assignUserRoles;
 
     // ==================== 数据加载 ====================
 
