@@ -365,7 +365,7 @@ function renderWarehouses(warehouses) {
                     ${isDefault ? '<span class="text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded">默认</span>' : ''}
                 </td>
                 <td class="px-4 py-3 text-sm">
-                    <div class="text-gray-800">${wh.contact_name || '-'}</div>
+                    <div class="text-gray-800">${wh.contact || '-'}</div>
                     <div class="text-gray-400">${wh.phone || '-'}</div>
                 </td>
                 <td class="px-4 py-3 text-sm text-gray-600">
@@ -589,7 +589,7 @@ window.openAddWarehouseModal = function() {
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">联系人 <span class="text-red-500">*</span></label>
-                        <input type="text" class="w-full border border-gray-300 rounded-md py-2 px-3 text-sm focus:ring-blue-500 focus:border-blue-500" name="contact_name" required>
+                        <input type="text" class="w-full border border-gray-300 rounded-md py-2 px-3 text-sm focus:ring-blue-500 focus:border-blue-500" name="contact" required>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">联系电话 <span class="text-red-500">*</span></label>

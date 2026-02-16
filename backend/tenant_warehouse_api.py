@@ -61,7 +61,7 @@ def get_warehouses():
         
         sql = """
             SELECT 
-                id, tenant_id, warehouse_name, contact_name, contact, phone,
+                id, tenant_id, warehouse_name, contact, phone,
                 province, city, district, address,
                 is_default, status, created_at
             FROM tenant_warehouse
@@ -95,7 +95,7 @@ def create_warehouse():
         data = request.json
         
         # 验证必填字段
-        required_fields = ['warehouse_name', 'contact_name', 'phone', 'address']
+        required_fields = ['warehouse_name', 'contact', 'phone', 'address']
         for field in required_fields:
             if not data.get(field):
                 return jsonify({'success': False, 'message': f'缺少必填字段: {field}'}), 400
@@ -114,16 +114,15 @@ def create_warehouse():
         # 插入新地址
         insert_sql = """
             INSERT INTO tenant_warehouse (
-                tenant_id, warehouse_name, contact_name, contact, phone,
+                tenant_id, warehouse_name, contact, phone,
                 province, city, district, address, is_default, status
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
         
         cursor.execute(insert_sql, (
             tenant_id,
             data['warehouse_name'],
-            data['contact_name'],
-            data.get('contact', data['contact_name']),  # contact字段兼容
+            data['contact'],
             data['phone'],
             data.get('province'),
             data.get('city'),
@@ -173,7 +172,7 @@ def update_warehouse(warehouse_id):
         params = []
         
         allowed_fields = [
-            'warehouse_name', 'contact_name', 'contact', 'phone',
+            'warehouse_name', 'contact', 'phone',
             'province', 'city', 'district', 'address'
         ]
         
@@ -309,7 +308,7 @@ def get_default_warehouse():
         
         sql = """
             SELECT 
-                id, tenant_id, warehouse_name, contact_name, contact, phone,
+                id, tenant_id, warehouse_name, contact, phone,
                 province, city, district, address,
                 is_default, status, created_at
             FROM tenant_warehouse
