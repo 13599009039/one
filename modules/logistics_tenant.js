@@ -482,60 +482,64 @@ function showNotification(message, type = 'info') {
 // 新增物流账号弹窗
 window.openAddLogisticsAccountModal = function() {
     const modalHTML = `
-        <div class="modal" id="add-logistics-modal">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h4>新增物流账号</h4>
-                        <button type="button" class="close" onclick="closeModal('add-logistics-modal')">&times;</button>
-                    </div>
-                    <div class="modal-body">
-                        <form id="add-logistics-form">
-                            <div class="form-group">
-                                <label>快递公司 <span class="required">*</span></label>
-                                <select class="form-control" name="cp_code" required>
-                                    <option value="">请选择</option>
-                                    <option value="ZTO">中通快递</option>
-                                    <option value="YTO">圆通快递</option>
-                                    <option value="YD">韵达快递</option>
-                                    <option value="SF">顺丰速运</option>
-                                    <option value="STO">申通快递</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>网点/分部名称</label>
-                                <input type="text" class="form-control" name="branch_name" 
-                                       placeholder="如：北京一部、上海分公司（可为空则显示默认网点）">
-                            </div>
-                            <div class="form-group">
-                                <label>快递客户编码 <span class="required">*</span></label>
-                                <input type="text" class="form-control" name="partner_id" 
-                                       placeholder="快递公司提供的partner_id" required>
-                            </div>
-                            <div class="form-group">
-                                <label>账号</label>
-                                <input type="text" class="form-control" name="account">
-                            </div>
-                            <div class="form-group">
-                                <label>密码/密钥</label>
-                                <input type="password" class="form-control" name="password">
-                            </div>
-                            <div class="alert alert-info">
-                                <i class="fa fa-info-circle"></i>
-                                添加后需要完成菜鸟授权才能使用
-                            </div>
-                        </form>
-                    </div>
-                    <div class="modal-footer">
-                        <button class="btn btn-default" onclick="closeModal('add-logistics-modal')">取消</button>
-                        <button class="btn btn-primary" onclick="submitLogisticsAccount()">添加并授权</button>
-                    </div>
+        <div id="add-logistics-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center px-4 hidden modal" style="z-index: 10000 !important;">
+            <div class="relative w-full max-w-lg shadow-lg rounded-md bg-white p-5 max-h-[90vh] overflow-y-auto">
+                <div class="flex justify-between items-center mb-4 pb-3 border-b">
+                    <h3 class="text-lg font-bold text-gray-900"><i class="fas fa-truck mr-2 text-blue-600"></i>新增物流账号</h3>
+                    <button type="button" class="text-gray-400 hover:text-gray-500" onclick="closeModal('add-logistics-modal')">
+                        <span class="text-2xl">&times;</span>
+                    </button>
                 </div>
+                <form id="add-logistics-form" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">快递公司 <span class="text-red-500">*</span></label>
+                        <select class="w-full border border-gray-300 rounded-md py-2 px-3 text-sm focus:ring-blue-500 focus:border-blue-500" name="cp_code" required>
+                            <option value="">请选择</option>
+                            <option value="ZTO">中通快递</option>
+                            <option value="YTO">圆通快递</option>
+                            <option value="YD">韵达快递</option>
+                            <option value="SF">顺丰速运</option>
+                            <option value="STO">申通快递</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">网点/分部名称</label>
+                        <input type="text" class="w-full border border-gray-300 rounded-md py-2 px-3 text-sm focus:ring-blue-500 focus:border-blue-500" name="branch_name" 
+                               placeholder="如：北京一部、上海分公司（可为空则显示默认网点）">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">快递客户编码 <span class="text-red-500">*</span></label>
+                        <input type="text" class="w-full border border-gray-300 rounded-md py-2 px-3 text-sm focus:ring-blue-500 focus:border-blue-500" name="partner_id" 
+                               placeholder="快递公司提供的partner_id" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">账号</label>
+                        <input type="text" class="w-full border border-gray-300 rounded-md py-2 px-3 text-sm focus:ring-blue-500 focus:border-blue-500" name="account">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">密码/密钥</label>
+                        <input type="password" class="w-full border border-gray-300 rounded-md py-2 px-3 text-sm focus:ring-blue-500 focus:border-blue-500" name="password">
+                    </div>
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                        <p class="text-sm text-blue-800"><i class="fas fa-info-circle mr-1"></i>添加后需要完成菜鸟授权才能使用</p>
+                    </div>
+                    <div class="flex justify-end space-x-3 pt-4 border-t">
+                        <button type="button" onclick="closeModal('add-logistics-modal')" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50">取消</button>
+                        <button type="submit" class="bg-blue-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-blue-700">添加并授权</button>
+                    </div>
+                </form>
             </div>
         </div>
     `;
     
     document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // 绑定form submit事件
+    document.getElementById('add-logistics-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        submitLogisticsAccount();
+    });
+    
     openModal('add-logistics-modal');  // 使用utils.js中的openModal而非jQuery
 };
 
@@ -569,62 +573,65 @@ window.submitLogisticsAccount = async function() {
 // 新增发货地址弹窗
 window.openAddWarehouseModal = function() {
     const modalHTML = `
-        <div class="modal" id="add-warehouse-modal">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h4>新增发货地址</h4>
-                        <button type="button" class="close" onclick="closeModal('add-warehouse-modal')">&times;</button>
-                    </div>
-                    <div class="modal-body">
-                        <form id="add-warehouse-form">
-                            <div class="form-group">
-                                <label>地址名称 <span class="required">*</span></label>
-                                <input type="text" class="form-control" name="name" required 
-                                       placeholder="如：北京总仓、上海分仓">
-                            </div>
-                            <div class="form-group">
-                                <label>联系人 <span class="required">*</span></label>
-                                <input type="text" class="form-control" name="contact_name" required>
-                            </div>
-                            <div class="form-group">
-                                <label>联系电话 <span class="required">*</span></label>
-                                <input type="text" class="form-control" name="contact_phone" required>
-                            </div>
-                            <div class="form-group">
-                                <label>省份 <span class="required">*</span></label>
-                                <input type="text" class="form-control" name="province" required>
-                            </div>
-                            <div class="form-group">
-                                <label>城市 <span class="required">*</span></label>
-                                <input type="text" class="form-control" name="city" required>
-                            </div>
-                            <div class="form-group">
-                                <label>区/县 <span class="required">*</span></label>
-                                <input type="text" class="form-control" name="district" required>
-                            </div>
-                            <div class="form-group">
-                                <label>详细地址 <span class="required">*</span></label>
-                                <textarea class="form-control" name="address" required rows="3"></textarea>
-                            </div>
-                            <div class="form-group">
-                                <label>
-                                    <input type="checkbox" name="is_default" value="1">
-                                    设为默认发货地址
-                                </label>
-                            </div>
-                        </form>
-                    </div>
-                    <div class="modal-footer">
-                        <button class="btn btn-default" onclick="closeModal('add-warehouse-modal')">取消</button>
-                        <button class="btn btn-primary" onclick="submitWarehouse()">保存</button>
-                    </div>
+        <div id="add-warehouse-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center px-4 hidden modal" style="z-index: 10000 !important;">
+            <div class="relative w-full max-w-lg shadow-lg rounded-md bg-white p-5 max-h-[90vh] overflow-y-auto">
+                <div class="flex justify-between items-center mb-4 pb-3 border-b">
+                    <h3 class="text-lg font-bold text-gray-900"><i class="fas fa-warehouse mr-2 text-green-600"></i>新增发货地址</h3>
+                    <button type="button" class="text-gray-400 hover:text-gray-500" onclick="closeModal('add-warehouse-modal')">
+                        <span class="text-2xl">&times;</span>
+                    </button>
                 </div>
+                <form id="add-warehouse-form" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">地址名称 <span class="text-red-500">*</span></label>
+                        <input type="text" class="w-full border border-gray-300 rounded-md py-2 px-3 text-sm focus:ring-blue-500 focus:border-blue-500" name="name" required 
+                               placeholder="如：北京总仓、上海分仓">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">联系人 <span class="text-red-500">*</span></label>
+                        <input type="text" class="w-full border border-gray-300 rounded-md py-2 px-3 text-sm focus:ring-blue-500 focus:border-blue-500" name="contact_name" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">联系电话 <span class="text-red-500">*</span></label>
+                        <input type="text" class="w-full border border-gray-300 rounded-md py-2 px-3 text-sm focus:ring-blue-500 focus:border-blue-500" name="contact_phone" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">省份 <span class="text-red-500">*</span></label>
+                        <input type="text" class="w-full border border-gray-300 rounded-md py-2 px-3 text-sm focus:ring-blue-500 focus:border-blue-500" name="province" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">城市 <span class="text-red-500">*</span></label>
+                        <input type="text" class="w-full border border-gray-300 rounded-md py-2 px-3 text-sm focus:ring-blue-500 focus:border-blue-500" name="city" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">区/县 <span class="text-red-500">*</span></label>
+                        <input type="text" class="w-full border border-gray-300 rounded-md py-2 px-3 text-sm focus:ring-blue-500 focus:border-blue-500" name="district" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">详细地址 <span class="text-red-500">*</span></label>
+                        <textarea class="w-full border border-gray-300 rounded-md py-2 px-3 text-sm focus:ring-blue-500 focus:border-blue-500" name="address" required rows="3"></textarea>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" name="is_default" value="1" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                        <label class="ml-2 block text-sm text-gray-700">设为默认发货地址</label>
+                    </div>
+                    <div class="flex justify-end space-x-3 pt-4 border-t">
+                        <button type="button" onclick="closeModal('add-warehouse-modal')" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50">取消</button>
+                        <button type="submit" class="bg-blue-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-blue-700">保存</button>
+                    </div>
+                </form>
             </div>
         </div>
     `;
     
     document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // 绑定form submit事件
+    document.getElementById('add-warehouse-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        submitWarehouse();
+    });
+    
     openModal('add-warehouse-modal');
 };
 
