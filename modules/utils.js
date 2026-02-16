@@ -1,13 +1,135 @@
 // 通用工具函数模块
-// 版本：v1.1 (架构升级)
+// 版本：v1.2 (新增前端日志上报)
 // 创建日期：2026-02-12
-// 更新日期：2026-02-13
+// 更新日期：2026-02-16
 
 // ✅ 初始化 Utils 工具对象
 if (!window.Utils) {
     window.Utils = {};
     console.log('✅ Utils 工具对象已初始化');
 }
+
+// ===================== 前端日志上报系统 =====================
+
+/**
+ * 前端日志缓冲队列（避免频繁请求）
+ */
+const logBuffer = [];
+let logTimer = null;
+
+/**
+ * 发送日志到服务器
+ * @param {string} level - 日志级别: info/warn/error/api
+ * @param {string} message - 日志消息
+ * @param {Object} data - 附加数据
+ */
+function sendLogToServer(level, message, data = {}) {
+    const logEntry = {
+        timestamp: new Date().toISOString(),
+        level,
+        message,
+        url: window.location.href,
+        userAgent: navigator.userAgent,
+        data: JSON.stringify(data)
+    };
+    
+    logBuffer.push(logEntry);
+    
+    // 批量发送（500ms内的日志合并发送）
+    clearTimeout(logTimer);
+    logTimer = setTimeout(() => {
+        if (logBuffer.length === 0) return;
+        
+        const logsToSend = [...logBuffer];
+        logBuffer.length = 0;
+        
+        fetch('/api/frontend_logs', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ logs: logsToSend }),
+            credentials: 'include'
+        }).catch(err => {
+            // 静默失败，避免死循环
+            console.warn('[日志上报] 失败:', err.message);
+        });
+    }, 500);
+}
+
+/**
+ * 拦截fetch API，自动记录请求和响应
+ */
+if (window.fetch && !window._fetchIntercepted) {
+    const originalFetch = window.fetch;
+    window.fetch = async function(...args) {
+        const [url, options = {}] = args;
+        const startTime = Date.now();
+        
+        try {
+            const response = await originalFetch(...args);
+            const duration = Date.now() - startTime;
+            
+            // 记录API请求
+            sendLogToServer('api', `${options.method || 'GET'} ${url}`, {
+                status: response.status,
+                duration: `${duration}ms`,
+                ok: response.ok
+            });
+            
+            return response;
+        } catch (error) {
+            const duration = Date.now() - startTime;
+            
+            // 记录API错误
+            sendLogToServer('error', `${options.method || 'GET'} ${url} 失败`, {
+                error: error.message,
+                duration: `${duration}ms`
+            });
+            
+            throw error;
+        }
+    };
+    window._fetchIntercepted = true;
+    console.log('✅ fetch拦截器已启用，API请求将自动上报');
+}
+
+/**
+ * 拦截console.error，自动上报前端错误
+ */
+if (!window._consoleIntercepted) {
+    const originalError = console.error;
+    console.error = function(...args) {
+        // 调用原始console.error
+        originalError.apply(console, args);
+        
+        // 上报到服务器
+        const message = args.map(arg => 
+            typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
+        ).join(' ');
+        
+        sendLogToServer('error', message);
+    };
+    window._consoleIntercepted = true;
+    console.log('✅ console.error拦截器已启用，错误将自动上报');
+}
+
+/**
+ * 全局错误监听
+ */
+window.addEventListener('error', (event) => {
+    sendLogToServer('error', `全局错误: ${event.message}`, {
+        filename: event.filename,
+        lineno: event.lineno,
+        colno: event.colno
+    });
+});
+
+window.addEventListener('unhandledrejection', (event) => {
+    sendLogToServer('error', `未捕获的Promise错误: ${event.reason}`);
+});
+
+console.log('✅ 前端日志上报系统已启动');
+
+// ===================== 原有工具函数 =====================
 
 /**
  * 统一API错误处理函数

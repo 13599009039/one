@@ -7084,6 +7084,16 @@ except ImportError as e:
 except Exception as e:
     print(f"⚠️ 租户仓库/发货地址API注册异常: {e}")
 
+# ==================== 注册前端日志接收API ====================
+try:
+    from frontend_logs_api import frontend_logs_bp
+    app.register_blueprint(frontend_logs_bp)
+    print("✅ 前端日志接收API已注册: /api/frontend_logs/*")
+except ImportError as e:
+    print(f"⚠️ 前端日志接收API注册失败: {e}")
+except Exception as e:
+    print(f"⚠️ 前端日志接收API注册异常: {e}")
+
 
 if __name__ == '__main__':
     # 生产环境使用 gunicorn 启动,这里仅用于开发测试
