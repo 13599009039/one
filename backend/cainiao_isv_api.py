@@ -9,11 +9,14 @@ Flask Blueprint - 完整16个核心接口
 from flask import Blueprint, request, jsonify, session
 import pymysql
 from datetime import datetime
-from functools import wraps
 import json
 
 # 导入菜鸟服务
 from cainiao_isv_service import CainiaoISVService, encrypt_password, decrypt_password
+
+# 导入统一的租户权限模块
+from tenant_auth import require_tenant_auth as tenant_auth_decorator, get_current_tenant_id
+from functools import wraps
 
 cainiao_isv_bp = Blueprint('cainiao_isv', __name__, url_prefix='/api/cainiao_isv')
 
@@ -42,14 +45,10 @@ def require_platform_admin(f):
     return decorated_function
 
 
+# 使用统一的租户权限装饰器，但保持旧的调用方式兼容
 def require_tenant_auth(f):
-    """租户权限装饰器"""
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'tenant_id' not in session:
-            return jsonify({'success': False, 'message': '未登录或无租户权限'}), 403
-        return f(*args, **kwargs)
-    return decorated_function
+    """租户权限装饰器（兼容旧版本）"""
+    return tenant_auth_decorator()(f)
 
 
 def get_cainiao_service():
@@ -202,7 +201,7 @@ def create_tenant():
 @require_tenant_auth
 def get_warehouses():
     """获取租户仓库列表"""
-    tenant_id = session['tenant_id']
+    tenant_id = session.get('company_id')
     
     conn = get_db()
     cursor = conn.cursor()
@@ -229,7 +228,7 @@ def get_warehouses():
 @require_tenant_auth
 def create_warehouse():
     """创建仓库"""
-    tenant_id = session['tenant_id']
+    tenant_id = session.get('company_id')
     data = request.json
     
     warehouse_name = data.get('warehouse_name', '').strip()
@@ -267,7 +266,7 @@ def create_warehouse():
 @require_tenant_auth
 def get_logistics_accounts():
     """获取租户物流账号列表（支持多网点）"""
-    tenant_id = session['tenant_id']
+    tenant_id = session.get('company_id')
     
     conn = get_db()
     cursor = conn.cursor()
@@ -296,7 +295,7 @@ def get_logistics_accounts():
 @require_tenant_auth
 def create_logistics_account():
     """创建物流账号（支持同一快递多网点）"""
-    tenant_id = session['tenant_id']
+    tenant_id = session.get('company_id')
     data = request.json
     
     cp_code = data.get('cp_code', '').strip()
@@ -341,7 +340,7 @@ def create_logistics_account():
 @require_tenant_auth
 def update_logistics_account(account_id):
     """更新物流账号"""
-    tenant_id = session['tenant_id']
+    tenant_id = session.get('company_id')
     data = request.json
     
     conn = get_db()
@@ -416,7 +415,7 @@ def update_logistics_account(account_id):
 @require_tenant_auth
 def delete_logistics_account(account_id):
     """删除物流账号（软删除）"""
-    tenant_id = session['tenant_id']
+    tenant_id = session.get('company_id')
     
     conn = get_db()
     cursor = conn.cursor()
@@ -448,7 +447,7 @@ def delete_logistics_account(account_id):
 @require_tenant_auth
 def get_shipping_addresses():
     """获取发货地址列表"""
-    tenant_id = session['tenant_id']
+    tenant_id = session.get('company_id')
     
     conn = get_db()
     cursor = conn.cursor()
@@ -478,7 +477,7 @@ def get_shipping_addresses():
 @require_tenant_auth
 def create_shipping_address():
     """创建发货地址"""
-    tenant_id = session['tenant_id']
+    tenant_id = session.get('company_id')
     data = request.json
     
     if not data.get('sender_name') or not data.get('sender_phone') or not data.get('address'):
@@ -518,7 +517,7 @@ def create_shipping_address():
 @require_tenant_auth
 def get_waybill():
     """获取电子面单（单个）"""
-    tenant_id = session['tenant_id']
+    tenant_id = session.get('company_id')
     data = request.json
     
     order_no = data.get('order_no', '').strip()
@@ -619,7 +618,7 @@ def get_waybill():
 @require_tenant_auth
 def batch_get_waybills():
     """批量获取电子面单"""
-    tenant_id = session['tenant_id']
+    tenant_id = session.get('company_id')
     data = request.json
     
     orders = data.get('orders', [])
@@ -647,7 +646,7 @@ def batch_get_waybills():
 @require_tenant_auth
 def cancel_waybill(waybill_id):
     """取消面单（回收运单号）"""
-    tenant_id = session['tenant_id']
+    tenant_id = session.get('company_id')
     data = request.json
     
     service = get_cainiao_service()
@@ -710,7 +709,7 @@ def cancel_waybill(waybill_id):
 @require_tenant_auth
 def confirm_shipment(waybill_id):
     """确认发货"""
-    tenant_id = session['tenant_id']
+    tenant_id = session.get('company_id')
     
     service = get_cainiao_service()
     if not service:
@@ -768,7 +767,7 @@ def confirm_shipment(waybill_id):
 @require_tenant_auth
 def print_single():
     """单个打印"""
-    tenant_id = session['tenant_id']
+    tenant_id = session.get('company_id')
     data = request.json
     
     waybill_id = data.get('waybill_id')
@@ -824,7 +823,7 @@ def print_single():
 @require_tenant_auth
 def print_batch():
     """批量打印"""
-    tenant_id = session['tenant_id']
+    tenant_id = session.get('company_id')
     data = request.json
     
     waybill_ids = data.get('waybill_ids', [])
@@ -888,7 +887,7 @@ def print_batch():
 @require_tenant_auth
 def get_waybills():
     """获取面单列表"""
-    tenant_id = session['tenant_id']
+    tenant_id = session.get('company_id')
     
     page = int(request.args.get('page', 1))
     page_size = int(request.args.get('page_size', 20))
@@ -948,7 +947,7 @@ def get_waybills():
 @require_tenant_auth
 def get_print_logs():
     """获取打印日志"""
-    tenant_id = session['tenant_id']
+    tenant_id = session.get('company_id')
     
     page = int(request.args.get('page', 1))
     page_size = int(request.args.get('page_size', 50))
@@ -995,7 +994,7 @@ def get_print_logs():
 @require_tenant_auth
 def get_auth_url():
     """获取授权链接"""
-    tenant_id = session['tenant_id']
+    tenant_id = session.get('company_id')
     data = request.json
     
     account_id = data.get('account_id')

@@ -5,12 +5,14 @@
 """
 
 from flask import Blueprint, request, session, jsonify
-from functools import wraps
 import pymysql
 import hashlib
 import hmac
 import time
 import urllib.parse
+
+# 导入统一的租户权限模块
+from tenant_auth import require_tenant_auth, get_current_tenant_id
 
 # 创建Blueprint
 tenant_logistics_bp = Blueprint('tenant_logistics', __name__)
@@ -27,30 +29,6 @@ DB_CONFIG = {
 def get_db_connection():
     """获取数据库连接"""
     return pymysql.connect(**DB_CONFIG)
-
-def require_tenant_auth(role=None):
-    """租户权限装饰器"""
-    def decorator(f):
-        @wraps(f)
-        def decorated_function(*args, **kwargs):
-            # 检查登录状态
-            if 'user_id' not in session:
-                return jsonify({'success': False, 'message': '未登录'}), 401
-            
-            # 检查租户ID
-            tenant_id = session.get('company_id')  # 使用company_id作为tenant_id
-            if not tenant_id:
-                return jsonify({'success': False, 'message': '未绑定租户'}), 403
-            
-            # 检查角色权限（如果需要）
-            if role == 'admin':
-                user_role = session.get('role', '')
-                if user_role not in ['admin', 'super_admin']:
-                    return jsonify({'success': False, 'message': '权限不足，需要管理员权限'}), 403
-            
-            return f(*args, **kwargs)
-        return decorated_function
-    return decorator
 
 # ============================================================
 # 物流账号管理API
