@@ -479,12 +479,101 @@ function showNotification(message, type = 'info') {
     }
 }
 
+// 新增物流账号弹窗
+window.openAddLogisticsAccountModal = function() {
+    const modalHTML = `
+        <div class="modal" id="add-logistics-modal">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4>新增物流账号</h4>
+                        <button type="button" class="close" onclick="closeModal('add-logistics-modal')">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="add-logistics-form">
+                            <div class="form-group">
+                                <label>快递公司 <span class="required">*</span></label>
+                                <select class="form-control" name="cp_code" required>
+                                    <option value="">请选择</option>
+                                    <option value="ZTO">中通快递</option>
+                                    <option value="YTO">圆通快递</option>
+                                    <option value="YD">韵达快递</option>
+                                    <option value="SF">顺丰速运</option>
+                                    <option value="STO">申通快递</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>网点/分部名称</label>
+                                <input type="text" class="form-control" name="branch_name" 
+                                       placeholder="如：北京一部、上海分公司（可为空则显示默认网点）">
+                            </div>
+                            <div class="form-group">
+                                <label>快递客户编码 <span class="required">*</span></label>
+                                <input type="text" class="form-control" name="partner_id" 
+                                       placeholder="快递公司提供的partner_id" required>
+                            </div>
+                            <div class="form-group">
+                                <label>账号</label>
+                                <input type="text" class="form-control" name="account">
+                            </div>
+                            <div class="form-group">
+                                <label>密码/密钥</label>
+                                <input type="password" class="form-control" name="password">
+                            </div>
+                            <div class="alert alert-info">
+                                <i class="fa fa-info-circle"></i>
+                                添加后需要完成菜鸟授权才能使用
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-default" onclick="closeModal('add-logistics-modal')">取消</button>
+                        <button class="btn btn-primary" onclick="submitLogisticsAccount()">添加并授权</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    $('#add-logistics-modal').modal('show');
+};
+
+// 提交新增物流账号
+window.submitLogisticsAccount = async function() {
+    const form = document.getElementById('add-logistics-form');
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData);
+    
+    try {
+        const response = await fetch('/api/tenant/logistics_accounts', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+            closeModal('add-logistics-modal');
+            showMessage('添加成功！', 'success');
+            loadLogisticsAccounts();
+        } else {
+            showMessage(result.message || '添加失败', 'error');
+        }
+    } catch (error) {
+        console.error('添加失败:', error);
+        showMessage('添加失败', 'error');
+    }
+};
+
 // ===================== 全局导出 =====================
 window.initLogisticsAccountsPage = initLogisticsAccountsPage;
 window.loadLogisticsAccounts = loadLogisticsAccounts;
 window.authorizeLogisticsAccount = authorizeLogisticsAccount;
 window.editLogisticsAccount = editLogisticsAccount;
 window.deleteLogisticsAccount = deleteLogisticsAccount;
+window.openAddLogisticsAccountModal = openAddLogisticsAccountModal;  // 新增导出
+window.submitLogisticsAccount = submitLogisticsAccount;  // 新增导出
 
 window.initWarehousesPage = initWarehousesPage;
 window.loadWarehouses = loadWarehouses;
