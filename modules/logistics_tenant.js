@@ -579,7 +579,7 @@ window.openAddWarehouseModal = function() {
                 <form id="add-warehouse-form" class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">地址名称 <span class="text-red-500">*</span></label>
-                        <input type="text" class="w-full border border-gray-300 rounded-md py-2 px-3 text-sm focus:ring-blue-500 focus:border-blue-500" name="name" required 
+                        <input type="text" class="w-full border border-gray-300 rounded-md py-2 px-3 text-sm focus:ring-blue-500 focus:border-blue-500" name="warehouse_name" required 
                                placeholder="如：北京总仓、上海分仓">
                     </div>
                     <div>
@@ -588,7 +588,7 @@ window.openAddWarehouseModal = function() {
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">联系电话 <span class="text-red-500">*</span></label>
-                        <input type="text" class="w-full border border-gray-300 rounded-md py-2 px-3 text-sm focus:ring-blue-500 focus:border-blue-500" name="contact_phone" required placeholder="11位手机号">
+                        <input type="text" class="w-full border border-gray-300 rounded-md py-2 px-3 text-sm focus:ring-blue-500 focus:border-blue-500" name="phone" required placeholder="11位手机号">
                     </div>
                     
                     <!-- 省市区三级联动 -->
