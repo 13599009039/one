@@ -90,8 +90,8 @@ check_logs() {
 check_api_health() {
     log_info "========== 开始API健康检查 =========="
     
-    # 检查API是否响应
-    HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:5000/api/health 2>/dev/null || echo "000")
+    # 检查API是否响应（使用8050端口）
+    HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8050/api/health 2>/dev/null || echo "000")
     
     if [ "$HTTP_CODE" = "200" ]; then
         log_info "✅ API健康检查通过（HTTP 200）"

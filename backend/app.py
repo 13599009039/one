@@ -7096,7 +7096,11 @@ except Exception as e:
 
 
 if __name__ == '__main__':
+    # 端口配置（遵循系统端口规范）
+    import os
+    FLASK_PORT = int(os.getenv('FLASK_PORT', 8050))  # 默认8050，避开5000端口冲突
+    
     # 生产环境使用 gunicorn 启动,这里仅用于开发测试
-    app.run(host='0.0.0.0', port=5000, debug=False)
+    app.run(host='0.0.0.0', port=FLASK_PORT, debug=False)
 
 
