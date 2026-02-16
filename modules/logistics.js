@@ -47,27 +47,45 @@ const LogisticsModule = {
  * 初始化物流订单列表页面
  */
 function initLogisticsOrdersPage() {
-    console.log('[Logistics] 初始化物流订单列表页面');
+    console.log('[Logistics] 初始化物流订单列表页面 - 重定向到物流账号管理');
     LogisticsModule.currentPage = 'orders';
-    loadLogisticsOrders();
+    
+    // V2.0: 调用新的租户物流账号管理页面
+    if (typeof initLogisticsAccountsPage === 'function') {
+        initLogisticsAccountsPage();
+    } else {
+        console.error('[Logistics] initLogisticsAccountsPage 函数未定义，请检查 logistics_tenant.js 是否正确加载');
+    }
 }
 
 /**
  * 初始化物流配置管理页面
  */
 function initLogisticsConfigPage() {
-    console.log('[Logistics] 初始化物流配置管理页面');
+    console.log('[Logistics] 初始化物流配置管理页面 - 重定向到物流账号管理');
     LogisticsModule.currentPage = 'config';
-    loadLogisticsPlatforms();
+    
+    // V2.0: 调用新的租户物流账号管理页面
+    if (typeof initLogisticsAccountsPage === 'function') {
+        initLogisticsAccountsPage();
+    } else {
+        console.error('[Logistics] initLogisticsAccountsPage 函数未定义');
+    }
 }
 
 /**
  * 初始化面单打印模板页面
  */
 function initLogisticsTemplatesPage() {
-    console.log('[Logistics] 初始化面单打印模板页面');
+    console.log('[Logistics] 初始化面单打印模板页面 - 重定向到发货地址管理');
     LogisticsModule.currentPage = 'templates';
-    loadPrintTemplates();
+    
+    // V2.0: 调用新的租户发货地址管理页面
+    if (typeof initWarehousesPage === 'function') {
+        initWarehousesPage();
+    } else {
+        console.error('[Logistics] initWarehousesPage 函数未定义');
+    }
 }
 
 // ===================== 物流订单列表 =====================
