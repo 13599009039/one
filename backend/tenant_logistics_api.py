@@ -15,11 +15,11 @@ import urllib.parse
 # 创建Blueprint
 tenant_logistics_bp = Blueprint('tenant_logistics', __name__)
 
-# 数据库连接配置
+# 数据库配置
 DB_CONFIG = {
     'host': 'localhost',
-    'user': 'root',
-    'password': '123456',
+    'user': 'ajkuaiji',
+    'password': '@HNzb5z75b16',
     'database': 'ajkuaiji',
     'charset': 'utf8mb4'
 }
