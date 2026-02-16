@@ -6,7 +6,7 @@
 // 模块变量
 let allProducts = [];
 let allProductTeams = [];
-let productTemplates = [];
+let productTemplatesForProducts = [];
 let currentEditProductId = null;
 
 // ========== 初始化 ==========
@@ -463,11 +463,11 @@ async function loadProductTemplatesForModal() {
         const res = await fetch('/api/product-templates', { credentials: 'include' });
         const result = await res.json();
         if (result.success) {
-            productTemplates = result.data || [];
+            productTemplatesForProducts = result.data || [];
             const select = document.getElementById('psTemplateId');
             if (select) {
                 select.innerHTML = '<option value="">选择商品类型模板...</option>' +
-                    productTemplates.map(t => `<option value="${t.id}">${t.type_name}</option>`).join('');
+                    productTemplatesForProducts.map(t => `<option value="${t.id}">${t.type_name}</option>`).join('');
             }
         }
     } catch (error) {
@@ -925,7 +925,7 @@ window.loadProductTemplateFields = function() {
         return;
     }
     
-    const template = productTemplates.find(t => t.id == templateId);
+    const template = productTemplatesForProducts.find(t => t.id == templateId);
     if (!template || !template.fields || template.fields.length === 0) {
         container.innerHTML = `
             <div class="text-center text-gray-400 py-8">
