@@ -469,14 +469,9 @@ async function deleteWarehouse(warehouseId) {
  * 显示通知
  */
 function showNotification(message, type = 'info') {
-    if (typeof window.showMessage === 'function') {
-        window.showMessage(message, type);
-    } else if (typeof window.showNotification === 'function') {
-        window.showNotification(message, type);
-    } else {
-        console.log(`[通知] ${type}: ${message}`);
-        alert(message);
-    }
+    // showMessage函数不存在，直接使用alert
+    console.log(`[通知] ${type}: ${message}`);
+    alert(message);
 }
 
 // 新增物流账号弹窗
@@ -559,14 +554,14 @@ window.submitLogisticsAccount = async function() {
         
         if (result.success) {
             closeModal('add-logistics-modal');
-            showMessage('添加成功！', 'success');
+            alert('添加成功！');
             loadLogisticsAccounts();
         } else {
-            showMessage(result.message || '添加失败', 'error');
+            alert(result.message || '添加失败');
         }
     } catch (error) {
         console.error('添加失败:', error);
-        showMessage('添加失败', 'error');
+        alert('添加失败');
     }
 };
 
@@ -668,14 +663,14 @@ window.submitWarehouse = async function() {
         
         if (result.success) {
             closeModal('add-warehouse-modal');
-            showMessage('添加成功！', 'success');
+            alert('添加成功！');
             loadWarehouses();
         } else {
-            showMessage(result.message || '添加失败', 'error');
+            alert(result.message || '添加失败');
         }
     } catch (error) {
         console.error('添加失败:', error);
-        showMessage('添加失败', 'error');
+        alert('添加失败');
     }
 };
 
