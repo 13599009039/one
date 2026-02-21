@@ -7331,3 +7331,14 @@ if __name__ == '__main__':
     app.run(host='0.0.0.0', port=FLASK_PORT, debug=False)
 
 
+
+# ==================== 注册共享API Blueprint ====================
+try:
+    from common_api import common_api_bp
+    app.register_blueprint(common_api_bp)
+    print("✅ 共享API已注册: /api/common/*")
+except ImportError as e:
+    print(f"⚠️ 共享API注册失败: {e}")
+except Exception as e:
+    print(f"⚠️ 共享API注册异常: {e}")
+
