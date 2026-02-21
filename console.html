@@ -223,6 +223,7 @@
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">引流人员</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">业务人员</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">服务人员</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">移动端权限</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">续费状态</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
                                 </tr>
@@ -1247,6 +1248,122 @@
             
             #sidebar.collapsed .sidebar-user-info {
                 justify-content: center;
+            }
+            
+            /* 订单详情模态框新样式 - 三分布局 1100x749 */
+            #orderDetailModal .modal-content {
+                width: 1100px !important;
+                max-width: 1100px !important;
+                height: 749px !important;
+                max-height: 749px !important;
+                padding: 0;
+                overflow: hidden;
+            }
+            
+            #orderDetailModal .modal-body {
+                display: grid;
+                grid-template-columns: 440px 330px 330px;
+                gap: 16px;
+                padding: 24px;
+                height: calc(749px - 80px);
+                overflow-y: auto;
+            }
+            
+            .order-detail-left,
+            .order-detail-right {
+                display: flex;
+                flex-direction: column;
+                gap: 16px;
+                overflow-y: auto;
+            }
+            
+            .order-detail-middle {
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+                border-left: 1px solid #e5e7eb;
+                border-right: 1px solid #e5e7eb;
+                padding-left: 16px;
+                padding-right: 16px;
+            }
+            
+            .order-detail-card {
+                background: white;
+                border: 1px solid #e5e7eb;
+                border-radius: 8px;
+                padding: 16px;
+            }
+            
+            .order-detail-card h4 {
+                font-size: 14px;
+                font-weight: 600;
+                color: #374151;
+                margin-bottom: 12px;
+                padding-bottom: 8px;
+                border-bottom: 2px solid #f3f4f6;
+            }
+            
+            .detail-grid-2col {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 16px;
+            }
+            
+            .detail-item {
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+            }
+            
+            .detail-label {
+                font-size: 12px;
+                color: #6b7280;
+                font-weight: 500;
+            }
+            
+            .detail-value {
+                font-size: 14px;
+                color: #1f2937;
+                font-weight: 500;
+            }
+            
+            .detail-amount {
+                font-size: 16px;
+                color: #7c3aed;
+                font-weight: 600;
+            }
+            
+            .log-section,
+            .payment-section {
+                flex: 1;
+                min-height: 0;
+                display: flex;
+                flex-direction: column;
+            }
+            
+            .log-list,
+            .payment-list {
+                flex: 1;
+                overflow-y: auto;
+                font-size: 12px;
+            }
+            
+            .log-item,
+            .payment-item {
+                padding: 8px 0;
+                border-bottom: 1px solid #f3f4f6;
+                line-height: 1.5;
+            }
+            
+            .order-detail-left::-webkit-scrollbar,
+            .order-detail-right::-webkit-scrollbar {
+                width: 6px;
+            }
+            
+            .order-detail-left::-webkit-scrollbar-thumb,
+            .order-detail-right::-webkit-scrollbar-thumb {
+                background-color: #d1d5db;
+                border-radius: 3px;
             }
             
             #sidebar.collapsed .sidebar-user-info > div:last-child {

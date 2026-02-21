@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>菜鸟授权回调处理</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #333;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .success-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #10b981;
+            margin: 0 auto 20px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            color: white;
+        }
+        .error-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #ef4444;
+            margin: 0 auto 20px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            color: white;
+        }
+        h2 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #1f2937;
+        }
+        p {
+            font-size: 14px;
+            color: #6b7280;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        .close-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            display: none;
+            margin-top: 20px;
+        }
+        .close-btn:hover {
+            background: #5568d3;
+        }
+        .error-details {
+            background: #fee2e2;
+            border-left: 4px solid #ef4444;
+            padding: 12px;
+            margin-top: 15px;
+            text-align: left;
+            font-size: 13px;
+            color: #991b1b;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="spinner" id="spinner"></div>
+        <div class="success-icon" id="successIcon">✓</div>
+        <div class="error-icon" id="errorIcon">✕</div>
+        
+        <h2 id="statusTitle">正在处理授权...</h2>
+        <p id="statusMessage">请稍候，系统正在换取授权Token</p>
+        
+        <div class="error-details" id="errorDetails"></div>
+        
+        <button class="close-btn" id="closeBtn" onclick="closeWindow()">关闭窗口</button>
+    </div>
+
+    <script>
+        console.log('[菜鸟回调] 页面加载完成');
+        
+        /**
+         * 从URL获取参数
+         */
+        function getUrlParams() {
+            const params = {};
+            const searchParams = new URLSearchParams(window.location.search);
+            
+            for (const [key, value] of searchParams.entries()) {
+                params[key] = value;
+            }
+            
+            console.log('[菜鸟回调] URL参数:', params);
+            return params;
+        }
+        
+        /**
+         * 显示成功状态
+         */
+        function showSuccess(message) {
+            document.getElementById('spinner').style.display = 'none';
+            document.getElementById('successIcon').style.display = 'flex';
+            document.getElementById('statusTitle').textContent = '授权成功！';
+            document.getElementById('statusMessage').textContent = message || 'Token已成功保存，页面将自动关闭';
+            document.getElementById('closeBtn').style.display = 'inline-block';
+            
+            // 通知父窗口授权成功
+            if (window.opener) {
+                window.opener.postMessage({
+                    type: 'cainiao_auth_success',
+                    message: '授权成功'
+                }, '*');
+            }
+            
+            // 3秒后自动关闭
+            setTimeout(() => {
+                window.close();
+            }, 3000);
+        }
+        
+        /**
+         * 显示失败状态
+         */
+        function showError(message, details) {
+            document.getElementById('spinner').style.display = 'none';
+            document.getElementById('errorIcon').style.display = 'flex';
+            document.getElementById('statusTitle').textContent = '授权失败';
+            document.getElementById('statusMessage').textContent = message || '授权处理失败，请重试';
+            document.getElementById('closeBtn').style.display = 'inline-block';
+            
+            if (details) {
+                const errorDetailsEl = document.getElementById('errorDetails');
+                errorDetailsEl.textContent = details;
+                errorDetailsEl.style.display = 'block';
+            }
+        }
+        
+        /**
+         * 关闭窗口
+         */
+        function closeWindow() {
+            window.close();
+        }
+        
+        /**
+         * 调用后端接口换取Token
+         */
+        async function exchangeToken(accessCode, platformAuthId) {
+            console.log('[菜鸟回调] 开始换取Token:', { accessCode, platformAuthId });
+            
+            try {
+                const response = await fetch('/api/cainiao_isv/exchange_token', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        access_code: accessCode,
+                        platform_auth_id: platformAuthId
+                    })
+                });
+                
+                console.log('[菜鸟回调] 响应状态:', response.status);
+                
+                const result = await response.json();
+                console.log('[菜鸟回调] 响应结果:', result);
+                
+                if (result.success) {
+                    showSuccess('授权成功！Token已保存');
+                } else {
+                    showError('Token换取失败', result.message || '未知错误');
+                }
+                
+            } catch (error) {
+                console.error('[菜鸟回调] 换取Token失败:', error);
+                showError('网络错误', error.message);
+            }
+        }
+        
+        /**
+         * 初始化处理
+         */
+        async function init() {
+            const params = getUrlParams();
+            
+            // 检查必需参数
+            const accessCode = params.accessCode || params.code;
+            const platformAuthId = params.ext || params.state;
+            
+            if (!accessCode) {
+                showError('参数错误', '未获取到授权码(accessCode)');
+                return;
+            }
+            
+            if (!platformAuthId) {
+                showError('参数错误', '未获取到授权记录ID(ext)');
+                return;
+            }
+            
+            // 调用换取Token接口
+            await exchangeToken(accessCode, platformAuthId);
+        }
+        
+        // 页面加载完成后执行
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

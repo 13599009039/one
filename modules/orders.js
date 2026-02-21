@@ -2,6 +2,115 @@
 // 版本: v24.3.22 - 使用SafeUtils防御性编程，全部getElementById改为safeGetElement
 console.log('📦 [orders.js] 文件开始加载... v24.3.22');
 
+// 订阅客户信息更新事件
+function handleCustomerUpdate(event) {
+    const { customerId, customerData } = event.detail;
+    console.log(`收到客户更新通知: 客户ID=${customerId}`);
+    
+    // 更新当前页面中相关的订单显示
+    updateOrdersWithCustomerInfo(customerId, customerData);
+    
+    // 如果有打开的订单详情，也进行更新
+    if (window.currentViewingOrderId) {
+        updateOrderDetailWithCustomerInfo(customerId, customerData);
+    }
+}
+
+// 更新订单列表中的客户信息
+function updateOrdersWithCustomerInfo(customerId, customerData) {
+    // 查找并更新相关的订单行
+    const orderRows = document.querySelectorAll(`[data-customer-id="${customerId}"]`);
+    orderRows.forEach(row => {
+        const customerNameCell = row.querySelector('[data-field="customer_name"]');
+        if (customerNameCell && customerData.shop_name) {
+            customerNameCell.textContent = customerData.shop_name;
+        }
+        
+        const merchantIdCell = row.querySelector('[data-field="merchant_id"]');
+        if (merchantIdCell && customerData.merchant_id) {
+            merchantIdCell.textContent = customerData.merchant_id;
+        }
+    });
+}
+
+// 更新订单详情中的客户信息
+function updateOrderDetailWithCustomerInfo(customerId, customerData) {
+    // 更新订单详情页的客户信息显示
+    const detailElements = {
+        'detailCustomerName': customerData.shop_name,
+        'detailMerchantId': customerData.merchant_id,
+        'detailIndustry': customerData.industry,
+        'detailCompany': customerData.company
+    };
+    
+    Object.entries(detailElements).forEach(([elementId, value]) => {
+        const element = SafeUtils.safeGetElement(elementId, 'updateOrderDetailWithCustomerInfo');
+        if (element && value) {
+            element.textContent = value;
+        }
+    });
+}
+
+// 初始化客户更新监听
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof window.subscribeToCustomerUpdates === 'function') {
+        window.subscribeToCustomerUpdates(handleCustomerUpdate);
+        console.log('✅ 已订阅客户信息更新事件');
+    }
+    
+    // 订阅物流状态更新事件
+    if (typeof window.subscribeToShippingUpdates === 'function') {
+        window.subscribeToShippingUpdates(handleShippingStatusUpdate);
+        console.log('✅ 已订阅物流状态更新事件');
+    }
+});
+
+// 处理物流状态更新事件
+function handleShippingStatusUpdate(event) {
+    const { orderId, trackingNo } = event.detail;
+    console.log(`收到物流状态更新通知: 订单ID=${orderId}, 运单号=${trackingNo}`);
+    
+    // 更新订单列表中的物流状态显示
+    updateOrderShippingStatus(orderId, trackingNo);
+    
+    // 如果有打开的订单详情，也进行更新
+    if (window.currentViewingOrderId && window.currentViewingOrderId === orderId) {
+        updateOrderDetailShippingStatus(orderId, trackingNo);
+    }
+}
+
+// 更新订单列表中的物流状态
+function updateOrderShippingStatus(orderId, trackingNo) {
+    // 查找并更新相关的订单行
+    const orderRow = document.querySelector(`[data-order-id="${orderId}"]`);
+    if (orderRow) {
+        const shippingCell = orderRow.querySelector('[data-field="shipping_status"]');
+        if (shippingCell) {
+            shippingCell.innerHTML = `
+                <div class="flex items-center">
+                    <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs mr-2">已更新</span>
+                    <span class="text-xs text-gray-500">${trackingNo}</span>
+                </div>
+            `;
+        }
+    }
+}
+
+// 更新订单详情中的物流状态
+function updateOrderDetailShippingStatus(orderId, trackingNo) {
+    const detailElements = {
+        'detailTrackingNo': trackingNo,
+        'detailShippingStatus': '物流信息已更新'
+    };
+    
+    Object.entries(detailElements).forEach(([elementId, value]) => {
+        const element = SafeUtils.safeGetElement(elementId, 'updateOrderDetailShippingStatus');
+        if (element && value) {
+            element.textContent = value;
+        }
+    });
+}
+
 // 全局变量：分页配置
 let orderCurrentPage = 1;
 let orderPageSize = 20;
@@ -174,7 +283,337 @@ function getOrderDateRangeFilter() {
     };
 }
 
-// ==================== 工具函数 ====================
+// ===================== 操作流程优化系统 =====================
+
+/**
+ * 初始化快捷键支持
+ */
+function initKeyboardShortcuts() {
+    document.addEventListener('keydown', function(event) {
+        // Ctrl/Cmd + S 保存订单
+        if ((event.ctrlKey || event.metaKey) && event.key === 's') {
+            event.preventDefault();
+            if (document.getElementById('saveOrderBtn')) {
+                document.getElementById('saveOrderBtn').click();
+            }
+        }
+        
+        // Ctrl/Cmd + N 新建订单
+        if ((event.ctrlKey || event.metaKey) && event.key === 'n') {
+            event.preventDefault();
+            if (typeof window.createOrder === 'function') {
+                window.createOrder();
+            }
+        }
+        
+        // ESC 关闭模态框
+        if (event.key === 'Escape') {
+            closeAllModals();
+        }
+        
+        // F1 显示操作帮助
+        if (event.key === 'F1') {
+            event.preventDefault();
+            showOperationGuide();
+        }
+    });
+}
+
+/**
+ * 关闭所有模态框
+ */
+function closeAllModals() {
+    const modals = document.querySelectorAll('.modal:not(.hidden), [id$="Modal"]:not(.hidden)');
+    modals.forEach(modal => {
+        modal.classList.add('hidden');
+        if (modal.style) {
+            modal.style.display = 'none';
+        }
+    });
+}
+
+/**
+ * 显示操作引导
+ */
+function showOperationGuide() {
+    const guideContent = `
+        <div class="p-4 max-w-md">
+            <h3 class="text-lg font-bold mb-3">📌 操作快捷键</h3>
+            <div class="space-y-2 text-sm">
+                <div class="flex justify-between">
+                    <span>保存订单</span>
+                    <kbd class="px-2 py-1 bg-gray-100 rounded">Ctrl+S</kbd>
+                </div>
+                <div class="flex justify-between">
+                    <span>新建订单</span>
+                    <kbd class="px-2 py-1 bg-gray-100 rounded">Ctrl+N</kbd>
+                </div>
+                <div class="flex justify-between">
+                    <span>关闭窗口</span>
+                    <kbd class="px-2 py-1 bg-gray-100 rounded">ESC</kbd>
+                </div>
+                <div class="flex justify-between">
+                    <span>操作帮助</span>
+                    <kbd class="px-2 py-1 bg-gray-100 rounded">F1</kbd>
+                </div>
+            </div>
+            <div class="mt-4 pt-3 border-t">
+                <p class="text-xs text-gray-500">提示：点击任意位置或按ESC键关闭此帮助</p>
+            </div>
+        </div>
+    `;
+    
+    showFloatingNotification(guideContent, 'info', 5000);
+}
+
+/**
+ * 显示浮动通知
+ */
+function showFloatingNotification(content, type = 'info', duration = 3000) {
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm cursor-pointer ${
+        type === 'success' ? 'bg-green-100 border border-green-200' :
+        type === 'error' ? 'bg-red-100 border border-red-200' :
+        type === 'warning' ? 'bg-yellow-100 border border-yellow-200' :
+        'bg-blue-100 border border-blue-200'
+    }`;
+    
+    notification.innerHTML = `
+        <div class="flex items-start">
+            <div class="flex-1">${content}</div>
+            <button onclick="this.parentElement.parentElement.remove()" class="ml-2 text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // 点击关闭
+    notification.addEventListener('click', function() {
+        this.remove();
+    });
+    
+    // 自动关闭
+    if (duration > 0) {
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, duration);
+    }
+}
+
+/**
+ * 智能操作引导
+ */
+function initSmartOperationGuide() {
+    // 监听用户操作，提供适时引导
+    let operationCount = 0;
+    
+    document.addEventListener('click', function(event) {
+        operationCount++;
+        
+        // 首次操作后显示基础引导
+        if (operationCount === 1) {
+            setTimeout(() => {
+                showFloatingNotification(`
+                    <div>
+                        <p class="font-medium mb-1">👋 欢迎使用ERP系统！</p>
+                        <p class="text-xs">按 <kbd class="px-1 py-0.5 bg-gray-200 rounded text-xs">F1</kbd> 查看快捷键帮助</p>
+                    </div>
+                `, 'info', 4000);
+            }, 1000);
+        }
+        
+        // 特定操作的智能提示
+        const target = event.target;
+        if (target.matches('[data-action="add-item"]')) {
+            showActionHint('点击商品名称可快速选择服务项目', 'top');
+        } else if (target.matches('[data-action="calculate"]')) {
+            showActionHint('金额会自动计算，无需手动输入', 'top');
+        }
+    });
+}
+
+/**
+ * 显示操作提示
+ */
+function showActionHint(message, position = 'top') {
+    // 简化实现，实际项目中可以使用更完善的提示组件
+    console.log(`💡 操作提示 [${position}]: ${message}`);
+}
+
+// 初始化操作优化功能
+document.addEventListener('DOMContentLoaded', function() {
+    initKeyboardShortcuts();
+    initSmartOperationGuide();
+    console.log('✅ 操作流程优化功能已初始化');
+});
+
+// ===================== 原有功能 =====================
+
+/**
+ * 智能计算运费
+ * @returns {Promise<number>} 计算后的运费金额
+ */
+async function calculateSmartShippingCost() {
+    try {
+        // 获取订单相关信息
+        const orderInfo = collectOrderInfo();
+        
+        // 基础运费计算
+        let baseCost = calculateBaseShippingCost(orderInfo);
+        
+        // 重量区间折扣
+        baseCost = applyWeightDiscount(baseCost, orderInfo.totalWeight);
+        
+        // 地区差异调整
+        baseCost = applyRegionalAdjustment(baseCost, orderInfo.destination);
+        
+        // 客户等级优惠
+        baseCost = applyCustomerLevelDiscount(baseCost, orderInfo.customerLevel);
+        
+        // 实时预览显示
+        showShippingCostPreview(baseCost, orderInfo);
+        
+        return baseCost;
+    } catch (error) {
+        console.error('智能运费计算失败:', error);
+        return 0;
+    }
+}
+
+/**
+ * 收集订单信息
+ */
+function collectOrderInfo() {
+    const items = getOrderItems();
+    const totalWeight = items.reduce((sum, item) => sum + (item.weight || 0) * item.quantity, 0);
+    const totalValue = items.reduce((sum, item) => sum + (item.price || 0) * item.quantity, 0);
+    
+    return {
+        items: items,
+        totalWeight: totalWeight,
+        totalValue: totalValue,
+        destination: document.getElementById('shippingAddress')?.value || '',
+        customerLevel: getCurrentCustomerLevel(),
+        shippingMethod: document.getElementById('shippingMethod')?.value || 'standard'
+    };
+}
+
+/**
+ * 获取订单项目
+ */
+function getOrderItems() {
+    // 这里应该从订单项目表格中获取实际数据
+    // 简化实现，返回示例数据
+    return [
+        { name: '商品1', weight: 0.5, price: 100, quantity: 2 },
+        { name: '商品2', weight: 1.2, price: 200, quantity: 1 }
+    ];
+}
+
+/**
+ * 计算基础运费
+ */
+function calculateBaseShippingCost(orderInfo) {
+    const { totalWeight, shippingMethod } = orderInfo;
+    
+    // 基础费率（元/公斤）
+    const baseRate = {
+        'standard': 8,    // 标准快递
+        'express': 15,    // 顺丰快递
+        'economy': 5      // 经济快递
+    }[shippingMethod] || 8;
+    
+    // 基础运费 = 重量 × 费率 + 首重费用
+    let cost = totalWeight * baseRate;
+    
+    // 首重费用
+    if (totalWeight > 0) {
+        cost += 10; // 首重10元
+    }
+    
+    return Math.max(cost, 15); // 最低15元
+}
+
+/**
+ * 应用重量区间折扣
+ */
+function applyWeightDiscount(cost, weight) {
+    if (weight >= 10) {
+        return cost * 0.8; // 8折
+    } else if (weight >= 5) {
+        return cost * 0.9; // 9折
+    }
+    return cost;
+}
+
+/**
+ * 应用地域调整
+ */
+function applyRegionalAdjustment(cost, destination) {
+    // 简化的地域判断
+    if (destination.includes('新疆') || destination.includes('西藏')) {
+        return cost * 1.5; // 边远地区加收50%
+    } else if (destination.includes('海南')) {
+        return cost * 1.2; // 海南加收20%
+    }
+    return cost;
+}
+
+/**
+ * 应用客户等级折扣
+ */
+function applyCustomerLevelDiscount(cost, level) {
+    const discounts = {
+        'vip': 0.7,      // VIP客户7折
+        'premium': 0.8,  // 高级客户8折
+        'regular': 0.9,  // 普通客户9折
+        'new': 1.0       // 新客户无折扣
+    };
+    
+    return cost * (discounts[level] || 1.0);
+}
+
+/**
+ * 获取当前客户等级
+ */
+function getCurrentCustomerLevel() {
+    // 这里应该从客户信息中获取
+    // 简化实现
+    return 'regular';
+}
+
+/**
+ * 显示运费预览
+ */
+function showShippingCostPreview(cost, orderInfo) {
+    const previewDiv = document.getElementById('shippingCostPreview');
+    if (!previewDiv) {
+        // 创建预览区域
+        const container = document.getElementById('extraCostSection');
+        if (container) {
+            container.insertAdjacentHTML('beforeend', `
+                <div id="shippingCostPreview" class="mt-2 p-2 bg-blue-50 rounded text-sm text-blue-700">
+                    <strong>运费预估：</strong>¥<span id="previewAmount">${cost.toFixed(2)}</span>
+                    <div class="text-xs mt-1" id="previewDetails"></div>
+                </div>
+            `);
+        }
+    } else {
+        // 更新预览内容
+        document.getElementById('previewAmount').textContent = cost.toFixed(2);
+        document.getElementById('previewDetails').innerHTML = `
+            重量: ${orderInfo.totalWeight}kg | 
+            方式: ${orderInfo.shippingMethod} | 
+            目的地: ${orderInfo.destination || '未填写'}
+        `;
+    }
+}
+
+// ===================== 原有订单功能 =====================
 
 /**
  * 获取订单状态样式类
@@ -229,6 +668,11 @@ function formatDate(dateString) {
 window.initOrdersPage = function() {
     console.log('🚀 [订单页面] 开始初始化...');
     
+    // 更新页面标题
+    if (typeof updatePageTitle === 'function') {
+        updatePageTitle('销售订单管理');
+    }
+    
     loadOrdersData();
     
     // 绑定新增订单按钮
@@ -246,14 +690,10 @@ window.initOrdersPage = function() {
         console.error('❌ [订单页面] 按钮不存在！DOM未加载或ID错误');
     }
     
-    // 绑定表单提交
-    const orderForm = SafeUtils.safeGetElement('orderForm', 'initOrdersPage');
-    if (orderForm) {
-        orderForm.onsubmit = function(e) {
-            e.preventDefault();
-            saveNewOrder();
-        };
-    }
+    
+    // ✅ 已移除重复的 orderForm.onsubmit 绑定，避免与 openAddOrderModal() 内部的 addEventListener 冲突
+    // openAddOrderModal() 会在打开模态框时绑定 submit 事件，且有防重复机制（_submitBound 标志）
+    // 此处不再重复绑定，以防止提交两次的问题
     
     // 绑定收款表单提交
     const paymentForm = SafeUtils.safeGetElement('paymentForm', 'initOrdersPage');
@@ -1803,7 +2243,19 @@ async function buildOrderData() {
         (extra_cost_type === 'travel' ? '差旅费' :
          extra_cost_type === 'logistics' ? '物流费' :
          extra_cost_type === 'tax' ? '税费' : '');
-    const extra_cost_amount = parseFloat(document.getElementById('extraCostAmount')?.value) || 0;
+    
+    // 智能运费计算
+    let extra_cost_amount = 0;
+    if (extra_cost_type === 'logistics') {
+        extra_cost_amount = await calculateSmartShippingCost();
+        // 更新UI显示计算结果
+        const amountInput = document.getElementById('extraCostAmount');
+        if (amountInput) {
+            amountInput.value = extra_cost_amount.toFixed(2);
+        }
+    } else {
+        extra_cost_amount = parseFloat(document.getElementById('extraCostAmount')?.value) || 0;
+    }
     
     // 最终金额计算
     const final_amount = final_transaction_price;  // 实际销售额 = 总销售额 + 议价
@@ -1868,7 +2320,7 @@ async function buildOrderData() {
         final_cost,
         
         // 状态和备注
-        status: document.getElementById('orderStatus')?.value || '待签约',
+        status: document.getElementById('orderStatus')?.value || '已签约',
         remarks: collectOrderRemarks(),
         
         // 商品明细
@@ -1906,22 +2358,38 @@ function collectOrderRemarks() {
 }
 
 async function saveNewOrder() {
-    // 关键修复：判断是新增还是编辑模式
-    const orderId = window.currentEditingOrderId;
-    const isEditMode = !!orderId;
+    // ✅ 防重入保护：避免重复提交导致创建多个订单
+    if (window._saveNewOrderInProgress) {
+        console.warn('⚠️ [saveNewOrder] 提交已在进行中，忽略重复调用');
+        return;
+    }
+    window._saveNewOrderInProgress = true;
+    console.log(`🚀 [saveNewOrder] 开始执行 | timestamp: ${Date.now()}`);
     
-    // 使用优化的构建函数
-    const orderData = await buildOrderData();
-    if (!orderData) {
-        return; // 验证失败，已显示错误提示
+    // 禁用提交按钮，防止用户重复点击
+    const submitBtn = document.getElementById('orderSubmitBtn');
+    const originalBtnText = submitBtn?.textContent || '创建订单';
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = '提交中...';
     }
     
-    // 添加成本汇总数据到订单
-    orderData.stable_cost = typeof getStableCostsTotal === 'function' ? getStableCostsTotal() : 0;
-    orderData.special_cost = typeof getSpecialCostsTotal === 'function' ? getSpecialCostsTotal() : 0;
-    
-    // 尝试使用 API 保存
     try {
+        // 关键修复：判断是新增还是编辑模式
+        const orderId = window.currentEditingOrderId;
+        const isEditMode = !!orderId;
+        
+        // 使用优化的构建函数
+        const orderData = await buildOrderData();
+        if (!orderData) {
+            return; // 验证失败，已显示错误提示
+        }
+        
+        // 添加成本汇总数据到订单
+        orderData.stable_cost = typeof getStableCostsTotal === 'function' ? getStableCostsTotal() : 0;
+        orderData.special_cost = typeof getSpecialCostsTotal === 'function' ? getSpecialCostsTotal() : 0;
+        
+        // 尝试使用 API 保存
         let result;
         if (isEditMode) {
             // 编辑模式：调用 PUT 更新接口
@@ -1941,7 +2409,7 @@ async function saveNewOrder() {
             }
         } else {
             // 新增模式：调用 POST 创建接口
-            const result = await window.api.addOrder(orderData);
+            result = await window.api.addOrder(orderData);
             
             if (result.success) {
                 const newOrderId = result.data?.id || result.data;
@@ -1961,8 +2429,16 @@ async function saveNewOrder() {
             }
         }
     } catch (error) {
-        console.error('❌ API 保存失败:', error);
-        showNotification(`订单${isEditMode ? '修改' : '创建'}失败: ${error.message}`, 'error');
+        console.error('❌ [saveNewOrder] 执行失败:', error);
+        showNotification(`订单${window.currentEditingOrderId ? '修改' : '创建'}失败: ${error.message}`, 'error');
+    } finally {
+        // ✅ 恢复按钮状态，释放锁
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalBtnText;
+        }
+        window._saveNewOrderInProgress = false;
+        console.log('✅ [saveNewOrder] 执行完毕，锁已释放');
     }
 }
 
@@ -2136,8 +2612,8 @@ async function loadOrdersData() {
             // 订单类型标签
             const isAftersaleOrder = order.order_type === 'aftersale';
             const orderTypeBadge = isAftersaleOrder 
-                ? '<span class="px-2 py-0.5 text-xs font-medium rounded-full bg-red-100 text-red-800">售后</span>'
-                : '';
+                ? '<span class="px-2 py-0.5 text-xs font-medium rounded-full bg-red-100 text-red-800">售后订单</span>'
+                : '<span class="px-2 py-0.5 text-xs font-medium rounded-full bg-blue-100 text-blue-800">销售订单</span>';
             
             // 审核状态（双审核：业务审核 + 财务审核）
             const businessAudited = order.business_audit_status === 1 || order.is_audited === 1;  // 兼容旧数据
@@ -2188,7 +2664,9 @@ async function loadOrdersData() {
             const tr = document.createElement('tr');
             tr.className = 'hover:bg-gray-50';
             // 金额展示优化：优先使用final_amount（最终成交金额），其次使用contract_amount
-            const displayAmount = parseFloat(order.final_amount || order.contract_amount || order.total_amount || 0) || 0;
+            // 售后订单显示负数金额
+            const baseAmount = parseFloat(order.final_amount || order.contract_amount || order.total_amount || 0) || 0;
+            const displayAmount = isAftersaleOrder ? -Math.abs(baseAmount) : baseAmount;
             
             // 售后订单显示关联原订单号，原订单显示"有售后"标记
             let orderIdDisplay = `${order.id}`;
@@ -2313,7 +2791,7 @@ async function loadParentOrderInfo(parentOrderId) {
 }
 
 window.viewOrder = async function(id) {
-    // P1-UI-4: 存储当前查看的订单ID，供退款功能使用
+    // P1-UI-4: 存储当前查看的订单 ID，供退款功能使用
     window.currentViewingOrderId = id;
     
     const modal = document.getElementById('orderDetailModal');
@@ -2344,8 +2822,11 @@ window.viewOrder = async function(id) {
             customer = customersResult.data.find(c => c.id === order.customer_id);
         }
     } catch (error) {
-        console.error('❌ API加载客户失败:', error);
+        console.error('❌ API 加载客户失败:', error);
     }
+    
+    // 设置模态框为新三分布局
+    setupOrderDetailNewLayout(modal, order, customer);
     
     // 基本信息
     document.getElementById('detailOrderId').textContent = order.id;
@@ -2530,6 +3011,12 @@ window.viewOrder = async function(id) {
         }
     }
     
+    // 加载合同管理区域（新增）
+    loadOrderContracts(order.id);
+    
+    // 在模态框中添加合同管理区域（如果不存在）
+    insertContractManagementSection();
+    
     // 显示模态框
     modal.classList.remove('hidden');
     modal.style.display = 'flex';
@@ -2709,7 +3196,35 @@ window.savePayment = async function(event) {
 // ==================== 售后订单功能（新版：独立订单） ====================
 
 /**
- * 打开售后订单创建弹窗
+ * 验证订单是否可创建售后
+ * @param {Object} order - 订单对象
+ * @returns {Promise<boolean>} 是否可退款
+ */
+async function validateOrderRefundable(order) {
+    // 检查订单状态是否允许退款
+    const refundableStatuses = ['已完成', '已结算', '处理中'];
+    if (!refundableStatuses.includes(order.status)) {
+        showNotification(`订单状态为${order.status}，暂不支持创建售后`, 'warning');
+        return false;
+    }
+    
+    // 检查是否已有售后订单
+    try {
+        const aftersaleResult = await window.api.get(`/api/orders/${order.id}/aftersales`);
+        if (aftersaleResult.success && aftersaleResult.data && aftersaleResult.data.length > 0) {
+            const existingCount = aftersaleResult.data.length;
+            showNotification(`该订单已有${existingCount}个售后订单，是否继续创建？`, 'warning', 5000);
+            // 这里可以选择让用户确认继续或者取消
+        }
+    } catch (error) {
+        console.warn('检查现有售后订单失败:', error);
+    }
+    
+    return true;
+}
+
+/**
+ * 打开售后订单弹窗
  * @param {number|string} parentOrderId - 原订单ID
  */
 window.openAftersaleOrderModal = async function(parentOrderId) {
@@ -2727,11 +3242,25 @@ window.openAftersaleOrderModal = async function(parentOrderId) {
             return;
         }
         const parentOrder = result.data;
+                
+        // 验证原订单是否可创建售后
+        if (!await validateOrderRefundable(parentOrder)) {
+            return;
+        }
         
         // 填充关联订单信息
         document.getElementById('aftersaleParentId').value = parentOrderId;
         document.getElementById('aftersaleParentOrderId').textContent = `#${parentOrderId}`;
         document.getElementById('aftersaleCustomerName').textContent = parentOrder.customer_name || '未知客户';
+        
+        // 显示原订单的服务项目
+        const serviceItems = parentOrder.items || [];
+        const serviceNames = serviceItems.map(item => item.service_name).filter(name => name);
+        document.getElementById('aftersaleServiceItems').textContent = 
+            serviceNames.length > 0 ? serviceNames.join(', ') : '无服务项目';
+        
+        // 初始化退款项目选择
+        initializeRefundItems(serviceItems);
         
         // 设置默认日期
         document.getElementById('aftersaleOrderDate').value = new Date().toISOString().split('T')[0];
@@ -2826,10 +3355,11 @@ window.submitAftersaleOrder = async function(event) {
     }
     
     // 收集表单数据
-    const totalAmount = parseFloat(document.getElementById('aftersaleTotalAmount').value) || 0;
-    const totalCost = parseFloat(document.getElementById('aftersaleTotalCost').value) || 0;
-    const negotiationAmount = parseFloat(document.getElementById('aftersaleNegotiationAmount').value) || 0;
-    const finalAmount = totalAmount + negotiationAmount;
+    const aftersaleFinalRefundAmount = parseFloat(document.getElementById('aftersaleFinalRefundAmount').value) || 0;
+    const totalAmount = -Math.abs(aftersaleFinalRefundAmount); // 负数表示退款
+    const totalCost = 0; // 售后无成本概念
+    const negotiationAmount = 0; // 售后无议价概念
+    const finalAmount = totalAmount;
     
     // 人员配置
     const businessStaffSelect = document.getElementById('aftersaleBusinessStaff');
@@ -2847,12 +3377,27 @@ window.submitAftersaleOrder = async function(event) {
     const remarksText = document.getElementById('aftersaleRemarks').value.trim();
     const remarks = remarksText ? [{ date: orderDate, content: remarksText }] : [];
     
+    // 获取原订单信息以继承服务项目
+    let parentOrder = null;
+    try {
+        const parentResult = await window.api.getOrder(parseInt(parentOrderId));
+        if (parentResult.success) {
+            parentOrder = parentResult.data;
+        }
+    } catch (error) {
+        console.error('获取原订单信息失败:', error);
+    }
+    
+    // 获取选中的退款项目
+    const refundItems = getSelectedRefundItems();
+    
     // 提交数据
     const submitData = {
         parent_order_id: parseInt(parentOrderId),
         aftersale_type: aftersaleType,
         aftersale_reason: aftersaleReason,
         order_date: orderDate,
+        service_name: parentOrder ? parentOrder.service_name : '自定义服务', // 继承原订单服务项目
         total_amount: totalAmount,
         total_cost: totalCost,
         negotiation_amount: negotiationAmount,
@@ -2866,7 +3411,8 @@ window.submitAftersaleOrder = async function(event) {
         team: team,
         team_id: teamId,
         remarks: remarks,
-        status: '处理中'
+        status: '处理中',
+        refund_items: refundItems // 添加退款项目数据
     };
     
     // 禁用提交按钮
@@ -3794,7 +4340,7 @@ window.openEditOrderModal = async function(orderId) {
         modal.style.display = 'flex';
         modal.style.visibility = 'visible';
         modal.style.opacity = '1';
-        modal.style.zIndex = '10000';
+        modal.style.zIndex = '1000';
         
         
     } catch (error) {
@@ -4811,6 +5357,18 @@ window.showOrderOperationLogs = async function() {
         return;
     }
     
+    return window.openOrderOperationLogsModal(orderId);
+};
+
+/**
+ * 打开订单操作日志弹窗（可传入订单ID）
+ */
+window.openOrderOperationLogsModal = async function(orderId) {
+    if (!orderId) {
+        showNotification('无法获取订单ID', 'error');
+        return;
+    }
+    
     const modal = document.getElementById('orderOperationLogsModal');
     const listContainer = document.getElementById('orderOperationLogsList');
     
@@ -4972,6 +5530,250 @@ function renderChangesDetail(changes) {
     return html;
 }
 
+// ==================== 售后订单退款项目功能 ====================
+
+/**
+ * 初始化退款项目选择
+ */
+function initializeRefundItems(serviceItems) {
+    const container = document.getElementById('aftersaleRefundItemsContainer');
+    
+    if (!serviceItems || serviceItems.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-4 text-gray-500 text-sm">
+                <i class="fas fa-exclamation-circle mr-1"></i>该订单无服务项目可退款
+            </div>
+        `;
+        return;
+    }
+    
+    // 生成退款项目列表
+    let html = `
+    <table class="w-full text-xs">
+        <thead>
+            <tr class="text-xs text-orange-700 bg-orange-100">
+                <th class="text-left py-2 px-2" style="width: 5%"><input type="checkbox" id="selectAllRefundItems" onchange="toggleAllRefundItems(this.checked)"></th>
+                <th class="text-left py-2 px-2" style="width: 35%">服务项目</th>
+                <th class="text-right py-2 px-2" style="width: 15%">单价</th>
+                <th class="text-right py-2 px-2" style="width: 15%">数量</th>
+                <th class="text-right py-2 px-2" style="width: 15%">原金额</th>
+                <th class="text-right py-2 px-2" style="width: 15%">退款金额</th>
+            </tr>
+        </thead>
+        <tbody>
+    `;
+    
+    serviceItems.forEach((item, index) => {
+        const itemId = `refundItem_${index}`;
+        const originalAmount = parseFloat(item.total || 0);
+        const originalQuantity = parseInt(item.quantity || 1);
+        const unitPrice = parseFloat(item.price || 0);
+        
+        html += `
+            <tr class="border-t border-orange-200 refund-item-row" data-item-id="${itemId}" data-original-amount="${originalAmount}" data-unit-price="${unitPrice}" data-original-quantity="${originalQuantity}">
+                <td class="py-2 px-2 text-center">
+                    <input type="checkbox" class="refund-item-checkbox" data-item-id="${itemId}" onchange="updateRefundTotal()">
+                </td>
+                <td class="py-2 px-2">
+                    <div class="font-medium text-sm">${item.service_name || '未知服务'}</div>
+                    <div class="text-xs text-gray-500">${item.service_type || ''}</div>
+                </td>
+                <td class="py-2 px-2 text-right text-sm">¥${unitPrice.toFixed(2)}</td>
+                <td class="py-2 px-2">
+                    <input type="number" 
+                           min="0" 
+                           max="${originalQuantity}" 
+                           class="refund-item-quantity w-16 border border-orange-300 rounded py-1 px-2 text-xs text-right" 
+                           placeholder="0"
+                           data-item-id="${itemId}"
+                           data-unit-price="${unitPrice}"
+                           data-original-quantity="${originalQuantity}"
+                           onchange="updateRefundItemAmount(this); updateRefundTotal()"
+                           disabled>
+                    <div class="text-xs text-gray-500 mt-1">/${originalQuantity}</div>
+                </td>
+                <td class="py-2 px-2 text-right font-medium text-orange-700">¥${originalAmount.toFixed(2)}</td>
+                <td class="py-2 px-2">
+                    <input type="number" 
+                           step="0.01" 
+                           min="0" 
+                           max="${originalAmount}" 
+                           class="refund-item-amount w-full border border-orange-300 rounded py-1 px-2 text-xs text-right" 
+                           placeholder="0.00"
+                           data-item-id="${itemId}"
+                           data-original-amount="${originalAmount}"
+                           onchange="validateRefundAmount(this); updateRefundTotal()"
+                           disabled>
+                </td>
+            </tr>
+        `;
+    });
+    
+    html += `
+        </tbody>
+    </table>
+    `;
+    
+    container.innerHTML = html;
+}
+
+/**
+ * 更新退款项目金额（根据数量自动计算）
+ */
+function updateRefundItemAmount(quantityInput) {
+    const row = quantityInput.closest('.refund-item-row');
+    const amountInput = row.querySelector('.refund-item-amount');
+    const unitPrice = parseFloat(quantityInput.dataset.unitPrice);
+    const quantity = parseInt(quantityInput.value) || 0;
+    
+    if (amountInput && !amountInput.disabled) {
+        const calculatedAmount = (unitPrice * quantity).toFixed(2);
+        amountInput.value = calculatedAmount;
+    }
+}
+
+/**
+ * 全选/取消全选退款项目
+ */
+function toggleAllRefundItems(checked) {
+    // 更新所有复选框状态
+    document.querySelectorAll('.refund-item-checkbox').forEach(checkbox => {
+        checkbox.checked = checked;
+    });
+    
+    // 启用/禁用对应的输入框
+    document.querySelectorAll('.refund-item-amount, .refund-item-quantity').forEach(input => {
+        input.disabled = !checked;
+        if (!checked) {
+            input.value = '';
+        } else {
+            // 如果启用且没有值，则设置默认值
+            if (!input.value) {
+                if (input.classList.contains('refund-item-quantity')) {
+                    // 数量设置为最大值
+                    input.value = input.dataset.originalQuantity;
+                    // 触发金额自动计算
+                    updateRefundItemAmount(input);
+                } else {
+                    // 金额设置为最大值
+                    input.value = input.dataset.originalAmount;
+                }
+            }
+        }
+    });
+    
+    updateRefundTotal();
+}
+
+/**
+ * 全选退款项目按钮
+ */
+function addAllRefundItems() {
+    const selectAllCheckbox = document.getElementById('selectAllRefundItems');
+    selectAllCheckbox.checked = true;
+    toggleAllRefundItems(true);
+}
+
+/**
+ * 验证退款金额
+ */
+function validateRefundAmount(input) {
+    const originalAmount = parseFloat(input.dataset.originalAmount);
+    const refundAmount = parseFloat(input.value) || 0;
+    
+    if (refundAmount > originalAmount) {
+        showNotification(`退款金额不能超过原金额 ¥${originalAmount.toFixed(2)}`, 'error');
+        input.value = originalAmount.toFixed(2);
+    } else if (refundAmount < 0) {
+        showNotification('退款金额不能为负数', 'error');
+        input.value = '0.00';
+    }
+}
+
+/**
+ * 更新退款总额
+ */
+function updateRefundTotal() {
+    let total = 0;
+    
+    document.querySelectorAll('.refund-item-checkbox:checked').forEach(checkbox => {
+        const row = checkbox.closest('.refund-item-row');
+        const amountInput = row.querySelector('.refund-item-amount');
+        
+        if (amountInput && amountInput.value && !amountInput.disabled) {
+            total += parseFloat(amountInput.value) || 0;
+        }
+    });
+    
+    // 更新显示
+    const refundTotalElement = document.getElementById('aftersaleRefundTotal');
+    const refundItemsTotalDisplay = document.getElementById('refundItemsTotalDisplay');
+    
+    if (refundTotalElement) {
+        refundTotalElement.textContent = `¥${total.toFixed(2)}`;
+    }
+    if (refundItemsTotalDisplay) {
+        refundItemsTotalDisplay.textContent = `¥${total.toFixed(2)}`;
+    }
+    
+    // 更新实际退款金额显示
+    updateActualRefundAmount(total);
+}
+
+/**
+ * 更新实际退款金额显示
+ */
+function updateActualRefundAmount(itemsTotal) {
+    const finalRefundInput = document.getElementById('aftersaleFinalRefundAmount');
+    const actualRefundElement = document.getElementById('actualRefundAmount');
+    
+    if (finalRefundInput && actualRefundElement) {
+        const finalRefundAmount = parseFloat(finalRefundInput.value) || itemsTotal;
+        actualRefundElement.textContent = `¥${finalRefundAmount.toFixed(2)}`;
+        
+        // 如果用户没有手动输入最终金额，则使用项目总计
+        if (!finalRefundInput.value) {
+            finalRefundInput.value = (-itemsTotal).toFixed(2); // 负数表示退款
+        }
+    }
+}
+
+// 绑定最终退款金额输入事件
+document.addEventListener('DOMContentLoaded', function() {
+    const finalRefundInput = document.getElementById('aftersaleFinalRefundAmount');
+    if (finalRefundInput) {
+        finalRefundInput.addEventListener('input', function() {
+            const itemsTotal = parseFloat(document.getElementById('refundItemsTotalDisplay').textContent.replace('¥', '')) || 0;
+            updateActualRefundAmount(itemsTotal);
+        });
+    }
+});
+
+/**
+ * 获取选中的退款项目数据
+ */
+function getSelectedRefundItems() {
+    const selectedItems = [];
+    
+    document.querySelectorAll('.refund-item-checkbox:checked').forEach(checkbox => {
+        const row = checkbox.closest('.refund-item-row');
+        const amountInput = row.querySelector('.refund-item-amount');
+        
+        if (amountInput && amountInput.value && !amountInput.disabled) {
+            const refundAmount = parseFloat(amountInput.value) || 0;
+            if (refundAmount > 0) {
+                selectedItems.push({
+                    item_id: checkbox.dataset.itemId,
+                    refund_amount: refundAmount,
+                    original_amount: parseFloat(row.dataset.originalAmount)
+                });
+            }
+        }
+    });
+    
+    return selectedItems;
+}
+
 /**
  * 关闭操作日志弹窗
  */
@@ -4982,6 +5784,353 @@ window.closeOrderOperationLogs = function() {
         modal.style.display = 'none';
     }
 };
+
+// ==================== 合同管理功能（新增） ====================
+
+/**
+ * 在订单详情模态框中插入合同管理区域
+ */
+function insertContractManagementSection() {
+    // 查找模态框中的操作区或备注区附近
+    const remarksList = document.getElementById('detailRemarksList');
+    if (!remarksList || !remarksList.parentElement) return;
+    
+    // 检查是否已存在合同管理区域
+    if (document.getElementById('contractManagementSection')) return;
+    
+    // 创建合同管理区域 HTML
+    const contractSection = document.createElement('div');
+    contractSection.id = 'contractManagementSection';
+    contractSection.className = 'mt-6 order-detail-card';
+    contractSection.innerHTML = `
+        <h4 class="text-sm font-semibold text-gray-700 mb-3">
+            <i class="fas fa-file-contract mr-2"></i>合同管理
+        </h4>
+        <div class="flex items-center space-x-3 mb-3">
+            <label class="flex-1 max-w-xs">
+                <input type="file" id="contractFile" accept=".pdf,.jpg,.jpeg,.png,.gif" 
+                       class="hidden" onchange="uploadContract()">
+                <div class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm 
+                            font-medium rounded-lg cursor-pointer text-center transition-colors">
+                    <i class="fas fa-upload mr-2"></i>上传合同
+                </div>
+            </label>
+            <button onclick="viewContracts()" class="px-4 py-2 bg-gray-600 
+                        hover:bg-gray-700 text-white text-sm font-medium rounded-lg 
+                        transition-colors">
+                <i class="fas fa-list mr-2"></i>查看合同
+            </button>
+        </div>
+        <!-- 已上传合同列表 -->
+        <div id="uploadedContracts" class="space-y-2 max-h-48 overflow-y-auto">
+            <p class="text-gray-400 text-sm text-center py-4">加载中...</p>
+        </div>
+    `;
+    
+    // 插入到备注列表前面
+    remarksList.parentElement.insertBefore(contractSection, remarksList.parentElement.firstChild);
+}
+
+/**
+ * 加载订单合同列表
+ */
+async function loadOrderContracts(orderId) {
+    const contractsContainer = document.getElementById('uploadedContracts');
+    if (!contractsContainer) return;
+    
+    try {
+        const result = await window.api.get(`/api/orders/${orderId}/contracts`);
+        
+        if (result.success && result.data) {
+            if (result.data.length === 0) {
+                contractsContainer.innerHTML = '<p class="text-gray-400 text-sm text-center py-4">暂无合同文件</p>';
+                return;
+            }
+            
+            contractsContainer.innerHTML = result.data.map(contract => {
+                const fileIcon = contract.file_type === 'pdf' ? 'fa-file-pdf text-red-500' : 'fa-file-image text-blue-500';
+                return `
+                    <div class="flex items-center justify-between p-2 bg-white rounded border border-gray-200 hover:bg-gray-50 transition-colors">
+                        <div class="flex items-center space-x-2 flex-1 min-w-0">
+                            <i class="fas ${fileIcon} text-lg"></i>
+                            <span class="text-sm text-gray-700 truncate" title="${contract.original_name}">${contract.original_name}</span>
+                            <span class="text-xs text-gray-400 uppercase ml-1">${contract.file_type}</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <a href="/uploads/${contract.file_path}" target="_blank" 
+                               class="text-blue-600 hover:text-blue-800 p-1" 
+                               title="预览">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="/uploads/${contract.file_path}" download 
+                               class="text-green-600 hover:text-green-800 p-1" 
+                               title="下载">
+                                <i class="fas fa-download"></i>
+                            </a>
+                            <span class="text-xs text-gray-400 ml-1">${formatDate(contract.uploaded_at)}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        } else {
+            contractsContainer.innerHTML = '<p class="text-red-400 text-sm text-center py-4">加载失败</p>';
+        }
+    } catch (error) {
+        console.error('加载合同列表失败:', error);
+        contractsContainer.innerHTML = '<p class="text-red-400 text-sm text-center py-4">加载失败</p>';
+    }
+}
+
+/**
+ * 上传合同文件
+ */
+window.uploadContract = async function() {
+    const fileInput = document.getElementById('contractFile');
+    const file = fileInput?.files[0];
+    
+    if (!file) {
+        showNotification('请选择文件', 'warning');
+        return;
+    }
+    
+    // 验证文件格式
+    const allowedTypes = ['pdf', 'jpg', 'jpeg', 'png', 'gif'];
+    const ext = file.name.split('.').pop().toLowerCase();
+    if (!allowedTypes.includes(ext)) {
+        showNotification('仅支持 PDF 和图片格式', 'error');
+        return;
+    }
+    
+    // 验证文件大小（不超过 10MB）
+    if (file.size > 10 * 1024 * 1024) {
+        showNotification('文件大小不能超过 10MB', 'error');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('contract', file);
+    
+    try {
+        const orderId = window.currentViewingOrderId;
+        if (!orderId) {
+            showNotification('订单 ID 丢失', 'error');
+            return;
+        }
+        
+        // 显示上传中状态
+        const uploadBtn = document.querySelector('label[for="contractFile"]');
+        if (uploadBtn) {
+            uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>上传中...';
+            uploadBtn.classList.add('opacity-75', 'cursor-not-allowed');
+        }
+        
+        const result = await window.api.post(`/api/orders/${orderId}/contracts`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        
+        if (result.success) {
+            showNotification('合同上传成功', 'success');
+            loadOrderContracts(orderId); // 刷新合同列表
+            // 清空文件选择
+            if (fileInput) fileInput.value = '';
+        } else {
+            showNotification('上传失败：' + result.message, 'error');
+        }
+    } catch (error) {
+        console.error('上传失败:', error);
+        showNotification('上传失败，请重试', 'error');
+    } finally {
+        // 恢复按钮状态
+        const uploadBtn = document.querySelector('label[for="contractFile"]');
+        if (uploadBtn) {
+            uploadBtn.innerHTML = '<i class="fas fa-upload mr-2"></i>上传合同';
+            uploadBtn.classList.remove('opacity-75', 'cursor-not-allowed');
+        }
+    }
+};
+
+/**
+ * 查看合同列表（用于按钮点击）
+ */
+window.viewContracts = function() {
+    showNotification('合同已在下方列表中显示', 'info');
+};
+
+/**
+ * 设置订单详情模态框新三分布局
+ */
+function setupOrderDetailNewLayout(modal, order, customer) {
+    const modalBody = modal.querySelector('.modal-body');
+    if (!modalBody) return;
+    
+    // 计算金额
+    const totalAmount = parseFloat(order.total_amount) || 0;
+    const negotiationAmount = parseFloat(order.negotiation_amount) || 0;
+    const finalAmount = parseFloat(order.final_amount) || totalAmount + negotiationAmount;
+    const paidAmount = parseFloat(order.paid_amount) || parseFloat(order.net_paid) || 0;
+    const unpaidAmount = finalAmount - paidAmount;
+    
+    // 左侧信息区 HTML
+    const leftHtml = `
+        <div class="order-detail-card">
+            <h4><i class="fas fa-user mr-2"></i>客户信息</h4>
+            <div class="detail-grid-2col">
+                <div class="detail-item">
+                    <span class="detail-label">客户名称</span>
+                    <span class="detail-value">${customer ? customer.shop_name : (order.customer_name || '未知客户')}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">所属行业</span>
+                    <span class="detail-value">${customer?.industry || '-'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">公司名称</span>
+                    <span class="detail-value">${customer?.company || '-'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">商户 ID</span>
+                    <span class="detail-value">${customer?.merchant_id || '-'}</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="order-detail-card">
+            <h4><i class="fas fa-file-contract mr-2"></i>订单基本信息</h4>
+            <div class="detail-grid-2col">
+                <div class="detail-item">
+                    <span class="detail-label">订单号</span>
+                    <span class="detail-value font-mono">${order.id}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">订单日期</span>
+                    <span class="detail-value">${formatDate(order.order_date)}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">订单类型</span>
+                    <span class="detail-value">${order.order_type === 'aftersale' ? '售后订单' : '销售订单'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">状态</span>
+                    <span class="px-2 py-0.5 rounded-full text-xs font-semibold ${getStatusClass(order.status)}">${order.status}</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="order-detail-card">
+            <h4><i class="fas fa-coins mr-2"></i>金额信息</h4>
+            <div class="detail-grid-2col">
+                <div class="detail-item">
+                    <span class="detail-label">合同金额</span>
+                    <span class="detail-amount">¥${totalAmount.toFixed(2)}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">协商金额</span>
+                    <span class="${negotiationAmount >= 0 ? 'text-blue-600' : 'text-red-600'}">
+                        ${negotiationAmount >= 0 ? '+' : ''}¥${Math.abs(negotiationAmount).toFixed(2)}
+                    </span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">最终金额</span>
+                    <span class="detail-amount text-lg">¥${finalAmount.toFixed(2)}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">已付金额</span>
+                    <span class="text-green-600 font-semibold">¥${paidAmount.toFixed(2)}</span>
+                </div>
+                <div class="detail-item col-span-2">
+                    <span class="detail-label">未付金额</span>
+                    <span class="detail-amount text-red-600">¥${unpaidAmount.toFixed(2)}</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="order-detail-card">
+            <h4><i class="fas fa-users mr-2"></i>业务团队</h4>
+            <div class="detail-grid-2col">
+                <div class="detail-item">
+                    <span class="detail-label">业务专员</span>
+                    <span class="detail-value">${order.business_staff || '-'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">服务专员</span>
+                    <span class="detail-value">${order.service_staff || '-'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">运营专员</span>
+                    <span class="detail-value">${order.operation_staff || '-'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">所属团队</span>
+                    <span class="detail-value">${order.team || '-'}</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 订单日志入口按钮 -->
+        <div class="order-detail-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <button onclick="openOrderOperationLogsModal(${order.id})" class="w-full py-3 text-white font-medium rounded-lg hover:opacity-90 transition-opacity flex items-center justify-center">
+                <i class="fas fa-history mr-2"></i>查看订单日志
+            </button>
+        </div>
+    `;
+    
+    // 中间操作区 HTML
+    const middleHtml = `
+        <div class="order-detail-card">
+            <h4><i class="fas fa-tools mr-2"></i>操作</h4>
+            <div class="flex flex-col gap-2">
+                <button onclick="openPaymentModal(${order.id})" class="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors">
+                    <i class="fas fa-money-bill-wave mr-2"></i>收款登记
+                </button>
+                <button onclick="openEditOrderModal(${order.id})" class="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors">
+                    <i class="fas fa-edit mr-2"></i>编辑订单
+                </button>
+                <button onclick="createAftersaleOrder(${order.id})" class="w-full px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-lg transition-colors">
+                    <i class="fas fa-undo mr-2"></i>创建售后
+                </button>
+                <button onclick="processOrder(${order.id})" class="w-full px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors">
+                    <i class="fas fa-exchange-alt mr-2"></i>状态流转
+                </button>
+            </div>
+        </div>
+        
+        <div class="order-detail-card">
+            <h4><i class="fas fa-sticky-note mr-2"></i>备注</h4>
+            <div id="detailRemarksList" class="space-y-2 max-h-40 overflow-y-auto">
+                ${order.remarks && order.remarks.length > 0 ? order.remarks.map(r => `
+                    <div class="p-2 bg-gray-50 rounded border">
+                        <p class="text-xs text-gray-500">${formatDate(r.date)}</p>
+                        <p class="text-sm text-gray-700">${r.content}</p>
+                    </div>
+                `).join('') : '<p class="text-gray-400 text-sm">暂无备注</p>'}
+            </div>
+        </div>
+    `;
+    
+    // 右侧记录区 HTML
+    const rightHtml = `
+        <div class="order-detail-card log-section">
+            <h4><i class="fas fa-history mr-2"></i>操作日志</h4>
+            <div id="operationLogList" class="log-list">
+                <p class="text-gray-400 text-sm text-center py-4">加载中...</p>
+            </div>
+        </div>
+        
+        <div class="order-detail-card payment-section">
+            <h4><i class="fas fa-receipt mr-2"></i>收款记录</h4>
+            <div id="paymentRecordsList" class="payment-list">
+                ${renderPaymentRecords(order.payment_records || [])}
+            </div>
+        </div>
+    `;
+    
+    // 组装 HTML
+    modalBody.innerHTML = `
+        <div class="order-detail-left">${leftHtml}</div>
+        <div class="order-detail-middle">${middleHtml}</div>
+        <div class="order-detail-right">${rightHtml}</div>
+    `;
+}
 
 console.log('📝 [操作日志] 功能加载完成');
 

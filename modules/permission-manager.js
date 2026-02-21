@@ -92,16 +92,27 @@
         }
 
         /**
-         * 从LocalStorage加载缓存
+         * 从数据库加载缓存
          */
-        _loadFromCache() {
+        async _loadFromCache() {
             try {
+                // 优先使用数据库管理器
+                if (window.databaseManager && window.databaseManager.isInitialized) {
+                    const cachedData = await window.databaseManager.getConfiguration('permissions_cache');
+                    if (cachedData && cachedData.expiresAt && Date.now() < cachedData.expiresAt) {
+                        this._setPermissions(cachedData.data.permissions || [], cachedData.data.codes || []);
+                        console.log('[PermissionManager] ✅ 从数据库加载权限缓存');
+                        return true;
+                    }
+                }
+                
+                // 回退到localStorage
                 const expiresAt = localStorage.getItem(this.CACHE_EXPIRES_KEY);
                 const now = Date.now();
 
                 // 检查缓存是否过期
                 if (!expiresAt || now > parseInt(expiresAt, 10)) {
-                    console.log('[PermissionManager] ⏰ 缓存已过期');
+                    console.log('[PermissionManager] ⏰ localStorage缓存已过期');
                     return false;
                 }
 
@@ -112,6 +123,7 @@
 
                 const parsed = JSON.parse(cachedData);
                 this._setPermissions(parsed.permissions || [], parsed.codes || []);
+                console.log('[PermissionManager] ✅ 从localStorage加载权限缓存');
                 return true;
             } catch (error) {
                 console.error('[PermissionManager] ❌ 加载缓存失败:', error);
@@ -122,15 +134,27 @@
         /**
          * 保存权限到LocalStorage
          */
-        _saveToCache() {
+        async _saveToCache() {
             try {
                 const data = {
                     permissions: this.permissions,
                     codes: Array.from(this.permissionCodes)
                 };
+                
+                // 优先保存到数据库
+                if (window.databaseManager && window.databaseManager.isInitialized) {
+                    const cacheData = {
+                        data: data,
+                        expiresAt: Date.now() + this.CACHE_DURATION
+                    };
+                    await window.databaseManager.saveConfiguration(cacheData, 'permissions_cache');
+                    console.log('[PermissionManager] 💾 权限已保存到数据库');
+                }
+                
+                // 同时保存到localStorage作为备份
                 localStorage.setItem(this.CACHE_KEY, JSON.stringify(data));
                 localStorage.setItem(this.CACHE_EXPIRES_KEY, (Date.now() + this.CACHE_DURATION).toString());
-                console.log('[PermissionManager] 💾 权限已缓存');
+                console.log('[PermissionManager] 💾 权限已缓存到localStorage');
             } catch (error) {
                 console.error('[PermissionManager] ❌ 缓存权限失败:', error);
             }
@@ -139,7 +163,18 @@
         /**
          * 清除权限缓存
          */
-        clearCache() {
+        async clearCache() {
+            try {
+                // 清除数据库缓存
+                if (window.databaseManager && window.databaseManager.isInitialized) {
+                    await window.databaseManager.saveConfiguration(null, 'permissions_cache');
+                    console.log('[PermissionManager] 🗑️ 数据库权限缓存已清除');
+                }
+            } catch (error) {
+                console.warn('[PermissionManager] 清除数据库缓存失败:', error);
+            }
+            
+            // 清除localStorage缓存
             localStorage.removeItem(this.CACHE_KEY);
             localStorage.removeItem(this.CACHE_EXPIRES_KEY);
             this.permissions = [];

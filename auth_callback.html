@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>授权成功 - AJ快计ERP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-50">
+    <div class="min-h-screen flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-8 text-center">
+            <!-- 成功图标 -->
+            <div id="successIcon" class="hidden mb-6">
+                <div class="mx-auto w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-check text-green-600 text-4xl"></i>
+                </div>
+                <h2 class="mt-4 text-2xl font-bold text-gray-900">授权成功</h2>
+                <p class="mt-2 text-gray-600">菜鸟物流账号授权已完成</p>
+                <p class="mt-4 text-sm text-gray-500">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    授权信息已保存，页面将在 <span id="countdown">3</span> 秒后自动关闭
+                </p>
+            </div>
+
+            <!-- 失败图标 -->
+            <div id="errorIcon" class="hidden mb-6">
+                <div class="mx-auto w-20 h-20 bg-red-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-times text-red-600 text-4xl"></i>
+                </div>
+                <h2 class="mt-4 text-2xl font-bold text-gray-900">授权失败</h2>
+                <p id="errorMessage" class="mt-2 text-gray-600">授权过程出现问题</p>
+                <button onclick="window.close()" class="mt-6 px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition">
+                    <i class="fas fa-times mr-2"></i>关闭窗口
+                </button>
+            </div>
+
+            <!-- 加载中 -->
+            <div id="loadingIcon">
+                <div class="mx-auto w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-spinner fa-spin text-blue-600 text-4xl"></i>
+                </div>
+                <h2 class="mt-4 text-xl font-semibold text-gray-900">正在处理授权信息...</h2>
+                <p class="mt-2 text-sm text-gray-500">请稍候，不要关闭此窗口</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 解析URL参数
+        function getUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            return {
+                code: params.get('code'),
+                state: params.get('state'),
+                error: params.get('error'),
+                error_description: params.get('error_description')
+            };
+        }
+
+        // 处理授权回调
+        async function handleAuthCallback() {
+            const params = getUrlParams();
+
+            // 检查是否有错误
+            if (params.error) {
+                showError(params.error_description || '授权被拒绝');
+                return;
+            }
+
+            // 检查必要参数
+            if (!params.code || !params.state) {
+                showError('授权参数缺失，请重试');
+                return;
+            }
+
+            try {
+                // 解析state获取account_id
+                let accountId;
+                const parts = params.state.split('_');
+                if (parts.length === 4 && parts[0] === 'tenant' && parts[2] === 'account') {
+                    // 新格式: "tenant_{tenant_id}_account_{account_id}"
+                    accountId = parts[3];
+                } else if (parts.length === 2) {
+                    // 兼容旧格式: "{tenant_id}_{account_id}"
+                    accountId = parts[1];
+                }
+
+                // 后端已经处理完成（因为这个页面是后端返回的HTML）
+                // 直接显示成功
+                showSuccess();
+                
+                // 通知父窗口授权成功（使用cainiao_auth_success类型）
+                if (window.opener) {
+                    window.opener.postMessage({
+                        type: 'cainiao_auth_success',
+                        account_id: accountId,
+                        timestamp: new Date().toISOString()
+                    }, '*');
+                    console.log('已发送授权成功消息到父窗口');
+                }
+                
+                // 3秒后自动关闭
+                let countdown = 3;
+                const countdownEl = document.getElementById('countdown');
+                const timer = setInterval(() => {
+                    countdown--;
+                    if (countdownEl) countdownEl.textContent = countdown;
+                    if (countdown <= 0) {
+                        clearInterval(timer);
+                        window.close();
+                    }
+                }, 1000);
+
+            } catch (error) {
+                console.error('授权回调处理失败:', error);
+                showError('处理失败，请重试');
+            }
+        }
+
+        // 显示成功状态
+        function showSuccess() {
+            document.getElementById('loadingIcon').classList.add('hidden');
+            document.getElementById('errorIcon').classList.add('hidden');
+            document.getElementById('successIcon').classList.remove('hidden');
+        }
+
+        // 显示错误状态
+        function showError(message) {
+            document.getElementById('loadingIcon').classList.add('hidden');
+            document.getElementById('successIcon').classList.add('hidden');
+            document.getElementById('errorIcon').classList.remove('hidden');
+            document.getElementById('errorMessage').textContent = message;
+        }
+
+        // 页面加载后自动处理
+        window.addEventListener('DOMContentLoaded', handleAuthCallback);
+    </script>
+</body>
+</html>

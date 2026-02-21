@@ -1,0 +1,113 @@
+{
+  "test_orders": [
+    {
+      "id": 1001,
+      "order_type": "sale",
+      "customer_name": "测试客户A",
+      "status": "已完成",
+      "is_settled": 1,
+      "total_amount": 1500.00,
+      "items": [
+        {
+          "id": 1,
+          "service_name": "网站建设项目",
+          "price": 1000.00,
+          "quantity": 1,
+          "total": 1000.00
+        },
+        {
+          "id": 2,
+          "service_name": "SEO优化服务",
+          "price": 500.00,
+          "quantity": 1,
+          "total": 500.00
+        }
+      ]
+    },
+    {
+      "id": 1002,
+      "order_type": "sale",
+      "customer_name": "测试客户B",
+      "status": "处理中",
+      "is_settled": 0,
+      "total_amount": 2800.00,
+      "items": [
+        {
+          "id": 3,
+          "service_name": "小程序开发",
+          "price": 2000.00,
+          "quantity": 1,
+          "total": 2000.00
+        },
+        {
+          "id": 4,
+          "service_name": "UI设计服务",
+          "price": 800.00,
+          "quantity": 1,
+          "total": 800.00
+        }
+      ]
+    },
+    {
+      "id": 1003,
+      "order_type": "sale",
+      "customer_name": "测试客户C",
+      "status": "已取消",
+      "is_settled": 0,
+      "total_amount": 0.00,
+      "items": []
+    }
+  ],
+  "test_customers": [
+    {
+      "id": 2001,
+      "shop_name": "优质客户A",
+      "merchant_id": "M2001",
+      "industry": "电商",
+      "level": "vip"
+    },
+    {
+      "id": 2002,
+      "shop_name": "普通客户B",
+      "merchant_id": "M2002",
+      "industry": "教育",
+      "level": "regular"
+    }
+  ],
+  "test_inventory": [
+    {
+      "id": 3001,
+      "name": "服务器设备",
+      "stock": 15,
+      "min_stock": 5,
+      "weight": 25.5
+    },
+    {
+      "id": 3002,
+      "name": "网络交换机",
+      "stock": 8,
+      "min_stock": 10,
+      "weight": 3.2
+    }
+  ],
+  "test_shipping_scenarios": [
+    {
+      "destination": "北京市朝阳区",
+      "weight": 2.5,
+      "method": "standard",
+      "level": "regular"
+    },
+    {
+      "destination": "新疆乌鲁木齐市",
+      "weight": 15.0,
+      "method": "express",
+      "level": "vip"
+    },
+    {
+      "destination": "海南省海口市",
+      "weight": 8.0,
+      "method": "economy",
+      "level": "premium"
+    }
+  ]
+}

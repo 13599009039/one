@@ -136,7 +136,7 @@ function renderCompanyTable(companies) {
     if (companies.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="11" class="px-6 py-8 text-center text-gray-500">
+                <td colspan="12" class="px-6 py-8 text-center text-gray-500">
                     <i class="fas fa-inbox text-4xl mb-2"></i>
                     <p>暂无公司数据</p>
                 </td>
@@ -187,6 +187,17 @@ function renderCompanyTable(companies) {
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                 ${escapeHtml(company.service_staff || '-')}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" 
+                           class="sr-only peer" 
+                           ${company.mobile_access ? 'checked' : ''} 
+                           onchange="toggleMobileAccess(${company.id}, this.checked)" 
+                           data-company-id="${company.id}">
+                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                    <span class="ml-2 text-xs text-gray-600">${company.mobile_access ? '开启' : '关闭'}</span>
+                </label>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm">
                 ${renewalBadge}
@@ -2325,6 +2336,48 @@ function testCainiaoPrinter() {
         };
     } catch (error) {
         showMessage('打印机连接失败：' + error.message, 'error');
+    }
+}
+
+// ============================================================
+// 移动端权限管理功能（M7.2 - 前端界面，后端功能待实现）
+// ============================================================
+
+/**
+ * 切换公司移动端访问权限
+ * @param {number} companyId - 公司ID
+ * @param {boolean} enabled - 是否开启
+ */
+async function toggleMobileAccess(companyId, enabled) {
+    try {
+        console.log(`[移动端权限] 公司ID: ${companyId}, 状态: ${enabled ? '开启' : '关闭'}`);
+        
+        // 调用后端API更新companies表的mobile_access字段
+        const result = await apiRequest(`/api/admin/companies/${companyId}/mobile_access`, {
+            method: 'PUT',
+            body: JSON.stringify({ mobile_access: enabled })
+        });
+        
+        // 更新UI显示
+        const checkbox = document.querySelector(`input[data-company-id="${companyId}"]`);
+        const label = checkbox?.nextElementSibling?.nextElementSibling;
+        
+        if (label) {
+            label.textContent = enabled ? '开启' : '关闭';
+        }
+        
+        // 显示成功提示
+        showMessage(result.message || `移动端权限已${enabled ? '开启' : '关闭'}`, 'success');
+        
+    } catch (error) {
+        console.error('[移动端权限错误]', error);
+        showMessage('操作失败：' + error.message, 'error');
+        
+        // 恢复复选框状态
+        const checkbox = document.querySelector(`input[data-company-id="${companyId}"]`);
+        if (checkbox) {
+            checkbox.checked = !enabled;
+        }
     }
 }
 

@@ -38,11 +38,10 @@ def require_platform_admin(f):
     from functools import wraps
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        # TODO: 实现平台管理员权限验证
-        # 目前暂时允许所有请求（开发阶段）
+        # 检查管理员登录状态
         admin_id = session.get('admin_id')
         if not admin_id:
-            # 临时方案：检查是否是superadmin角色的用户
+            # 检查是否是具有管理员权限的普通用户
             user_id = session.get('user_id')
             if not user_id:
                 return jsonify({'success': False, 'message': '未登录'}), 401
@@ -448,6 +447,57 @@ def generate_onboarding_link(company_id):
             
     except Exception as e:
         return jsonify({'success': False, 'message': f'生成开通链接失败：{str(e)}'}), 500
+
+
+@console_bp.route('/companies/<int:company_id>/mobile_access', methods=['PUT'])
+@require_platform_admin
+def update_mobile_access(company_id):
+    """更新公司的移动端访问权限"""
+    try:
+        data = request.json
+        mobile_access = data.get('mobile_access')
+        
+        # 验证参数
+        if mobile_access is None:
+            return jsonify({'success': False, 'message': '缺少mobile_access参数'}), 400
+        
+        # 转换为布尔值
+        if isinstance(mobile_access, str):
+            mobile_access = mobile_access.lower() in ('true', '1', 'yes')
+        else:
+            mobile_access = bool(mobile_access)
+        
+        conn = get_db_connection()
+        try:
+            with conn.cursor() as cursor:
+                # 检查公司是否存在
+                cursor.execute("SELECT id, name FROM companies WHERE id = %s", (company_id,))
+                company = cursor.fetchone()
+                if not company:
+                    return jsonify({'success': False, 'message': '公司不存在'}), 404
+                
+                # 更新移动端权限
+                cursor.execute(
+                    "UPDATE companies SET mobile_access = %s WHERE id = %s",
+                    (1 if mobile_access else 0, company_id)
+                )
+                conn.commit()
+                
+                return jsonify({
+                    'success': True,
+                    'message': f'移动端权限已{"开启" if mobile_access else "关闭"}',
+                    'data': {
+                        'company_id': company_id,
+                        'company_name': company['name'],
+                        'mobile_access': mobile_access
+                    }
+                }), 200
+                
+        finally:
+            conn.close()
+            
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'更新移动端权限失败：{str(e)}'}), 500
 
 
 # ==================== 用户管理API ====================

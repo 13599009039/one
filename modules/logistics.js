@@ -1238,8 +1238,68 @@ async function refreshLogisticsTrack() {
     // 当前仅模拟刷新
     setTimeout(() => {
         showNotification('物流信息已更新', 'success');
+        
+        // 发布物流状态更新事件
+        publishShippingStatusUpdate(orderId, trackingNo);
     }, 1000);
 }
+
+// ===================== 事件通知系统 =====================
+
+/**
+ * 发布物流状态更新事件
+ * @param {number} orderId - 订单ID
+ * @param {string} trackingNo - 运单号
+ */
+function publishShippingStatusUpdate(orderId, trackingNo) {
+    // 创建自定义事件
+    const event = new CustomEvent('shippingStatusUpdated', {
+        detail: {
+            orderId: orderId,
+            trackingNo: trackingNo,
+            status: 'updated',
+            timestamp: new Date().toISOString()
+        }
+    });
+    
+    // 在全局范围内派发事件
+    window.dispatchEvent(event);
+    
+    console.log(`物流状态更新事件已发布: 订单ID=${orderId}, 运单号=${trackingNo}`);
+    
+    // 同时通过API通知服务器（可选）
+    try {
+        window.api.post('/api/events/shipping-status-updated', {
+            order_id: orderId,
+            tracking_no: trackingNo,
+            timestamp: new Date().toISOString()
+        }).catch(err => {
+            console.warn('发送物流状态更新事件到服务器失败:', err);
+        });
+    } catch (error) {
+        console.warn('物流状态更新事件通知异常:', error);
+    }
+}
+
+/**
+ * 订阅物流状态更新事件
+ * @param {Function} callback - 回调函数
+ */
+function subscribeToShippingUpdates(callback) {
+    window.addEventListener('shippingStatusUpdated', callback);
+}
+
+/**
+ * 取消订阅物流状态更新事件
+ * @param {Function} callback - 回调函数
+ */
+function unsubscribeFromShippingUpdates(callback) {
+    window.removeEventListener('shippingStatusUpdated', callback);
+}
+
+// 挂载全局函数
+window.subscribeToShippingUpdates = subscribeToShippingUpdates;
+window.unsubscribeFromShippingUpdates = unsubscribeFromShippingUpdates;
 
 // ===================== 打印模板模态框 =====================
 

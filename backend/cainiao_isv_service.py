@@ -11,8 +11,12 @@ import json
 import time
 import requests
 import base64
+import logging
 from datetime import datetime
 from typing import Dict, Any, Optional
+
+# 配置日志
+logger = logging.getLogger(__name__)
 
 
 class CainiaoISVService:
@@ -20,6 +24,8 @@ class CainiaoISVService:
     
     # 菜鸟正式环境域名
     BASE_URL = "https://link.cainiao.com"
+    # 菜鸟Token换取API
+    TOKEN_EXCHANGE_URL = "https://lcp.cloud.cainiao.com/api/permission/exchangeToken.do"
     
     def __init__(self, app_key: str, app_secret: str, env: str = 'prod'):
         """
@@ -35,6 +41,117 @@ class CainiaoISVService:
         # 测试环境切换
         if env == 'test':
             self.BASE_URL = "https://linktest.cainiao.com"
+    
+    def exchange_token(self, access_code: str) -> Dict[str, Any]:
+        """
+        使用 accessCode 换取 accessToken
+        参考文档第606-654行
+        :param access_code: 商家在菜鸟平台授权后生成的一次性授权码
+        :return: {
+            'success': bool,
+            'access_token': str,
+            'message': str
+        }
+        """
+        try:
+            # 按照文档生成签名：md5(accessCode + "," + appKey + "," + appSecret)
+            # 注意：MD5签名必须转为大写（与菜鸟API一致）
+            sign_str = f"{access_code},{self.app_key},{self.app_secret}"
+            sign = hashlib.md5(sign_str.encode('utf-8')).hexdigest().upper()
+            
+            # 【详细日志】1 - 签名计算过程
+            logger.info(f"[\u83dc\u9e1fISV-DEBUG] ========== Token\u6362\u53d6\u5f00\u59cb ==========")
+            logger.info(f"[\u83dc\u9e1fISV-DEBUG] accessCode: {access_code}")
+            logger.info(f"[\u83dc\u9e1fISV-DEBUG] appKey: {self.app_key}")
+            logger.info(f"[\u83dc\u9e1fISV-DEBUG] appSecret: {self.app_secret}")
+            logger.info(f"[\u83dc\u9e1fISV-DEBUG] \u7b7e\u540d\u539f\u6587: {sign_str}")
+            logger.info(f"[\u83dc\u9e1fISV-DEBUG] MD5\u7b7e\u540d(\u5927\u5199): {sign}")
+            
+            # 构建请求参数
+            params = {
+                'accessCode': access_code,
+                'isvAppKey': self.app_key,
+                'sign': sign
+            }
+            
+            # 【详细日志】2 - 请求参数
+            logger.info(f"[菜鸟ISV-DEBUG] API URL: {self.TOKEN_EXCHANGE_URL}")
+            logger.info(f"[菜鸟ISV-DEBUG] 请求参数: {params}")
+                        
+            # 【注意】不需要设置Host头！备案域名验证是在redirectUrl中，不是在Token换取请求中
+            headers = {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            }
+            logger.info(f"[菜鸟ISV-DEBUG] 请求头: {headers}")
+                        
+            # 发起请求
+            response = requests.post(self.TOKEN_EXCHANGE_URL, data=params, headers=headers, timeout=30)
+            
+            # 【详细日志】3 - HTTP响应头
+            logger.info(f"[\u83dc\u9e1fISV-DEBUG] HTTP\u72b6\u6001\u7801: {response.status_code}")
+            logger.info(f"[\u83dc\u9e1fISV-DEBUG] \u54cd\u5e94\u5934: {dict(response.headers)}")
+            logger.info(f"[\u83dc\u9e1fISV-DEBUG] Content-Type: {response.headers.get('Content-Type', 'N/A')}")
+            
+            # 【详细日志】4 - 完整响应内容
+            full_response_text = response.text
+            logger.info(f"[\u83dc\u9e1fISV-DEBUG] \u54cd\u5e94内\u5bb9长\u5ea6: {len(full_response_text)} bytes")
+            logger.info(f"[\u83dc\u9e1fISV-DEBUG] \u54cd\u5e94内\u5bb9完整文本:\n{full_response_text}")
+            
+            # 先解析JSON（即使HTTP状态码不是200，菜鸟API也可能返回JSON错误信息）
+            try:
+                result = response.json()
+                logger.info(f"[菜鸟ISV] 解析JSON成功: {result}")
+            except Exception as json_err:
+                logger.error(f"[菜鸟ISV] JSON解析失败: {json_err}")
+                return {
+                    'success': False,
+                    'access_token': '',
+                    'message': f'HTTP{response.status_code}错误，响应非JSON格式',
+                    'raw_response': response.text[:500]
+                }
+            
+            # 检查HTTP状态码（如果不是200，返回详细错误）
+            if response.status_code != 200:
+                error_msg = result.get('errorMessage', result.get('message', f'HTTP错误: {response.status_code}'))
+                error_code = result.get('errorCode', result.get('code', ''))
+                logger.error(f"[菜鸟ISV] API返回错误 - Code: {error_code}, Message: {error_msg}")
+                return {
+                    'success': False,
+                    'access_token': '',
+                    'message': error_msg,
+                    'error_code': error_code,
+                    'raw_response': result
+                }
+            
+            # 解析响应
+            if result.get('success') and result.get('accessTokens'):
+                access_token_list = result.get('accessTokens', [])
+                if access_token_list and len(access_token_list) > 0:
+                    access_token = access_token_list[0].get('accessToken', '')
+                    logger.info(f"[菜鸟ISV] Token换取成功")
+                    return {
+                        'success': True,
+                        'access_token': access_token,
+                        'message': 'Token换取成功',
+                        'raw': result
+                    }
+            
+            logger.warning(f"[菜鸟ISV] Token换取失败: {result}")
+            return {
+                'success': False,
+                'access_token': '',
+                'message': result.get('errorMessage', 'Token换取失败'),
+                'error_code': result.get('errorCode', ''),
+                'raw': result
+            }
+            
+        except Exception as e:
+            logger.error(f"[菜鸟ISV] Token换取异常: {str(e)}")
+            return {
+                'success': False,
+                'access_token': '',
+                'message': f'请求异常: {str(e)}'
+            }
     
     def _generate_sign(self, params: Dict[str, Any]) -> str:
         """

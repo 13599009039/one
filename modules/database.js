@@ -9,18 +9,34 @@ let currentCompany = null;
 // ⚠️ 保留此文件仅为兼容性目的，将在未来版本删除
 // ============================================
 
-// 从localStorage加载数据，如果没有则使用默认数据
-function loadDataFromStorage() {
-    const savedData = localStorage.getItem('ajkuaiji_data');
-    if (savedData) {
-        try {
-            return JSON.parse(savedData);
-        } catch (e) {
-            console.error('解析localStorage数据失败:', e);
-            return getDefaultData();
+// 从数据库加载数据，如果没有则使用默认数据
+async function loadDataFromStorage() {
+    try {
+        // 优先使用数据库管理器
+        if (window.databaseManager && window.databaseManager.isInitialized) {
+            const userData = await window.databaseManager.getUserData();
+            if (userData) {
+                console.log('[Database] 从数据库加载用户数据');
+                return userData;
+            }
         }
+        
+        // 回退到localStorage（兼容模式）
+        const savedData = localStorage.getItem('ajkuaiji_data');
+        if (savedData) {
+            try {
+                console.log('[Database] 从localStorage加载数据');
+                return JSON.parse(savedData);
+            } catch (e) {
+                console.error('解析localStorage数据失败:', e);
+                return getDefaultData();
+            }
+        }
+        return getDefaultData();
+    } catch (error) {
+        console.error('[Database] 加载数据失败:', error);
+        return getDefaultData();
     }
-    return getDefaultData();
 }
 
 // 获取默认数据
@@ -56,9 +72,23 @@ function getDefaultData() {
 }
 
 
-// 保存数据到localStorage
-function saveDataToStorage() {
+// 保存数据到数据库和localStorage
+async function saveDataToStorage() {
+    try {
+        // 优先保存到数据库
+        if (window.databaseManager && window.databaseManager.isInitialized) {
+            const result = await window.databaseManager.saveUserData(mockData);
+            if (result) {
+                console.log('[Database] 数据已保存到数据库');
+            }
+        }
+    } catch (error) {
+        console.warn('[Database] 保存到数据库失败:', error);
+    }
+    
+    // 同时保存到localStorage作为备份
     localStorage.setItem('ajkuaiji_data', JSON.stringify(mockData));
+    console.log('[Database] 数据已保存到localStorage作为备份');
 }
 
 // 模拟数据库数据（从localStorage加载或使用默认数据）

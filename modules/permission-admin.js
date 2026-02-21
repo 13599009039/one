@@ -445,7 +445,7 @@
             grouped[moduleName].push(perm);
         });
 
-        // 模块显示名称映射
+        // 模块名称映射
         const moduleNames = {
             'menu': '菜单访问',
             'dashboard': '仪表盘',
@@ -455,6 +455,10 @@
             'service': '服务管理',
             'inventory': '库存管理',
             'report': '报表统计',
+            'report_sales': '销售报表',
+            'report_financial': '财务报表',
+            'report_performance': '业绩报表',
+            'report_custom': '自定义报表',
             'personnel': '人员管理',
             'role': '角色管理',
             'permission': '权限管理',
@@ -473,6 +477,10 @@
             'service': 'fas fa-concierge-bell',
             'inventory': 'fas fa-boxes',
             'report': 'fas fa-chart-bar',
+            'report_sales': 'fas fa-chart-line',
+            'report_financial': 'fas fa-money-bill-wave',
+            'report_performance': 'fas fa-trophy',
+            'report_custom': 'fas fa-sliders-h',
             'personnel': 'fas fa-user-cog',
             'role': 'fas fa-user-tag',
             'permission': 'fas fa-shield-alt',
@@ -501,7 +509,12 @@
         
         // 按模块排序并渲染
         const sortedModules = Object.keys(grouped).sort((a, b) => {
-            const order = ['menu', 'dashboard', 'transaction', 'order', 'customer', 'service', 'inventory', 'report', 'personnel', 'role', 'permission', 'system', 'data', 'other'];
+            const order = [
+                'menu', 'dashboard', 'transaction', 'order', 'customer', 
+                'service', 'inventory', 'report', 'report_sales', 'report_financial', 
+                'report_performance', 'report_custom', 'personnel', 'role', 
+                'permission', 'system', 'data', 'other'
+            ];
             return order.indexOf(a) - order.indexOf(b);
         });
         

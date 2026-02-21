@@ -620,7 +620,150 @@ async function viewPurchaseDetail(id) {
     showInventoryAlert('采购单详情', content);
 }
 
-// === 库存管理 ===
+// ===================== 智能库存预警系统 =====================
+
+/**
+ * 获取产品的历史销售数据
+ * @param {Array} products - 产品列表
+ * @returns {Object} 销售历史数据
+ */
+async function getSalesHistoryForProducts(products) {
+    try {
+        // 获取最近30天的销售数据
+        const response = await window.api.get('/api/analytics/sales-history?days=30');
+        if (!response.success) return {};
+        
+        const salesData = response.data || [];
+        const historyMap = {};
+        
+        // 按产品分组销售数据
+        salesData.forEach(record => {
+            const productId = record.product_id || record.service_id;
+            if (productId) {
+                if (!historyMap[productId]) {
+                    historyMap[productId] = [];
+                }
+                historyMap[productId].push({
+                    date: record.sale_date,
+                    quantity: record.quantity || 0,
+                    amount: record.amount || 0
+                });
+            }
+        });
+        
+        return historyMap;
+    } catch (error) {
+        console.warn('获取销售历史数据失败:', error);
+        return {};
+    }
+}
+
+/**
+ * 智能计算库存预警阈值
+ * @param {Object} product - 产品信息
+ * @param {Object} salesHistory - 销售历史数据
+ * @returns {number} 预警阈值
+ */
+function calculateSmartThreshold(product, salesHistory) {
+    const productId = product.id;
+    const history = salesHistory[productId] || [];
+    
+    if (history.length === 0) {
+        // 没有历史数据，使用默认值
+        return 5;
+    }
+    
+    // 计算平均每日销量
+    const totalQuantity = history.reduce((sum, record) => sum + record.quantity, 0);
+    const avgDailySales = totalQuantity / 30; // 30天平均
+    
+    // 计算销量波动系数
+    const quantities = history.map(r => r.quantity);
+    const variance = calculateVariance(quantities, avgDailySales);
+    const volatility = Math.sqrt(variance) / avgDailySales;
+    
+    // 基础安全库存 = 平均日销量 × 安全天数
+    const baseSafetyStock = avgDailySales * 3; // 3天安全库存
+    
+    // 波动调整系数
+    const volatilityFactor = 1 + (volatility * 0.5); // 最多增加50%
+    
+    // 季节性调整（简单实现）
+    const seasonalFactor = getCurrentSeasonalFactor(product);
+    
+    // 计算最终预警阈值
+    const smartThreshold = Math.ceil(baseSafetyStock * volatilityFactor * seasonalFactor);
+    
+    // 设置最小值和最大值限制
+    return Math.max(2, Math.min(smartThreshold, 50));
+}
+
+/**
+ * 计算方差
+ */
+function calculateVariance(values, mean) {
+    if (values.length === 0) return 0;
+    const squaredDiffs = values.map(value => Math.pow(value - mean, 2));
+    return squaredDiffs.reduce((sum, val) => sum + val, 0) / values.length;
+}
+
+/**
+ * 获取当前季节性因子
+ */
+function getCurrentSeasonalFactor(product) {
+    const now = new Date();
+    const month = now.getMonth() + 1; // 1-12
+    
+    // 简单的季节性判断
+    if ([11, 12, 1].includes(month)) {
+        // 冬季，假设某些产品销量增加
+        return product.category === 'winter_product' ? 1.3 : 1.0;
+    } else if ([6, 7, 8].includes(month)) {
+        // 夏季
+        return product.category === 'summer_product' ? 1.3 : 1.0;
+    }
+    return 1.0;
+}
+
+/**
+ * 获取预警级别
+ */
+function getWarningLevel(currentStock, threshold) {
+    const ratio = currentStock / threshold;
+    
+    if (ratio <= 0.2) return 'critical';      // 严重不足
+    if (ratio <= 0.5) return 'warning';       // 警告
+    if (ratio <= 0.8) return 'attention';     // 注意
+    return 'normal';                          // 正常
+}
+
+/**
+ * 获取状态标签
+ */
+function getStatusLabel(level) {
+    const labels = {
+        'critical': '<span class="px-2 py-0.5 bg-red-100 text-red-800 rounded text-xs font-bold">严重不足</span>',
+        'warning': '<span class="px-2 py-0.5 bg-orange-100 text-orange-800 rounded text-xs">库存警告</span>',
+        'attention': '<span class="px-2 py-0.5 bg-yellow-100 text-yellow-800 rounded text-xs">注意补货</span>',
+        'normal': '<span class="px-2 py-0.5 bg-green-100 text-green-800 rounded text-xs">库存充足</span>'
+    };
+    return labels[level] || labels.normal;
+}
+
+/**
+ * 获取行样式类
+ */
+function getRowClass(level) {
+    const classes = {
+        'critical': 'bg-red-50 border-l-4 border-red-500',
+        'warning': 'bg-orange-50 border-l-4 border-orange-500',
+        'attention': 'bg-yellow-50 border-l-4 border-yellow-500',
+        'normal': ''
+    };
+    return classes[level] || '';
+}
+
+// ===================== 原有库存管理功能 =====================
 async function initInventoryPage() {
     await renderInventoryList();
     await renderInventoryLogs();
@@ -638,16 +781,24 @@ async function renderInventoryList() {
         const tbody = document.getElementById('inventoryTableBody');
         if (!tbody) return;
         
+        // 获取历史销售数据用于智能预警计算
+        const salesHistory = await getSalesHistoryForProducts(products);
+        
         tbody.innerHTML = products.map(product => {
             const stock = product.stock || 0;
-            const minStock = product.min_stock || 5;
+            
+            // 智能计算预警阈值
+            const smartThreshold = calculateSmartThreshold(product, salesHistory);
+            const minStock = product.min_stock || smartThreshold;
             const isLow = stock <= minStock;
-            const statusLabel = isLow ?
-                '<span class="px-2 py-0.5 bg-red-100 text-red-800 rounded text-xs">库存不足</span>' :
-                '<span class="px-2 py-0.5 bg-green-100 text-green-800 rounded text-xs">正常</span>';
+            
+            // 预警级别判断
+            const warningLevel = getWarningLevel(stock, minStock);
+            const statusLabel = getStatusLabel(warningLevel);
+            const rowClass = getRowClass(warningLevel);
             
             return `
-                <tr class="hover:bg-gray-50 ${isLow ? 'bg-red-50' : ''}">
+                <tr class="hover:bg-gray-50 ${rowClass}">
                     <td class="px-4 py-3 text-sm text-gray-600">${product.code || '-'}</td>
                     <td class="px-4 py-3 font-medium text-gray-900">${product.name || '未知'}</td>
                     <td class="px-4 py-3 text-center">
@@ -1154,6 +1305,9 @@ async function saveInventoryOut(event) {
         
         if (!result.success) throw new Error(result.message || 'API返回失败');
         
+        // 触发财务成本核算
+        await triggerFinancialCostCalculation(materialId, quantity, '出库');
+        
         closeInventoryOutModal();
         await renderInventoryList();
         await renderInventoryLogs();
@@ -1163,6 +1317,46 @@ async function saveInventoryOut(event) {
         }
     } catch (error) {
         window.Utils.handleApiError(error, '任务出库');
+    }
+}
+
+/**
+ * 触发财务成本核算
+ * @param {number} materialId - 商品ID
+ * @param {number} quantity - 数量
+ * @param {string} operation - 操作类型（入库/出库）
+ */
+async function triggerFinancialCostCalculation(materialId, quantity, operation) {
+    try {
+        // 获取商品成本信息
+        const productResponse = await window.api.get(`/api/products/${materialId}`);
+        if (!productResponse.success) {
+            console.warn('获取商品信息失败:', productResponse.message);
+            return;
+        }
+        
+        const product = productResponse.data;
+        const unitCost = parseFloat(product.cost_price || 0);
+        const totalCost = unitCost * quantity;
+        
+        // 通知财务模块进行成本核算
+        const financialResult = await window.api.post('/api/financial/cost-calculation', {
+            material_id: materialId,
+            quantity: quantity,
+            unit_cost: unitCost,
+            total_cost: totalCost,
+            operation: operation,
+            operation_time: new Date().toISOString()
+        });
+        
+        if (financialResult.success) {
+            console.log(`${operation}成本核算已触发: ¥${totalCost.toFixed(2)}`);
+        } else {
+            console.warn('财务成本核算触发失败:', financialResult.message);
+        }
+    } catch (error) {
+        console.error('触发财务成本核算异常:', error);
+        // 不中断主流程，仅记录日志
     }
 }
 

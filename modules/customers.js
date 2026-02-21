@@ -8,6 +8,12 @@ let cachedCustomerDetail = null;  // 缓存的客户详情
 
 window.initCustomersPage = function() {
     console.log('初始化客户管理页面（三栏式布局版）');
+    
+    // 更新页面标题
+    if (typeof updatePageTitle === 'function') {
+        updatePageTitle('客户管理');
+    }
+    
     loadCustomersData();
     
     const addCustomerBtn = SafeUtils.safeGetElement('addCustomerBtn', 'initCustomersPage');
@@ -535,6 +541,9 @@ window.saveCustomer = async function() {
             closeCustomerModalFunc();
             console.log('关闭模态框，准备刷新列表...');
             loadCustomersData();
+            
+            // 发布客户信息更新事件
+            publishCustomerUpdateEvent(id ? parseInt(id) : result.data?.id || result.id, customerData);
             
             // 如果是编辑模式且有选中的客户，刷新详情页
             if (id && selectedCustomerId && parseInt(id) === selectedCustomerId) {
@@ -1742,3 +1751,57 @@ function showParseTip(tipEl, text, type) {
             break;
     }
 }
+
+/**
+ * 发布客户信息更新事件
+ * @param {number} customerId - 客户ID
+ * @param {Object} customerData - 客户数据
+ */
+function publishCustomerUpdateEvent(customerId, customerData) {
+    // 创建自定义事件
+    const event = new CustomEvent('customerUpdated', {
+        detail: {
+            customerId: customerId,
+            customerData: customerData,
+            timestamp: new Date().toISOString()
+        }
+    });
+    
+    // 在全局范围内派发事件
+    window.dispatchEvent(event);
+    
+    console.log(`客户信息更新事件已发布: 客户ID=${customerId}`);
+    
+    // 同时通过API通知服务器（可选）
+    try {
+        window.api.post('/api/events/customer-updated', {
+            customer_id: customerId,
+            updated_fields: Object.keys(customerData),
+            timestamp: new Date().toISOString()
+        }).catch(err => {
+            console.warn('发送客户更新事件到服务器失败:', err);
+        });
+    } catch (error) {
+        console.warn('客户更新事件通知异常:', error);
+    }
+}
+
+/**
+ * 订阅客户信息更新事件
+ * @param {Function} callback - 回调函数
+ */
+function subscribeToCustomerUpdates(callback) {
+    window.addEventListener('customerUpdated', callback);
+}
+
+/**
+ * 取消订阅客户信息更新事件
+ * @param {Function} callback - 回调函数
+ */
+function unsubscribeFromCustomerUpdates(callback) {
+    window.removeEventListener('customerUpdated', callback);
+}
+
+// 挂载全局函数
+window.subscribeToCustomerUpdates = subscribeToCustomerUpdates;
+window.unsubscribeFromCustomerUpdates = unsubscribeFromCustomerUpdates;

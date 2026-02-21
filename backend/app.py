@@ -1103,7 +1103,8 @@ def get_all_permissions():
 
 
 @app.route('/api/role-permissions/<int:role_id>', methods=['GET'])
-def get_role_permissions(role_id):
+@require_company
+def get_role_permissions(role_id, current_company_id=None, current_user_id=None):
     """获取角色已分配的权限列表"""
     try:
         conn = get_db_connection()
@@ -1124,7 +1125,8 @@ def get_role_permissions(role_id):
 
 
 @app.route('/api/role-permissions/assign', methods=['POST'])
-def assign_role_permissions():
+@require_company
+def assign_role_permissions(current_company_id=None, current_user_id=None):
     """为角色分配权限
 
     请求体示例:
@@ -1173,7 +1175,8 @@ def assign_role_permissions():
 
 
 @app.route('/api/user-roles/assign', methods=['POST'])
-def assign_user_roles():
+@require_company
+def assign_user_roles(current_company_id=None, current_user_id=None):
     """为用户分配角色
 
     请求体示例：
@@ -2503,7 +2506,7 @@ def add_order():
                 data.get('extra_cost_amount', 0),
                 data.get('final_amount', 0),
                 data.get('final_cost', 0),
-                data.get('status', '待签约'),
+                data.get('status', '已签约'),
                 remarks_str
             ))
             order_id = cursor.lastrowid
@@ -2559,13 +2562,34 @@ def create_aftersale_order():
             cursor.execute("""
                 SELECT id, customer_id, customer_name, business_staff, business_staff_id,
                        service_staff, service_staff_id, operation_staff, operation_staff_id,
-                       team, team_id, project, project_id, company
+                       team, team_id, project, project_id, company, status, is_settled
                 FROM orders WHERE id=%s AND company_id=%s AND is_deleted=0
             """, (parent_order_id, company_id))
             parent_order = cursor.fetchone()
             
             if not parent_order:
                 return jsonify({'success': False, 'message': '原订单不存在'}), 404
+            
+            # 验证原订单状态是否允许创建售后
+            refundable_statuses = ['已完成', '已结算', '处理中']
+            if parent_order['status'] not in refundable_statuses:
+                return jsonify({
+                    'success': False, 
+                    'message': f'订单状态为{parent_order["status"]}，暂不支持创建售后'
+                }), 400
+            
+            # 检查是否已有售后订单（限制数量）
+            cursor.execute("""
+                SELECT COUNT(*) as count FROM orders 
+                WHERE parent_order_id=%s AND order_type='aftersale' AND is_deleted=0
+            """, (parent_order_id,))
+            aftersale_count = cursor.fetchone()['count']
+            
+            if aftersale_count >= 3:  # 限制最多3个售后订单
+                return jsonify({
+                    'success': False, 
+                    'message': '该订单已达到最大售后订单数量限制（3个）'
+                }), 400
             
             # 处理remarks：如果是list则转为json字符串
             remarks_data = data.get('remarks', [])
@@ -2983,7 +3007,7 @@ def update_order(order_id):
                 data.get('extra_cost_amount', 0),
                 data.get('final_amount', 0),
                 data.get('final_cost', 0),
-                data.get('status', '待签约'),
+                data.get('status', '已签约'),
                 data.get('business_staff'),
                 data.get('business_staff_id'),
                 data.get('service_staff'),
@@ -3042,6 +3066,92 @@ def update_order(order_id):
         return jsonify({'success': True})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
+
+@app.route('/api/orders/<int:order_id>/contracts', methods=['POST'])
+def upload_order_contract(order_id):
+    """
+    上传订单合同（无权限限制，所有用户均可上传）
+    支持格式：PDF, JPG, PNG, GIF
+    """
+    try:
+        from datetime import datetime
+        import os
+        import uuid
+        
+        # 1. 检查文件是否存在
+        if 'contract' not in request.files:
+            return jsonify({'success': False, 'message': '未选择文件', 'code': 'NO_FILE'}), 400
+        
+        file = request.files['contract']
+        if file.filename == '':
+            return jsonify({'success': False, 'message': '未选择文件', 'code': 'EMPTY_FILENAME'}), 400
+        
+        # 2. 验证文件类型
+        allowed_extensions = {'pdf', 'jpg', 'jpeg', 'png', 'gif'}
+        ext = file.filename.rsplit('.', 1)[1].lower() if '.' in file.filename else ''
+        if ext not in allowed_extensions:
+            return jsonify({'success': False, 'message': '不支持的文件格式，仅支持 PDF 和图片', 'code': 'INVALID_FILE_TYPE'}), 400
+        
+        # 3. 生成文件名（使用时间戳 + UUID 避免冲突）
+        filename = f"order_{order_id}_contract_{datetime.now().strftime('%Y%m%d%H%M%S')}_{uuid.uuid4().hex[:8]}.{ext}"
+        
+        # 4. 保存文件到 uploads/contracts 目录
+        upload_dir = os.path.join(os.path.dirname(__file__), '..', 'uploads', 'contracts')
+        os.makedirs(upload_dir, exist_ok=True)
+        filepath = os.path.join(upload_dir, filename)
+        file.save(filepath)
+        
+        # 5. 记录到数据库
+        current_user_id = session.get('user_id', 1)
+        relative_path = f"contracts/{filename}"  # 存储相对路径
+        
+        conn = get_db_connection()
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                INSERT INTO order_contracts (order_id, file_path, original_name, file_type, uploaded_by, uploaded_at)
+                VALUES (%s, %s, %s, %s, %s, NOW())
+            """, (order_id, relative_path, file.filename, ext, current_user_id))
+            contract_id = cursor.lastrowid
+            conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'message': '合同上传成功',
+            'data': {
+                'id': contract_id,
+                'file_path': relative_path,
+                'original_name': file.filename,
+                'file_type': ext
+            }
+        })
+    except Exception as e:
+        app.logger.error(f"合同上传失败：{str(e)}")
+        return jsonify({'success': False, 'message': f'上传失败：{str(e)}', 'code': 'UPLOAD_ERROR'}), 500
+
+@app.route('/api/orders/<int:order_id>/contracts', methods=['GET'])
+def get_order_contracts(order_id):
+    """
+    获取订单的合同列表
+    """
+    try:
+        conn = get_db_connection()
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                SELECT id, order_id, file_path, original_name, file_type, uploaded_by, uploaded_at
+                FROM order_contracts
+                WHERE order_id = %s
+                ORDER BY uploaded_at DESC
+            """, (order_id,))
+            contracts = cursor.fetchall()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'data': contracts
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 @app.route('/api/orders/<int:order_id>', methods=['DELETE'])
 def delete_order(order_id):
@@ -3290,6 +3400,42 @@ def log_order_operation(order_id, operation_type, changes=None, remark=None):
     except Exception as e:
         app.logger.error(f'记录操作日志失败: {e}')
         return False
+
+
+def log_system_audit(resource_type, operation, resource_id, details):
+    """
+    记录系统审计日志
+    :param resource_type: 资源类型 (order/customer/user/permission等)
+    :param operation: 操作类型
+    :param resource_id: 资源ID
+    :param details: 详细信息
+    """
+    try:
+        operator_id = session.get('user_id')
+        operator_name = session.get('user_name', '')
+        company_id = session.get('company_id', 1)
+        user_ip = request.environ.get('REMOTE_ADDR', 'unknown')
+        
+        conn = get_db_connection()
+        with conn.cursor() as cursor:
+            details_json = json.dumps(details, ensure_ascii=False) if details else None
+            
+            cursor.execute("""
+                INSERT INTO system_audit_logs 
+                (resource_type, resource_id, operation, operator_id, operator_name, 
+                 company_id, user_ip, details, created_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW())
+            """, (resource_type, resource_id, operation, operator_id, operator_name, 
+                  company_id, user_ip, details_json))
+            
+            conn.commit()
+        conn.close()
+        
+        # 记录到应用日志
+        app.logger.info(f'[AUDIT] {resource_type}:{resource_id} {operation} by {operator_name}({operator_id}) from {user_ip}')
+        
+    except Exception as e:
+        app.logger.error(f'记录系统审计日志失败: {str(e)}')
 
 @app.route('/api/orders/<int:order_id>/operation-logs', methods=['GET'])
 def get_order_operation_logs(order_id):
@@ -4884,7 +5030,7 @@ def create_refund():
         data = request.json
         order_id = data.get('order_id')
         refund_amount = data.get('refund_amount')
-        refund_type = data.get('refund_type', '全额退款')
+        refund_type_input = data.get('refund_type', '全额退款')
         refund_reason = data.get('refund_reason', '')
         account_id = data.get('account_id')
         transaction_date = data.get('transaction_date')
@@ -4902,6 +5048,29 @@ def create_refund():
             if not order:
                 return jsonify({'success': False, 'message': '订单不存在'})
             
+            # 验证退款金额不超过可退金额
+            cursor.execute("""
+                SELECT 
+                    SUM(CASE WHEN is_refund=0 THEN amount ELSE 0 END) as total_paid,
+                    SUM(CASE WHEN is_refund=1 THEN ABS(amount) ELSE 0 END) as total_refunded
+                FROM transactions 
+                WHERE order_id=%s AND is_void=0
+            """, (order_id,))
+            
+            payment_stats = cursor.fetchone()
+            total_paid = float(payment_stats['total_paid'] or 0)
+            total_refunded = float(payment_stats['total_refunded'] or 0)
+            available_refund = total_paid - total_refunded
+            
+            if float(refund_amount) > available_refund:
+                return jsonify({
+                    'success': False, 
+                    'message': f'退款金额超过可退金额。已付: ¥{total_paid:.2f}，已退: ¥{total_refunded:.2f}，可退: ¥{available_refund:.2f}'
+                }), 400
+            
+            # 区分部分退款和全额退款
+            refund_type_actual = '部分退款' if float(refund_amount) < available_refund else '全额退款'
+            
             # 创建退款流水（金额为负数）
             sql = """INSERT INTO transactions (
                 transaction_type, transaction_date, payer_bank, payer_name,
@@ -4918,13 +5087,13 @@ def create_refund():
                 '',  # 收款银行
                 '客户',  # 收款方（客户）
                 -abs(float(refund_amount)),  # 金额为负数
-                f'订单退款 - {refund_type}',
+                f'订单退款 - {refund_type_actual}',
                 refund_reason,
                 account_id,
                 order.get('company_id', 1),
                 order_id,
                 1,  # is_refund=1
-                refund_type,
+                refund_type_actual,
                 order_id,  # original_order_id
                 created_by
             ))
@@ -7074,6 +7243,16 @@ except ImportError as e:
 except Exception as e:
     print(f"⚠️ 租户物流账号API注册异常: {e}")
 
+# ==================== 注册租户平台授权管理API ====================
+try:
+    from tenant_platform_auth_api import tenant_platform_auth_bp
+    app.register_blueprint(tenant_platform_auth_bp)
+    print("✅ 租户平台授权API已注册: /api/tenant/platform_authorizations/*")
+except ImportError as e:
+    print(f"⚠️ 租户平台授权API注册失败: {e}")
+except Exception as e:
+    print(f"⚠️ 租户平台授权API注册异常: {e}")
+
 # ==================== 注册租户仓库/发货地址管理API ====================
 try:
     from tenant_warehouse_api import tenant_warehouse_bp
@@ -7085,6 +7264,7 @@ except Exception as e:
     print(f"⚠️ 租户仓库/发货地址API注册异常: {e}")
 
 # ==================== 注册前端日志接收API ====================
+# 修复404错误: POST /api/frontend_logs 接口缺失
 try:
     from frontend_logs_api import frontend_logs_bp
     app.register_blueprint(frontend_logs_bp)
@@ -7093,6 +7273,53 @@ except ImportError as e:
     print(f"⚠️ 前端日志接收API注册失败: {e}")
 except Exception as e:
     print(f"⚠️ 前端日志接收API注册异常: {e}")
+
+# ==================== 注册移动端API Blueprints ====================
+try:
+    from mobile_auth_api import mobile_auth_bp
+    app.register_blueprint(mobile_auth_bp)
+    print("✅ 移动端认证API已注册: /api/mobile/auth/*")
+except ImportError as e:
+    print(f"⚠️ 移动端认证API注册失败: {e}")
+except Exception as e:
+    print(f"⚠️ 移动端认证API注册异常: {e}")
+
+try:
+    from mobile_customer_api import mobile_customer_bp
+    app.register_blueprint(mobile_customer_bp)
+    print("✅ 移动端客户API已注册: /api/mobile/customers/*")
+except ImportError as e:
+    print(f"⚠️ 移动端客户API注册失败: {e}")
+except Exception as e:
+    print(f"⚠️ 移动端客户API注册异常: {e}")
+
+try:
+    from mobile_order_api import mobile_order_bp
+    app.register_blueprint(mobile_order_bp)
+    print("✅ 移动端订单API已注册: /api/mobile/orders/*")
+except ImportError as e:
+    print(f"⚠️ 移动端订单API注册失败: {e}")
+except Exception as e:
+    print(f"⚠️ 移动端订单API注册异常: {e}")
+
+try:
+    from mobile_statistics_api import mobile_statistics_bp
+    app.register_blueprint(mobile_statistics_bp)
+    print("✅ 移动端统计API已注册: /api/mobile/statistics/*")
+\n# ==================== 注册共享API Blueprint ====================
+try:
+    from common_api import common_api_bp
+    app.register_blueprint(common_api_bp)
+    print("✅ 共享API已注册: /api/common/*")
+except ImportError as e:
+    print(f"⚠️ 共享API注册失败: {e}")
+except Exception as e:
+    print(f"⚠️ 共享API注册异常: {e}")
+
+except ImportError as e:
+    print(f"⚠️ 移动端统计API注册失败: {e}")
+except Exception as e:
+    print(f"⚠️ 移动端统计API注册异常: {e}")
 
 
 if __name__ == '__main__':

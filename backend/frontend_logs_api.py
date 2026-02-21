@@ -7,10 +7,21 @@
 创建日期：2026-02-16
 """
 
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, session
 from datetime import datetime
 import os
 import json
+from functools import wraps
+
+def require_login(f):
+    """基础登录验证装饰器"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'success': False, 'message': '未登录'}), 401
+        return f(*args, **kwargs)
+    return decorated_function
 
 frontend_logs_bp = Blueprint('frontend_logs', __name__)
 
@@ -22,6 +33,7 @@ FRONTEND_LOG_FILE = os.path.join(LOG_DIR, 'frontend.log')
 os.makedirs(LOG_DIR, exist_ok=True)
 
 @frontend_logs_bp.route('/api/frontend_logs', methods=['POST'])
+# 前端日志接口不需要登录校验，否则登录前的错误无法上报
 def receive_frontend_logs():
     """
     接收前端日志
@@ -113,6 +125,7 @@ def format_log_entry(log):
 
 # 提供实时日志查看API
 @frontend_logs_bp.route('/api/frontend_logs/view', methods=['GET'])
+@require_login
 def view_frontend_logs():
     """
     查看前端日志（最近500行）

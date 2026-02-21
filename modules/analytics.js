@@ -24,11 +24,79 @@ const AnalyticsState = {
 window.initAnalyticsPage = async function() {
     console.log('[Analytics] 🚀 初始化统计分析页面...');
     
+    // 权限检查
+    if (!await checkReportAccessPermission()) {
+        showPermissionDeniedMessage();
+        return;
+    }
+    
     // 初始化日期选择器
     initDateSelector();
     
     // 加载数据
     await loadAnalyticsData();
+};
+
+/**
+ * 检查报表访问权限
+ */
+async function checkReportAccessPermission() {
+    try {
+        const response = await window.api.get('/api/user-permissions/current');
+        if (!response.success) return false;
+        
+        const permissions = response.data || [];
+        const hasReportPermission = permissions.some(p => 
+            p.module === 'report' && (p.action === 'view' || p.action === 'access')
+        );
+        
+        console.log('[Analytics] 报表权限检查:', hasReportPermission);
+        return hasReportPermission;
+    } catch (error) {
+        console.error('[Analytics] 权限检查失败:', error);
+        return false;
+    }
+}
+
+/**
+ * 显示权限拒绝消息
+ */
+function showPermissionDeniedMessage() {
+    const container = document.getElementById('analyticsContainer');
+    if (container) {
+        container.innerHTML = `
+            <div class="flex flex-col items-center justify-center h-96 text-gray-500">
+                <i class="fas fa-lock text-6xl mb-4"></i>
+                <h3 class="text-xl font-semibold mb-2">访问权限不足</h3>
+                <p class="text-gray-600 mb-4">您没有查看报表统计的权限</p>
+                <button onclick="requestReportPermission()" 
+                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    申请权限
+                </button>
+            </div>
+        `;
+    }
+}
+
+/**
+ * 申请报表权限
+ */
+window.requestReportPermission = async function() {
+    try {
+        const response = await window.api.post('/api/permissions/request', {
+            module: 'report',
+            action: 'view',
+            reason: '业务分析需要'
+        });
+        
+        if (response.success) {
+            showNotification('权限申请已提交，请等待管理员审批', 'success');
+        } else {
+            showNotification('权限申请失败: ' + (response.message || '未知错误'), 'error');
+        }
+    } catch (error) {
+        showNotification('权限申请异常: ' + error.message, 'error');
+    }
 };
 
 /**
@@ -211,22 +279,55 @@ async function loadAnalyticsData() {
     const yearMonth = AnalyticsState.startDate.substring(0, 7); // YYYY-MM
     
     try {
+        // 加载原始数据
+        const rawData = {};
+        
         // 加载公司概览数据
-        await loadCompanyAnalytics(yearMonth);
+        rawData.company = await loadRawCompanyAnalytics(yearMonth);
         
         // 加载团队数据
-        await loadTeamsAnalytics(yearMonth);
+        rawData.teams = await loadRawTeamsAnalytics(yearMonth);
         
         // 根据当前标签加载对应数据
         if (AnalyticsState.currentTab === 'business') {
-            await loadBusinessStaffAnalytics(yearMonth);
+            rawData.businessStaff = await loadRawBusinessStaffAnalytics(yearMonth);
         } else if (AnalyticsState.currentTab === 'operation') {
-            await loadOperationStaffAnalytics(yearMonth);
+            rawData.operationStaff = await loadRawOperationStaffAnalytics(yearMonth);
         } else if (AnalyticsState.currentTab === 'service') {
-            await loadServiceStaffAnalytics(yearMonth);
+            rawData.serviceStaff = await loadRawServiceStaffAnalytics(yearMonth);
         } else if (AnalyticsState.currentTab === 'project') {
-            await loadProjectAnalytics(yearMonth);
+            rawData.project = await loadRawProjectAnalytics(yearMonth);
         }
+        
+        // 数据质量检查和过滤
+        const filteredData = {
+            company: filterInvalidData(rawData.company, 'company'),
+            teams: filterInvalidData(rawData.teams, 'teams'),
+            businessStaff: filterInvalidData(rawData.businessStaff, 'businessStaff'),
+            operationStaff: filterInvalidData(rawData.operationStaff, 'operationStaff'),
+            serviceStaff: filterInvalidData(rawData.serviceStaff, 'serviceStaff'),
+            project: filterInvalidData(rawData.project, 'project')
+        };
+        
+        // 更新全局状态
+        AnalyticsState.companyData = filteredData.company;
+        AnalyticsState.teamsData = filteredData.teams;
+        AnalyticsState.businessStaffData = filteredData.businessStaff || [];
+        AnalyticsState.operationStaffData = filteredData.operationStaff || [];
+        AnalyticsState.serviceStaffData = filteredData.serviceStaff || [];
+        AnalyticsState.projectData = filteredData.project || [];
+        
+        // 渲染各个模块
+        renderCompanyAnalytics(filteredData.company);
+        renderTeamsAnalytics(filteredData.teams);
+        renderStaffAnalytics(filteredData);
+        
+        // 记录数据质量报告
+        logDataQualityReport({
+            original: rawData,
+            filtered: filteredData,
+            timestamp: new Date().toISOString()
+        });
         
         console.log('[Analytics] ✅ 统计数据加载完成');
     } catch (error) {
@@ -235,9 +336,295 @@ async function loadAnalyticsData() {
     }
 }
 
+// ===================== 数据质量控制 =====================
+
 /**
- * 加载公司概览数据
+ * 过滤无效数据
+ * @param {any} data - 原始数据
+ * @param {string} dataType - 数据类型
+ * @returns {any} 过滤后的数据
  */
+function filterInvalidData(data, dataType) {
+    if (!data) return data;
+    
+    const qualityReport = {
+        totalRecords: 0,
+        validRecords: 0,
+        invalidRecords: 0,
+        filteredReasons: [],
+        timestamp: new Date().toISOString()
+    };
+    
+    switch (dataType) {
+        case 'company':
+            return filterCompanyData(data, qualityReport);
+            
+        case 'teams':
+            return filterArrayData(data, isValidTeamRecord, qualityReport);
+            
+        case 'businessStaff':
+        case 'operationStaff':
+        case 'serviceStaff':
+            return filterArrayData(data, isValidStaffRecord, qualityReport);
+            
+        case 'project':
+            return filterArrayData(data, isValidProjectRecord, qualityReport);
+            
+        default:
+            return data;
+    }
+}
+
+/**
+ * 过滤公司数据
+ */
+function filterCompanyData(data, report) {
+    report.totalRecords = 1;
+    
+    // 检查关键字段是否存在且合理
+    const requiredFields = ['total_sales', 'total_orders', 'total_cost'];
+    const hasRequiredFields = requiredFields.every(field => 
+        data[field] !== undefined && data[field] !== null
+    );
+    
+    if (!hasRequiredFields) {
+        report.invalidRecords = 1;
+        report.filteredReasons.push('缺少必要的统计字段');
+        logDataQualityIssue('company', report);
+        return null;
+    }
+    
+    // 检查数值合理性
+    if (data.total_sales < 0 || data.total_orders < 0) {
+        report.invalidRecords = 1;
+        report.filteredReasons.push('统计数值不合理（负数）');
+        logDataQualityIssue('company', report);
+        return null;
+    }
+    
+    report.validRecords = 1;
+    return data;
+}
+
+/**
+ * 过滤数组类型数据
+ */
+function filterArrayData(data, validator, report) {
+    if (!Array.isArray(data)) {
+        report.totalRecords = 0;
+        report.validRecords = 0;
+        return [];
+    }
+    
+    report.totalRecords = data.length;
+    
+    const filteredData = data.filter((item, index) => {
+        const isValid = validator(item);
+        if (!isValid) {
+            report.invalidRecords++;
+            report.filteredReasons.push(`记录${index}: 数据验证失败`);
+        }
+        return isValid;
+    });
+    
+    report.validRecords = filteredData.length;
+    
+    if (report.invalidRecords > 0) {
+        logDataQualityIssue('array', report);
+    }
+    
+    return filteredData;
+}
+
+/**
+ * 验证团队记录
+ */
+function isValidTeamRecord(record) {
+    return record && 
+           record.team_name && 
+           typeof record.total_sales === 'number' && 
+           record.total_sales >= 0 &&
+           typeof record.total_orders === 'number' && 
+           record.total_orders >= 0;
+}
+
+/**
+ * 验证员工记录
+ */
+function isValidStaffRecord(record) {
+    return record && 
+           record.staff_name && 
+           typeof record.total_sales === 'number' && 
+           record.total_sales >= 0 &&
+           typeof record.order_count === 'number' && 
+           record.order_count >= 0;
+}
+
+/**
+ * 验证项目记录
+ */
+function isValidProjectRecord(record) {
+    return record && 
+           record.project_name && 
+           typeof record.total_sales === 'number' && 
+           record.total_sales >= 0 &&
+           typeof record.customer_count === 'number' && 
+           record.customer_count >= 0;
+}
+
+/**
+ * 记录数据质量问题
+ */
+function logDataQualityIssue(dataType, report) {
+    console.warn(`[Analytics] 数据质量警告 [${dataType}]:`, {
+        总记录数: report.totalRecords,
+        有效记录数: report.validRecords,
+        无效记录数: report.invalidRecords,
+        过滤原因: report.filteredReasons,
+        时间戳: report.timestamp
+    });
+    
+    // 发送到服务器记录（可选）
+    try {
+        window.api.post('/api/analytics/data-quality-report', {
+            data_type: dataType,
+            report: report
+        }).catch(err => {
+            console.debug('数据质量报告发送失败:', err);
+        });
+    } catch (error) {
+        console.debug('数据质量报告记录异常:', error);
+    }
+}
+
+/**
+ * 记录数据质量报告
+ */
+function logDataQualityReport(reportData) {
+    console.log('[Analytics] 数据质量报告:', {
+        原始数据量: getObjectSize(reportData.original),
+        过滤后数据量: getObjectSize(reportData.filtered),
+        过滤时间: reportData.timestamp
+    });
+}
+
+/**
+ * 获取对象大小（用于统计）
+ */
+function getObjectSize(obj) {
+    if (!obj) return 0;
+    if (Array.isArray(obj)) return obj.length;
+    if (typeof obj === 'object') {
+        return Object.keys(obj).length;
+    }
+    return 1;
+}
+
+// ===================== 原始数据加载函数 =====================
+
+/**
+ * 加载原始公司数据
+ */
+async function loadRawCompanyAnalytics(period) {
+    try {
+        const response = await fetch(`/api/analytics/summary?dimension_type=company&dimension_id=1&period_type=month&period_value=${period}`, {
+            credentials: 'include'
+        });
+        
+        const result = await response.json();
+        return result.success ? result.data : null;
+    } catch (error) {
+        console.error('[Analytics] 加载原始公司数据失败:', error);
+        return null;
+    }
+}
+
+/**
+ * 加载原始团队数据
+ */
+async function loadRawTeamsAnalytics(period) {
+    try {
+        const response = await fetch(`/api/analytics/team-summary?period_type=month&period_value=${period}`, {
+            credentials: 'include'
+        });
+        
+        const result = await response.json();
+        return result.success ? result.data : [];
+    } catch (error) {
+        console.error('[Analytics] 加载原始团队数据失败:', error);
+        return [];
+    }
+}
+
+/**
+ * 加载原始业务员数据
+ */
+async function loadRawBusinessStaffAnalytics(period) {
+    try {
+        const response = await fetch(`/api/analytics/staff-summary?staff_type=business&period_type=month&period_value=${period}`, {
+            credentials: 'include'
+        });
+        
+        const result = await response.json();
+        return result.success ? result.data : [];
+    } catch (error) {
+        console.error('[Analytics] 加载原始业务员数据失败:', error);
+        return [];
+    }
+}
+
+/**
+ * 加载原始运营员数据
+ */
+async function loadRawOperationStaffAnalytics(period) {
+    try {
+        const response = await fetch(`/api/analytics/staff-summary?staff_type=operation&period_type=month&period_value=${period}`, {
+            credentials: 'include'
+        });
+        
+        const result = await response.json();
+        return result.success ? result.data : [];
+    } catch (error) {
+        console.error('[Analytics] 加载原始运营员数据失败:', error);
+        return [];
+    }
+}
+
+/**
+ * 加载原始服务员数据
+ */
+async function loadRawServiceStaffAnalytics(period) {
+    try {
+        const response = await fetch(`/api/analytics/staff-summary?staff_type=service&period_type=month&period_value=${period}`, {
+            credentials: 'include'
+        });
+        
+        const result = await response.json();
+        return result.success ? result.data : [];
+    } catch (error) {
+        console.error('[Analytics] 加载原始服务员数据失败:', error);
+        return [];
+    }
+}
+
+/**
+ * 加载原始项目数据
+ */
+async function loadRawProjectAnalytics(period) {
+    try {
+        const response = await fetch(`/api/analytics/project-summary?period_type=month&period_value=${period}`, {
+            credentials: 'include'
+        });
+        
+        const result = await response.json();
+        return result.success ? result.data : [];
+    } catch (error) {
+        console.error('[Analytics] 加载原始项目数据失败:', error);
+        return [];
+    }
+}
+
+// ===================== 原有的加载函数（保持兼容性）=====================
 async function loadCompanyAnalytics(period) {
     try {
         const response = await fetch(`/api/analytics/summary?dimension_type=company&dimension_id=1&period_type=month&period_value=${period}`, {

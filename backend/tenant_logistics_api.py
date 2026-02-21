@@ -399,18 +399,17 @@ def test_logistics_account(account_id):
 @tenant_logistics_bp.route('/api/tenant/express_companies', methods=['GET'])
 @require_tenant_auth()
 def get_express_companies():
-    """获取支持的快递公司列表"""
+    """获取支持的快递公司列表（纯 API 密钥模式）"""
     companies = [
-        {'code': 'ZTO', 'name': '中通快递'},
-        {'code': 'YTO', 'name': '圆通快递'},
-        {'code': 'YD', 'name': '韵达快递'},
-        {'code': 'SF', 'name': '顺丰速运'},
-        {'code': 'STO', 'name': '申通快递'},
-        {'code': 'HTKY', 'name': '百世快递'},
-        {'code': 'JD', 'name': '京东物流'},
-        {'code': 'EMS', 'name': 'EMS'},
-        {'code': 'YZPY', 'name': '邮政快递包裹'},
-        {'code': 'DBL', 'name': '德邦快递'},
+        {'code': 'SF', 'name': '顺丰速运', 'auth_type': 'api_key', 'description': 'API密钥模式'},
+        {'code': 'ZTO', 'name': '中通快递', 'auth_type': 'api_key', 'description': 'API密钥模式'},
+        {'code': 'YTO', 'name': '圆通快递', 'auth_type': 'api_key', 'description': 'API密钥模式'},
+        {'code': 'YD', 'name': '韵达快递', 'auth_type': 'api_key', 'description': 'API密钥模式'},
+        {'code': 'STO', 'name': '申通快递', 'auth_type': 'api_key', 'description': 'API密钥模式'},
+        {'code': 'HTKY', 'name': '百世快递', 'auth_type': 'api_key', 'description': 'API密钥模式'},
+        {'code': 'EMS', 'name': 'EMS', 'auth_type': 'api_key', 'description': 'API密钥模式'},
+        {'code': 'YZPY', 'name': '邮政快递包裹', 'auth_type': 'api_key', 'description': 'API密钥模式'},
+        {'code': 'DBL', 'name': '德邦快递', 'auth_type': 'api_key', 'description': 'API密钥模式'},
     ]
     
     return jsonify({

@@ -6,7 +6,7 @@ Flask Blueprint - 完整16个核心接口
 多租户 + 多仓库 + 多网点支持
 """
 
-from flask import Blueprint, request, jsonify, session
+from flask import Blueprint, request, jsonify, session, render_template_string
 import pymysql
 from datetime import datetime
 import json
@@ -993,91 +993,133 @@ def get_print_logs():
 @cainiao_isv_bp.route('/auth/url', methods=['POST'])
 @require_tenant_auth
 def get_auth_url():
-    """获取授权链接"""
+    """生成菜鸟授权跳转链接（OAuth跳转模式）"""
     tenant_id = session.get('company_id')
     data = request.json
+    platform_auth_id = data.get('platform_auth_id')
     
-    account_id = data.get('account_id')
+    if not platform_auth_id:
+        return jsonify({'success': False, 'message': '缺少platform_auth_id参数'})
     
     service = get_cainiao_service()
     if not service:
         return jsonify({'success': False, 'message': 'ISV配置未完成'})
     
-    conn = get_db()
-    cursor = conn.cursor()
-    
     try:
-        cursor.execute("""
-            SELECT callback_url FROM cainiao_isv_config WHERE id = 1
-        """)
-        config = cursor.fetchone()
-        
-        if not config or not config['callback_url']:
-            return jsonify({'success': False, 'message': '回调地址未配置'})
-        
-        # 生成授权链接（state包含tenant_id和account_id）
-        state = f"{tenant_id}_{account_id}"
-        auth_url = service.get_auth_url(config['callback_url'], state)
+        # 构建菜鸟授权跳转链接（直接授权页面，不经过登录重定向）
+        # 参考老系统：http://lcp.cloud.cainiao.com/permission/isv/grantpage.do?isvAppKey=247457&ext=&redirectUrl=http://client.xnamb.cn/auth/callback.html
+        # 关键：使用测试环境AppKey 247457
+        auth_url = (
+            f"http://lcp.cloud.cainiao.com/permission/isv/grantpage.do"
+            f"?isvAppKey=247457"  # 使用测试环境AppKey（老系统相同）
+            f"&ext={platform_auth_id}"  # 使用ext传递授权记录ID
+            f"&redirectUrl=http://client.xnamb.cn/auth/callback.html"  # 必须与菜鸟ISV平台备案地址一致（老系统地址）
+        )
         
         return jsonify({
             'success': True,
             'data': {
-                'auth_url': auth_url
+                'auth_url': auth_url,
+                'platform_auth_id': platform_auth_id
+            },
+            'message': '授权链接生成成功'
+        })
+        
+    except Exception as e:
+        logger.error(f"[菜鸟ISV] 生成授权链接失败: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': f'生成授权链接失败: {str(e)}'
+        })
+
+
+@cainiao_isv_bp.route('/exchange_token', methods=['POST'])
+def exchange_token():
+    """使用accessCode换取accessToken（菜鸟ISV授权）
+    注意：此接口不需要session验证，因为accessCode有时效性，用户可能在授权后过一段时间才粘贴
+    通过platform_auth_id验证租户权限
+    """
+    data = request.json
+    
+    access_code = data.get('access_code', '').strip()
+    platform_auth_id = data.get('platform_auth_id')
+    
+    if not access_code:
+        return jsonify({'success': False, 'message': '请输入accessCode'})
+    
+    if not platform_auth_id:
+        return jsonify({'success': False, 'message': '缺少platform_auth_id参数'})
+    
+    # 通过platform_auth_id验证授权记录是否存在并获取租户ID
+    conn = get_db()
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            "SELECT tenant_id FROM tenant_platform_authorizations WHERE id = %s",
+            (platform_auth_id,)
+        )
+        auth_record = cursor.fetchone()
+        if not auth_record:
+            return jsonify({'success': False, 'message': '授权记录不存在'})
+        
+        tenant_id = auth_record['tenant_id']
+    finally:
+        cursor.close()
+        conn.close()
+    
+    service = get_cainiao_service()
+    if not service:
+        return jsonify({'success': False, 'message': 'ISV配置未完成'})
+    
+    # 调用菜鸟Token换取API
+    result = service.exchange_token(access_code)
+    
+    if not result['success']:
+        return jsonify({
+            'success': False,
+            'message': result.get('message', 'Token换取失败')
+        })
+    
+    access_token = result['access_token']
+    
+    # 保存Token到数据库
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    try:
+        # 计算过期时间（菜鸟Token通常有1年有效期）
+        from datetime import datetime, timedelta
+        expire_time = datetime.now() + timedelta(days=365)
+        
+        # 更新平台授权记录
+        cursor.execute("""
+            UPDATE tenant_platform_authorizations
+            SET access_code = %s,
+                access_token = %s,
+                expire_time = %s,
+                auth_status = 1,
+                auth_time = NOW(),
+                updated_at = NOW()
+            WHERE id = %s AND tenant_id = %s
+        """, (access_code, access_token, expire_time, platform_auth_id, tenant_id))
+        
+        conn.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': '授权成功！Token已保存',
+            'data': {
+                'access_token': access_token,
+                'expire_time': expire_time.strftime('%Y-%m-%d %H:%M:%S')
             }
+        })
+    except Exception as e:
+        conn.rollback()
+        return jsonify({
+            'success': False,
+            'message': f'保存Token失败: {str(e)}'
         })
     finally:
         cursor.close()
         conn.close()
 
-
-@cainiao_isv_bp.route('/auth/callback', methods=['GET'])
-def auth_callback():
-    """授权回调处理"""
-    code = request.args.get('code')
-    state = request.args.get('state')
-    
-    if not code:
-        return jsonify({'success': False, 'message': '授权失败，缺少code'})
-    
-    service = get_cainiao_service()
-    if not service:
-        return jsonify({'success': False, 'message': 'ISV配置未完成'})
-    
-    # 获取AccessToken
-    result = service.get_access_token(code)
-    
-    if result['success']:
-        access_token = result['data'].get('access_token')
-        expire_time = result['data'].get('expire_time')
-        
-        # 解析state
-        try:
-            tenant_id, account_id = state.split('_')
-            
-            conn = get_db()
-            cursor = conn.cursor()
-            
-            try:
-                # 更新物流账号的Token
-                cursor.execute("""
-                    UPDATE tenant_logistics_account 
-                    SET auth_token = %s, auth_expire = %s
-                    WHERE id = %s AND tenant_id = %s
-                """, (access_token, expire_time, account_id, tenant_id))
-                
-                conn.commit()
-                
-                return jsonify({
-                    'success': True,
-                    'message': '授权成功'
-                })
-            finally:
-                cursor.close()
-                conn.close()
-        except:
-            return jsonify({'success': False, 'message': '状态参数异常'})
-    else:
-        return jsonify({
-            'success': False,
-            'message': f'获取Token失败: {result["message"]}'
-        })

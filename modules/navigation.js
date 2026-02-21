@@ -51,6 +51,8 @@ const subMenuConfig = {
     logistics: {
         title: '物流',
         items: [
+            { id: 'logisticsAccounts', icon: 'fa-user-shield', name: '快递账号管理' },
+            { id: 'platformAuthorization', icon: 'fa-key', name: '平台授权' },
             { id: 'logisticsOrders', icon: 'fa-shipping-fast', name: '物流订单列表' },
             { id: 'logisticsConfig', icon: 'fa-cogs', name: '物流配置管理' },
             { id: 'logisticsTemplates', icon: 'fa-print', name: '面单打印模板' }
@@ -259,7 +261,7 @@ function showPage(pageId) {
         // 业务成本设置
         'costConfigPage',
         // 物流管理（新增）
-        'logisticsOrdersPage', 'logisticsConfigPage', 'logisticsTemplatesPage',
+        'logisticsOrdersPage', 'logisticsConfigPage', 'logisticsTemplatesPage', 'logisticsAccountsPage', 'platformAuthorizationPage',
         // 旧设置页（兼容）
         'settingsPage'
     ];
@@ -404,6 +406,27 @@ function showPage(pageId) {
             break;
         case 'logisticsTemplates':
             if (typeof initLogisticsTemplatesPage === 'function') initLogisticsTemplatesPage();
+            break;
+        case 'logisticsAccounts':
+            if (typeof initLogisticsAccountsPage === 'function') initLogisticsAccountsPage();
+            break;
+        case 'warehouses':
+            if (typeof initWarehousesPage === 'function') initWarehousesPage();
+            break;
+        case 'expressPrint':
+            if (typeof initExpressPrintPage === 'function') initExpressPrintPage();
+            break;
+        case 'orderPrint':
+            if (typeof initOrderPrintPage === 'function') initOrderPrintPage();
+            break;
+        case 'orderLinkage':
+            if (typeof initOrderLinkagePage === 'function') initOrderLinkagePage();
+            break;
+        case 'templateManage':
+            if (typeof initTemplateManagePage === 'function') initTemplateManagePage();
+            break;
+        case 'logisticsOrder':
+            if (typeof initLogisticsOrderPage === 'function') initLogisticsOrderPage();
             break;
         // 旧设置页（兼容）
         case 'settings':
