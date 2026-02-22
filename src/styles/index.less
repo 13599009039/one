@@ -1,0 +1,286 @@
+@import './variable.less';
+
+// 全局样式重置
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 
+               'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: @font-size-md;
+  color: @text-primary;
+  background-color: @bg-color;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+// Vant Dialog弹窗样式优化 - 确保弹窗居中显示
+.van-dialog {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  width: 85% !important;
+  max-width: 320px !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  z-index: 2000 !important;
+  
+  .van-dialog__header {
+    padding-top: 20px !important;
+    font-weight: 600 !important;
+    font-size: 16px !important;
+  }
+  
+  .van-dialog__message {
+    padding: 20px !important;
+    font-size: 14px !important;
+    line-height: 1.6 !important;
+  }
+  
+  .van-dialog__footer {
+    display: flex !important;
+    
+    .van-button {
+      flex: 1;
+      height: 48px !important;
+      font-size: 15px !important;
+      border-radius: 0 !important;
+    }
+  }
+}
+
+// Vant overlay遮罩层样式优化
+.van-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  z-index: 1999 !important;
+}
+
+// Vant Toast顶部错误提示样式 - 强制覆盖
+.van-toast {
+  position: fixed !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  z-index: 9999 !important;
+  
+  // 顶部显示时
+  &.van-toast--top {
+    top: 60px !important;
+    bottom: auto !important;
+  }
+  
+  // 中间显示时也调整
+  &.van-toast--middle {
+    top: 50% !important;
+    transform: translate(-50%, -50%) !important;
+  }
+  
+  // 错误提示样式
+  &.van-toast--fail,
+  &.van-toast--error {
+    background: linear-gradient(135deg, #ff4d4f 0%, #f5222d 100%) !important;
+    color: #fff !important;
+    box-shadow: 0 4px 12px rgba(245, 34, 45, 0.3) !important;
+    
+    .van-toast__text {
+      color: #fff !important;
+      font-weight: 500 !important;
+    }
+    
+    .van-toast__icon {
+      color: #fff !important;
+    }
+  }
+  
+  // 成功提示样式
+  &.van-toast--success {
+    background: linear-gradient(135deg, #52c41a 0%, #389e0d 100%) !important;
+    color: #fff !important;
+    box-shadow: 0 4px 12px rgba(82, 196, 26, 0.3) !important;
+    
+    .van-toast__text {
+      color: #fff !important;
+      font-weight: 500 !important;
+    }
+  }
+  
+  .van-toast__text {
+    font-size: 14px !important;
+  }
+}
+
+// 额外的全局覆盖 - 确保Toast在顶部（多个选择器确保优先级）
+body .van-toast.van-toast--top,
+html body .van-toast.van-toast--top,
+.van-toast.van-toast--top.van-toast--fail {
+  top: 60px !important;
+  bottom: auto !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+}
+
+// 自定义顶部Toast样式
+.top-error-toast,
+.top-success-toast,
+.top-info-toast {
+  position: fixed !important;
+  top: 60px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  z-index: 9999 !important;
+  max-width: 85% !important;
+  min-width: 200px !important;
+}
+
+.top-error-toast {
+  background: linear-gradient(135deg, #ff4d4f 0%, #f5222d 100%) !important;
+  color: #fff !important;
+  border-radius: 8px !important;
+  padding: 12px 16px !important;
+}
+
+// 审核弹窗专用样式
+.review-dialog {
+  .van-dialog__header {
+    color: @primary-color;
+  }
+  
+  .van-dialog__confirm {
+    background-color: @primary-color !important;
+    color: #fff !important;
+  }
+}
+
+// 触摸优化
+button, a, input {
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+}
+
+// 输入框防止iOS自动缩放
+input, textarea, select {
+  font-size: 16px !important;
+}
+
+// 安全区域适配
+.safe-area-top {
+  padding-top: @safe-area-top;
+}
+
+.safe-area-bottom {
+  padding-bottom: @safe-area-bottom;
+}
+
+.safe-area-left {
+  padding-left: @safe-area-left;
+}
+
+.safe-area-right {
+  padding-right: @safe-area-right;
+}
+
+// 通用卡片样式
+.card {
+  background: #fff;
+  border-radius: @border-radius-md;
+  padding: @spacing-md;
+  margin-bottom: @spacing-md;
+  box-shadow: @box-shadow-sm;
+}
+
+// 通用列表样式
+.list-item {
+  background: #fff;
+  padding: @spacing-md;
+  border-bottom: 1px solid @border-color;
+  
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+// 通用按钮样式
+.btn-primary {
+  background: @primary-color;
+  color: #fff;
+  border: none;
+  border-radius: @border-radius-md;
+  padding: @spacing-sm @spacing-md;
+  font-size: @font-size-md;
+  cursor: pointer;
+  
+  &:active {
+    opacity: 0.8;
+  }
+}
+
+// 状态标签
+.status-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: @font-size-xs;
+  border-radius: @border-radius-sm;
+  
+  &.pending {
+    background: #fff7e6;
+    color: @warning-color;
+  }
+  
+  &.success {
+    background: #f6ffed;
+    color: @success-color;
+  }
+  
+  &.error {
+    background: #fff2f0;
+    color: @error-color;
+  }
+}
+
+// 文本溢出省略
+.text-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.text-ellipsis-2 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+// Flex布局
+.flex {
+  display: flex;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.flex-column {
+  display: flex;
+  flex-direction: column;
+}

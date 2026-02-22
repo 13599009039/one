@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>移动端ERP界面优化展示</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f0f2f5;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 414px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1677ff 0%, #4096ff 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 20px;
+        }
+        
+        .feature-section {
+            margin-bottom: 30px;
+        }
+        
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1d1d1d;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .features-grid {
+            display: grid;
+            gap: 15px;
+        }
+        
+        .feature-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            border-left: 4px solid #1677ff;
+        }
+        
+        .feature-card h3 {
+            font-size: 16px;
+            color: #1d1d1d;
+            margin-bottom: 8px;
+        }
+        
+        .feature-card p {
+            font-size: 14px;
+            color: #595959;
+            line-height: 1.5;
+        }
+        
+        .preview-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .preview-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1d1d1d;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .device-frame {
+            width: 100%;
+            max-width: 375px;
+            margin: 0 auto;
+            background: #000;
+            border-radius: 40px;
+            padding: 15px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            position: relative;
+        }
+        
+        .device-screen {
+            width: 100%;
+            height: 600px;
+            background: white;
+            border-radius: 25px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .iframe-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #f0f2f5 0%, #ffffff 100%);
+            color: #8c8c8c;
+            font-size: 16px;
+            text-align: center;
+        }
+        
+        .cta-section {
+            text-align: center;
+            padding: 30px 20px;
+            background: #f8f9fa;
+            border-top: 1px solid #f0f0f0;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #1677ff 0%, #4096ff 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(22, 119, 255, 0.3);
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(22, 119, 255, 0.4);
+        }
+        
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .comparison-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            text-align: center;
+        }
+        
+        .comparison-card h3 {
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        
+        .comparison-card.before {
+            border-top: 4px solid #ff4d4f;
+        }
+        
+        .comparison-card.after {
+            border-top: 4px solid #52c41a;
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                border-radius: 0;
+            }
+            
+            .comparison {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📱 移动端ERP界面优化</h1>
+            <p>全新视觉体验，提升工作效率</p>
+        </div>
+        
+        <div class="content">
+            <div class="feature-section">
+                <h2 class="section-title">✨ 主要优化亮点</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <h3>🎨 视觉层次优化</h3>
+                        <p>通过渐变背景、阴影效果和合理的间距设计，显著提升界面的视觉层次感和专业度</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>🌈 状态颜色编码</h3>
+                        <p>不同客户状态采用专属色彩方案："跟进中"(蓝色)、"已流失"(红色)、"已成交"(绿色)、"潜在客户"(橙色)</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>📊 数据可视化</h3>
+                        <p>优化统计数据展示，使用卡片式设计和清晰的数值突出显示，便于快速获取关键信息</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>👆 触摸体验</h3>
+                        <p>增大点击区域，优化手势反馈，确保在移动设备上的流畅操作体验</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="preview-section">
+                <h2 class="preview-title">📱 实时预览</h2>
+                <div class="device-frame">
+                    <div class="device-screen">
+                        <div class="iframe-placeholder">
+                            <div>
+                                <div style="font-size: 48px; margin-bottom: 15px;">📱</div>
+                                <div>移动端ERP界面预览</div>
+                                <div style="margin-top: 10px; font-size: 14px;">
+                                    <a href="http://localhost:8090" target="_blank" style="color: #1677ff; text-decoration: none;">
+                                        点击访问实际应用 →
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="feature-section">
+                <h2 class="section-title">⚖️ 优化前后对比</h2>
+                <div class="comparison">
+                    <div class="comparison-card before">
+                        <h3>❌ 优化前</h3>
+                        <p>• 视觉单调，缺乏层次<br>
+                        • 状态区分不明显<br>
+                        • 卡片间距过小<br>
+                        • 数据展示不够突出</p>
+                    </div>
+                    <div class="comparison-card after">
+                        <h3>✅ 优化后</h3>
+                        <p>• 丰富的视觉层次<br>
+                        • 清晰的状态颜色编码<br>
+                        • 舒适的间距设计<br>
+                        • 直观的数据可视化</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="cta-section">
+                <a href="http://localhost:8090" class="btn" target="_blank">
+                    🚀 立即体验优化版界面
+                </a>
+                <p style="margin-top: 15px; color: #8c8c8c; font-size: 14px;">
+                    开发服务器运行中: http://localhost:8090
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

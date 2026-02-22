@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>弹窗测试</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vant@4/lib/index.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-btn {
+            padding: 12px 24px;
+            background: #1677ff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px 0;
+        }
+        .popup-content {
+            padding: 20px;
+            text-align: center;
+        }
+        .company-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+        }
+        .company-item:last-child {
+            border-bottom: none;
+        }
+        .company-item:hover {
+            background: #f5f5f5;
+        }
+    </style>
+</head>
+<body>
+    <h2>Vant Popup 弹窗测试</h2>
+    
+    <button class="test-btn" onclick="showPopup()">显示公司选择弹窗</button>
+    
+    <div id="popup" style="display: none;">
+        <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;" onclick="hidePopup()"></div>
+        <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 80%; max-width: 300px; background: white; border-radius: 8px; z-index: 1001;">
+            <div style="padding: 16px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+                <div style="font-weight: bold;">选择公司</div>
+                <button onclick="hidePopup()" style="background: none; border: none; font-size: 20px; cursor: pointer;">×</button>
+            </div>
+            <div>
+                <div class="company-item" onclick="selectCompany('许昌爱佳网络科技有限公司')">许昌爱佳网络科技有限公司</div>
+                <div class="company-item" onclick="selectCompany('郑州分公司')">郑州分公司</div>
+                <div class="company-item" onclick="selectCompany('上海办事处')">上海办事处</div>
+            </div>
+            <div style="padding: 16px; border-top: 1px solid #eee;">
+                <button onclick="hidePopup()" style="width: 100%; padding: 12px; background: #1677ff; color: white; border: none; border-radius: 4px;">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showPopup() {
+            document.getElementById('popup').style.display = 'block';
+        }
+        
+        function hidePopup() {
+            document.getElementById('popup').style.display = 'none';
+        }
+        
+        function selectCompany(name) {
+            alert('选择了: ' + name);
+            hidePopup();
+        }
+    </script>
+</body>
+</html>

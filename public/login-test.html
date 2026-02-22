@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>移动端登录测试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+        }
+        input:focus {
+            outline: none;
+            border-color: #4ecdc4;
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            background: #4ecdc4;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #45b7aa;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .debug-info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .debug-info h3 {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📱 移动端登录测试</h1>
+        
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="username">用户名</label>
+                <input type="text" id="username" name="username" required value="admin">
+            </div>
+            
+            <div class="form-group">
+                <label for="password">密码</label>
+                <input type="password" id="password" name="password" required value="123456">
+            </div>
+            
+            <button type="submit" id="loginBtn">登录</button>
+        </form>
+        
+        <div id="status" class="status info">
+            请输入账号密码进行登录测试
+        </div>
+        
+        <div class="debug-info">
+            <h3>🔧 调试信息</h3>
+            <div id="debugOutput"></div>
+        </div>
+    </div>
+
+    <script>
+        // 调试输出函数
+        function debugLog(message, type = 'info') {
+            const debugOutput = document.getElementById('debugOutput');
+            const time = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.innerHTML = `[${time}] <strong>${type.toUpperCase()}:</strong> ${message}`;
+            logEntry.style.color = type === 'error' ? '#e74c3c' : type === 'success' ? '#27ae60' : '#3498db';
+            debugOutput.appendChild(logEntry);
+            debugOutput.scrollTop = debugOutput.scrollHeight;
+        }
+
+        // 更新状态显示
+        function updateStatus(message, type = 'info') {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = message;
+            statusEl.className = `status ${type}`;
+        }
+
+        // 登录表单处理
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const loginBtn = document.getElementById('loginBtn');
+            
+            // 禁用按钮
+            loginBtn.disabled = true;
+            loginBtn.textContent = '登录中...';
+            
+            debugLog(`开始登录尝试: ${username}`, 'info');
+            updateStatus('正在登录...', 'info');
+            
+            try {
+                // 测试API连接
+                debugLog('测试API连接...', 'info');
+                const healthCheck = await fetch('http://127.0.0.1:8051/api/health');
+                debugLog(`API健康检查: ${healthCheck.status} ${healthCheck.statusText}`, 'info');
+                
+                // 执行登录
+                debugLog('发送登录请求...', 'info');
+                const response = await fetch('http://127.0.0.1:8051/api/mobile/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password
+                    })
+                });
+                
+                debugLog(`登录响应状态: ${response.status} ${response.statusText}`, 'info');
+                
+                const data = await response.json();
+                debugLog(`响应数据: ${JSON.stringify(data)}`, 'info');
+                
+                if (data.code === 0) {
+                    // 登录成功
+                    debugLog('登录成功!', 'success');
+                    updateStatus('✅ 登录成功! Token已保存', 'success');
+                    
+                    // 保存token
+                    localStorage.setItem('mobile_token', data.data.token);
+                    localStorage.setItem('mobile_user_info', JSON.stringify(data.data.user));
+                    
+                    debugLog(`Token保存成功: ${data.data.token.substring(0, 20)}...`, 'success');
+                    
+                    // 3秒后跳转到主页
+                    setTimeout(() => {
+                        window.location.href = 'http://localhost:8090';
+                    }, 3000);
+                } else {
+                    // 登录失败
+                    debugLog(`登录失败: ${data.message}`, 'error');
+                    updateStatus(`❌ 登录失败: ${data.message}`, 'error');
+                }
+                
+            } catch (error) {
+                debugLog(`网络错误: ${error.message}`, 'error');
+                updateStatus(`❌ 网络错误: ${error.message}`, 'error');
+                console.error('登录错误:', error);
+            } finally {
+                // 恢复按钮
+                loginBtn.disabled = false;
+                loginBtn.textContent = '登录';
+            }
+        });
+
+        // 页面加载时检查状态
+        window.addEventListener('load', () => {
+            debugLog('页面加载完成', 'info');
+            
+            // 检查是否已登录
+            const token = localStorage.getItem('mobile_token');
+            if (token) {
+                debugLog('检测到已存在的token', 'info');
+                updateStatus('检测到已登录状态，可直接访问应用', 'success');
+            }
+            
+            // 检查API连接
+            fetch('http://127.0.0.1:8051/api/health')
+                .then(response => {
+                    debugLog(`API连接检查: ${response.ok ? '正常' : '异常'}`, 
+                             response.ok ? 'success' : 'error');
+                })
+                .catch(error => {
+                    debugLog(`API连接失败: ${error.message}`, 'error');
+                });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,55 @@
+import { 
+  Button, 
+  Cell, 
+  CellGroup,
+  Field,
+  Form,
+  Icon,
+  NavBar,
+  Tabbar,
+  TabbarItem,
+  List,
+  PullRefresh,
+  Search,
+  Toast,
+  Dialog,
+  Loading,
+  Overlay,
+  Popup,
+  SwipeCell,
+  Tag,
+  Empty,
+  Divider,
+  ActionSheet,
+  DatePicker,
+  Picker,
+  Checkbox
+} from 'vant'
+
+export function setupVant(app) {
+  app.use(Button)
+  app.use(Cell)
+  app.use(CellGroup)
+  app.use(Field)
+  app.use(Form)
+  app.use(Icon)
+  app.use(NavBar)
+  app.use(Tabbar)
+  app.use(TabbarItem)
+  app.use(List)
+  app.use(PullRefresh)
+  app.use(Search)
+  app.use(Toast)
+  app.use(Dialog)
+  app.use(Loading)
+  app.use(Overlay)
+  app.use(Popup)
+  app.use(SwipeCell)
+  app.use(Tag)
+  app.use(Empty)
+  app.use(Divider)
+  app.use(ActionSheet)
+  app.use(DatePicker)
+  app.use(Picker)
+  app.use(Checkbox)
+}

@@ -1,0 +1,215 @@
+<template>
+  <div class="mine-page">
+    <!-- 用户信息头部 -->
+    <div class="user-header">
+      <div class="user-avatar">
+        <van-icon name="user-circle-o" size="60" />
+      </div>
+      <div class="user-info">
+        <div class="user-name">{{ userInfo.username || '未登录' }}</div>
+        <div class="user-company">{{ userInfo.company_name || '-' }}</div>
+      </div>
+    </div>
+
+    <!-- 功能菜单 -->
+    <div class="page-content">
+      <!-- 账户信息 -->
+      <van-cell-group inset title="账户信息">
+        <van-cell title="用户名称" :value="userInfo.username || '-'" />
+        <van-cell title="所属公司" :value="userInfo.company_name || '-'" />
+        <van-cell title="租户ID" :value="userInfo.tenant_id || '-'" />
+      </van-cell-group>
+
+      <!-- 系统设置 -->
+      <van-cell-group inset title="系统设置">
+        <van-cell title="清除缓存" is-link @click="handleClearCache" />
+        <van-cell title="关于我们" is-link @click="handleAbout" />
+      </van-cell-group>
+
+      <!-- 退出登录 -->
+      <van-cell-group inset>
+        <van-cell title="退出登录" is-link center @click="handleLogout">
+          <template #icon>
+            <van-icon name="warning-o" color="#ee0a24" style="margin-right: 8px;" />
+          </template>
+        </van-cell>
+      </van-cell-group>
+
+      <!-- 版本信息 -->
+      <div class="version-info">
+        <div>ERP移动端 v1.0.0</div>
+        <div>© 2026 All Rights Reserved</div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { Dialog, showSuccessToast } from 'vant'
+import { logout } from '@/api/auth'
+
+const router = useRouter()
+
+// 用户信息
+const userInfo = ref({
+  username: '',
+  company_name: '',
+  tenant_id: ''
+})
+
+// 加载用户信息
+const loadUserInfo = () => {
+  try {
+    const userStr = localStorage.getItem('mobile_erp_user')
+    if (userStr) {
+      const user = JSON.parse(userStr)
+      userInfo.value = {
+        username: user.username || user.name || '',
+        company_name: user.company_name || user.companyName || '',
+        tenant_id: user.tenant_id || user.companyId || localStorage.getItem('mobile_erp_tenant_id') || ''
+      }
+    }
+  } catch (error) {
+    console.error('[Load User Info Error]', error)
+  }
+}
+
+// 清除缓存
+const handleClearCache = () => {
+  Dialog.confirm({
+    title: '清除缓存',
+    message: '确定要清除所有缓存数据吗？'
+  }).then(() => {
+    // 保留登录信息,只清除其他缓存
+    const token = localStorage.getItem('mobile_erp_token')
+    const tenantId = localStorage.getItem('mobile_erp_tenant_id')
+    const user = localStorage.getItem('mobile_erp_user')
+    
+    localStorage.clear()
+    
+    // 恢复登录信息
+    if (token) localStorage.setItem('mobile_erp_token', token)
+    if (tenantId) localStorage.setItem('mobile_erp_tenant_id', tenantId)
+    if (user) localStorage.setItem('mobile_erp_user', user)
+    
+    showSuccessToast('缓存已清除')
+  }).catch(() => {
+    // 用户取消
+  })
+}
+
+// 关于我们
+const handleAbout = () => {
+  Dialog.alert({
+    title: '关于我们',
+    message: 'ERP移动端 v1.0.0\n\n一款专为企业打造的移动办公应用，\n支持订单管理、客户管理、数据统计等功能。\n\n技术支持: Vue3 + Vant4',
+    confirmButtonText: '我知道了'
+  })
+}
+
+// 退出登录
+const handleLogout = () => {
+  Dialog.confirm({
+    title: '退出登录',
+    message: '确定要退出登录吗？'
+  }).then(async () => {
+    try {
+      await logout()
+    } catch (error) {
+      console.error('[Logout Error]', error)
+    } finally {
+      // 清除本地数据
+      localStorage.removeItem('mobile_erp_token')
+      localStorage.removeItem('mobile_erp_tenant_id')
+      localStorage.removeItem('mobile_erp_user')
+      
+      showSuccessToast('已退出登录')
+      router.replace('/login')
+    }
+  }).catch(() => {
+    // 用户取消
+  })
+}
+
+// 页面加载
+onMounted(() => {
+  loadUserInfo()
+})
+</script>
+
+<style lang="less" scoped>
+.mine-page {
+  min-height: 100vh;
+  background: #f5f5f5;
+  padding-bottom: 60px;
+}
+
+// 用户信息头部
+.user-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 40px 16px 30px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  color: #fff;
+}
+
+.user-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.user-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.user-name {
+  font-size: 20px;
+  font-weight: 500;
+  margin-bottom: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-company {
+  font-size: 13px;
+  opacity: 0.9;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// 页面内容
+.page-content {
+  padding: 16px;
+}
+
+:deep(.van-cell-group) {
+  margin-bottom: 16px;
+}
+
+:deep(.van-cell-group__title) {
+  padding-left: 16px;
+  color: #666;
+  font-weight: 500;
+}
+
+// 版本信息
+.version-info {
+  text-align: center;
+  padding: 32px 16px 16px;
+  font-size: 12px;
+  color: #999;
+  line-height: 1.8;
+}
+</style>

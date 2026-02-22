@@ -1,0 +1,44 @@
+# SSL 证书安装指南
+
+## 当前状态
+- HTTP: ✅ 已配置（http://erp.xnamb.cn）
+- HTTPS: ❌ 未配置 SSL 证书
+
+## 方案一：使用 Let's Encrypt 免费证书（推荐）
+
+### 1. 安装 Certbot
+sudo apt update
+sudo apt install certbot python3-certbot-nginx -y
+
+### 2. 获取证书
+sudo certbot --nginx -d erp.xnamb.cn -d m.erp.xnamb.cn
+
+### 3. 自动续期（已自动配置）
+Certbot 会自动添加定时任务，无需手动配置
+
+## 方案二：使用阿里云免费 SSL 证书
+
+### 1. 在阿里云控制台申请免费 SSL 证书
+- 访问：https://ssl.console.aliyun.com/
+- 选择"免费证书" → "购买"（0 元）
+- 绑定域名：erp.xnamb.cn
+
+### 2. 下载证书并上传到服务器
+- 下载 Nginx 格式的证书
+- 上传到服务器：/etc/nginx/ssl/erp.xnamb.cn/
+
+### 3. 配置 Nginx
+server {
+    listen 443 ssl;
+    server_name erp.xnamb.cn;
+    
+    ssl_certificate /etc/nginx/ssl/erp.xnamb.cn/cert.pem;
+    ssl_certificate_key /etc/nginx/ssl/erp.xnamb.cn/key.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+    
+    # ... 其他配置
+}
+
+## 验证 HTTPS
+curl -I https://erp.xnamb.cn

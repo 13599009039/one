@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>最终弹窗测试</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vant@4/lib/index.css">
+    <script src="https://cdn.jsdelivr.net/npm/vant@4/lib/vant.min.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        .test-section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .btn {
+            padding: 12px 24px;
+            background: #1677ff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            margin: 10px 0;
+        }
+        .btn:hover {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="container">
+            <h2 style="text-align: center; color: #333;">移动端"我的"界面弹窗测试</h2>
+            
+            <div class="test-section">
+                <h3>1. 基础弹窗测试</h3>
+                <button class="btn" @click="showBasicPopup = true">显示基础弹窗</button>
+                
+                <van-popup v-model:show="showBasicPopup" position="center" round :style="{ width: '80%', maxWidth: '300px' }">
+                    <div style="padding: 20px; text-align: center;">
+                        <h3>基础弹窗</h3>
+                        <p>这是最基本的弹窗测试</p>
+                        <button class="btn" @click="showBasicPopup = false" style="background: #666;">关闭</button>
+                    </div>
+                </van-popup>
+            </div>
+            
+            <div class="test-section">
+                <h3>2. 公司选择弹窗测试</h3>
+                <button class="btn" @click="showCompanyPopup = true">显示公司选择弹窗</button>
+                
+                <van-popup v-model:show="showCompanyPopup" position="center" round :style="{ width: '80%', maxWidth: '300px' }">
+                    <div style="background: white; border-radius: 8px; overflow: hidden;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px; border-bottom: 1px solid #F0F0F0;">
+                            <div style="font-weight: 500; color: #333; font-size: 16px;">选择公司</div>
+                            <van-icon name="cross" @click="showCompanyPopup = false" style="font-size: 20px; color: #999; cursor: pointer;"></van-icon>
+                        </div>
+                        <div style="padding: 8px 0; max-height: 300px; overflow-y: auto;">
+                            <div v-for="company in companies" :key="company.id"
+                                style="display: flex; align-items: center; padding: 16px; cursor: pointer; transition: background-color 0.2s;"
+                                @click="selectCompany(company)"
+                                :style="{ backgroundColor: selectedCompany?.id === company.id ? '#f0f8ff' : 'transparent' }">
+                                <van-icon v-if="selectedCompany?.id === company.id" name="checked" style="margin-right: 12px; color: #1677ff;"></van-icon>
+                                <span style="font-size: 16px; color: #333;">{{ company.name }}</span>
+                            </div>
+                        </div>
+                        <div style="padding: 16px; border-top: 1px solid #F0F0F0;">
+                            <button class="btn" @click="confirmSelection" style="height: 40px;">确定</button>
+                        </div>
+                    </div>
+                </van-popup>
+            </div>
+            
+            <div class="test-section">
+                <h3>3. 当前选中公司</h3>
+                <p v-if="selectedCompany">当前选择：{{ selectedCompany.name }}</p>
+                <p v-else>请先选择公司</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp, ref } = Vue;
+        
+        createApp({
+            setup() {
+                const showBasicPopup = ref(false);
+                const showCompanyPopup = ref(false);
+                const selectedCompany = ref(null);
+                
+                const companies = ref([
+                    { id: 1, name: '许昌爱佳网络科技有限公司' },
+                    { id: 2, name: '郑州分公司' },
+                    { id: 3, name: '上海办事处' }
+                ]);
+                
+                const selectCompany = (company) => {
+                    selectedCompany.value = company;
+                };
+                
+                const confirmSelection = () => {
+                    if (selectedCompany.value) {
+                        alert(`已选择公司：${selectedCompany.value.name}`);
+                    }
+                    showCompanyPopup.value = false;
+                };
+                
+                return {
+                    showBasicPopup,
+                    showCompanyPopup,
+                    selectedCompany,
+                    companies,
+                    selectCompany,
+                    confirmSelection
+                };
+            }
+        }).use(vant).mount('#app');
+    </script>
+</body>
+</html>
